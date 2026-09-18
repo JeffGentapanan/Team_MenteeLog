@@ -12,8 +12,8 @@ MenteeLog is a multi-role web platform designed to streamline OJT tracking, DTR 
 
 ---
 
-## System Architecture
-![System Architecture](./assets/MenteeLog-System-Architecture.png)
+## Sitemap
+![Sitemap](./assets/assets/MenteeLog-Sitemap.png)
 
 ---
 
