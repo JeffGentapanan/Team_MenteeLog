@@ -5,7 +5,7 @@ MenteeLog is a multi-role web platform designed to streamline OJT tracking, DTR 
 
 ## System Architecture
 ![System Architecture](./assets/MenteeLog-System-Architecture.png)
-![Database ERD](./assets/MenteeLog-Database-ERD)
+![Database ERD](./assets/MenteeLog-Database-ERD.png)
 
 ## Team Roles & Contributions
 - **Lead / Project Manager:** [Jeff A. Gentapanan]
