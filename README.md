@@ -4,7 +4,7 @@
 
 The working three-portal frontend is in **[frontend](./frontend/README.md)**. Your design references and team documents are preserved.
 
-Run `cd frontend` then `npm start`, and open **http://127.0.0.1:4173**. No package installation is required. On the sign-in page, select Student, Supervisor, or Coordinator and choose the demo button.
+Run `cd frontend` then `npm start`, and open **http://127.0.0.1:4173**. No package installation is required. On the sign-in page, select Student, Supervisor, or Coordinator and use the creator credentials in [frontend/README.md](./frontend/README.md#creator-portal-accounts).
 
 Backend teammates: see **[API integration contract](./frontend/API-CONTRACT.md)** and **[security boundaries](./frontend/SECURITY.md)**. This is a frontend demonstration; real authentication and database services are not connected.
 
@@ -16,17 +16,17 @@ MenteeLog is a multi-role web platform designed to streamline OJT tracking, DTR 
 ---
 
 ## System Architecture
-![System Architecture](./MenteeLog-System-Architecture.png)
+![System Architecture](<./Team MenteeLog Files/MenteeLog-System-Architecture.png>)
 
 ---
 
 ## Sitemap
-![Sitemap](./MenteeLog-Sitemap.png)
+![Sitemap](<./Team MenteeLog Files/MenteeLog-Sitemap.png>)
 
 ---
 
 ## Database ERD
-![Database ERD](./MenteeLog-Database-ERD.png)
+![Database ERD](<./Team MenteeLog Files/MenteeLog-Database-ERD.png>)
 
 ---
 
