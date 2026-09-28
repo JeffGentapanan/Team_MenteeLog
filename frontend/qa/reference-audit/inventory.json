@@ -1,0 +1,1650 @@
+[
+  {
+    "Reference": "Coordinator Portal\\Coordinator Dashboard\\Coordinator  Dashboard - Notfication Dropdown Navigation Bar.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "2F071868942E8F8C6C3D3D0974F36B2F3703DB96D53156FCCB8287DDFB690D84",
+    "Route": "#/coordinator/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Dashboard\\Coordinator  Dashboard - User Dropdown Navigation Bar.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "2F071868942E8F8C6C3D3D0974F36B2F3703DB96D53156FCCB8287DDFB690D84",
+    "Route": "#/coordinator/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Dashboard\\Coordinator- Dashboard.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "A27769521C53312C452BB0F0C366357C737376DA883C200128950B8B489BA7F8",
+    "Route": "#/coordinator/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator DTR Compliance\\Coordinator DTR Compliance  - Scanning Complete and Review.png",
+    "Width": 1440,
+    "Height": 1520,
+    "Hash": "F539671FB3B42B8928FD0621F6E84E45A25F2D432AD81D712A9D851F4B11BA2C",
+    "Route": "#/coordinator/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator DTR Compliance\\Coordinator DTR Compliance - Main.png",
+    "Width": 1440,
+    "Height": 1445,
+    "Hash": "07373ECF03CB6DDDD8CC19B55209DA0673A1A0092ACC7D2C29EF4BCCB0BDA9D5",
+    "Route": "#/coordinator/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator DTR Compliance\\Coordinator DTR Compliance - Scanning Flagged Entries.png",
+    "Width": 1440,
+    "Height": 1500,
+    "Hash": "2A301930B303D63BD0E4FA79E013D7DEDCA3150D1E463528D46E276C6C7E65B3",
+    "Route": "#/coordinator/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator DTR Compliance\\Coordinator DTR Compliance - Student DTR Downloaded 3.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "727BA2C5ACD7BA51E8850EDC3AE90E65FB6E8E174278137B12FF3E1C5090D109",
+    "Route": "#/coordinator/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator DTR Compliance\\Coordinator DTR Compliance - Student DTR Downloaded.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "10B267E025CF4FF47CF37F1DF0C00504FFEA9634E7F9E93D1E0F6C7C4A2E6AE3",
+    "Route": "#/coordinator/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator DTR Compliance\\Coordinator DTR Compliance -_ Flagged Entries - main.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "92CAAC19FC7A26CE3448E0BF50C25948B2EB75F2209241B5F188094DD2230D34",
+    "Route": "#/coordinator/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator DTR Compliance\\Coordinator DTR Compliance -_ Flagged Entries - Review Details.png",
+    "Width": 1448,
+    "Height": 1024,
+    "Hash": "096EA4C9E762369E8FDA12933C411C3BA2BD80153D0D22AD92A8603DBDC73EA6",
+    "Route": "#/coordinator/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator DTR Compliance\\Coordinator DTR Compliance -_ Student DTR Details - Downloading.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "5FC634354782A980F316C63180642DCC11A731CFAFA4D669F082E673A8B6F623",
+    "Route": "#/coordinator/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator DTR Compliance\\Coordinator DTR Compliance -_ Student DTR Details.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "104AACFFD24D1DED1AAA109B13843A329D4525516C7AEBC4FB7D3A1A1796B4A4",
+    "Route": "#/coordinator/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator HTE Accreditation\\Coordinator HTE Accreditation -  MOA Renewal Queue.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "1AD4DC2AA3C4B5612E22B746ABD774BB9116F8D8BCE46961F0CDE06A6DEF16FF",
+    "Route": "#/coordinator/hte",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator HTE Accreditation\\Coordinator HTE Accreditation - Filing details 4.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "B8667E20C59AFF3569205454E418F9BE2AD528F4E9D4CEB014A58C23FBA5250B",
+    "Route": "#/coordinator/hte",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator HTE Accreditation\\Coordinator HTE Accreditation - Filing Details 8.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "0669CE8DDCA0FFF7FE7026F24C727411E7B243BFFF065A3478176CA8EAFCAFDA",
+    "Route": "#/coordinator/hte",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator HTE Accreditation\\Coordinator HTE Accreditation - Filing Details 9.png",
+    "Width": 1440,
+    "Height": 1194,
+    "Hash": "9C0036981D8564AC44AC36259080550E29BD348044D1654DABD935990F3BFDB6",
+    "Route": "#/coordinator/hte",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator HTE Accreditation\\Coordinator HTE Accreditation - Main.png",
+    "Width": 1440,
+    "Height": 1321,
+    "Hash": "5F10C43E99AE6CA4AED09BDA8F3825E249592DBA771CAC2BCCB89414E5870284",
+    "Route": "#/coordinator/hte",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator HTE Accreditation\\Coordinator HTE Accreditation - Notify Expiry of MOA.png",
+    "Width": 1440,
+    "Height": 1470,
+    "Hash": "96ACC903ED3EBE348A467146295A8F9DEB6351A72067A645CFD55607B0DF388D",
+    "Route": "#/coordinator/hte",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator HTE Accreditation\\Coordinator HTE Accreditation - Successfull Renewal.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "3D81B60E929A5D99826BE38A3B55016FF8DFF8EE3BAA43C44A18E86EEB28A8D7",
+    "Route": "#/coordinator/hte",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator HTE Accreditation\\Coordinator HTE Accreditation - Successfully Add New HTE.png",
+    "Width": 1440,
+    "Height": 1383,
+    "Hash": "EEA52B9304834CCD2A4B5F5EE9B697F813BF95C20A57D3741B800A4C629440B4",
+    "Route": "#/coordinator/hte",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator HTE Accreditation\\Coordinator HTE Accreditation - View Company Information.png",
+    "Width": 1478,
+    "Height": 1334,
+    "Hash": "BFA698F1DFAFF2DA2607610DEA199E7D45F0A1285CCA90053CF2F12FA3261401",
+    "Route": "#/coordinator/hte",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator HTE Accreditation\\Coordinator HTE Accreditation - View Recent Activity Log.png",
+    "Width": 1440,
+    "Height": 1058,
+    "Hash": "3B60747E52D0FCE53E225107B98E3BF7C83BBB7719B89AC7B661E3A30184CED4",
+    "Route": "#/coordinator/hte",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator HTE Accreditation\\Coordinator HTE Accredititation - Renew of MOA.png",
+    "Width": 1440,
+    "Height": 1140,
+    "Hash": "B7701D26A637CEE5B4859B106532B75F0376029DF42EEDD533C7A1B80823C240",
+    "Route": "#/coordinator/hte",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator HTE Accreditation\\Supervisor HTE Accreditation - View Company Documents.png",
+    "Width": 1478,
+    "Height": 1100,
+    "Hash": "11720DF0B12EB3FEA14B9842C67B2505F5B3C08D5CCBEF7B94BDB74617D2B76D",
+    "Route": "#/coordinator/hte",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Incident Reports\\Coordinator Incident Reports -_ All Cases.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "36E0E42DDA477A98F5A09EF2683DF2C4ABA04CEBEA1B60278A2493D05A34C279",
+    "Route": "#/coordinator/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Incident Reports\\Coordinator Incident Reports -_ Disciplinary Logs.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "F19D86D022DCF232A2299FC367F0D0985D75FF069D5749C91F2F24CCCF5E10EA",
+    "Route": "#/coordinator/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Incident Reports\\Coordinator Incident Reports -_ Incident Flagged for Review.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "22416D9D256BB396416CEA9DE99806D38E7B4C6A6F399E814693102EE84367EE",
+    "Route": "#/coordinator/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Incident Reports\\Coordinator Incident Reports -_ Log Incident Report.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "2DD66AAF14547AA38E11012FA23E3E48B6005B4AB51870F8BB51E08CC32677FD",
+    "Route": "#/coordinator/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Incident Reports\\Coordinator Incident Reports -_ Main.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "C66C8E3DF012648836C3CBF89F25456BE8C1BFA4BD44F054B273FB4F8F61A8DC",
+    "Route": "#/coordinator/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Incident Reports\\Coordinator Incident Reports -_ Red Queue.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "B750355102FDFFCA8FFCD242577C83C153EBF72296B4F3FCC448B830E58D6E5C",
+    "Route": "#/coordinator/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Incident Reports\\Coordinator Incident Reports -_ Review Incident - Add Note.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "8DB7A08FD69E4C3C6811C529959BA365B750A7A9D91B4C5F7E6CBC7BAC1BFB25",
+    "Route": "#/coordinator/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Incident Reports\\Coordinator Incident Reports -_ Review Incident - Attached Evidence.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "9CDE95B4FA3BFBF8D12D390BB0F74C33A0FFB767A625A55EEDA75E51DE8B3BFC",
+    "Route": "#/coordinator/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Incident Reports\\Coordinator Incident Reports -_ Review Incident - Resolving the Issue.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "C48BD67B2E864099055F6537A0EDC2200E332D49D944E79EC6D209C57487C94C",
+    "Route": "#/coordinator/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Incident Reports\\Coordinator Incident Reports -_ Review Incident.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "32946A2F99253EAC27FAF70AB065B9096B50F6E19F17C644BB2C2D00A69B2F90",
+    "Route": "#/coordinator/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Incident Reports\\Coordinator Incident Reports -_ Student Claims.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "057FBE070F16B77EA74A6A9A2863452AB546DAA33AC3A0E66312542AC2B69487",
+    "Route": "#/coordinator/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Incident Reports\\Coordinator Incident Reports -_ Update Case Investigation.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "DF0511F05AD0979045A93EDFE6D8504E9D29A7FD0916A1C9963172E87285FAD6",
+    "Route": "#/coordinator/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Notification\\Coordinator Notification - All Notif.-1.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "25DEBF5C541C92FAB0617F86CEE884ECC133DBCF19D881B5B640721041D6E9A0",
+    "Route": "#/coordinator/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Notification\\Coordinator Notification - All Notif..png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "5466B5F65ABC2F2A76D0FDD23A1762D3147A6FE2FBB8371EEC87D99E05B9DE47",
+    "Route": "#/coordinator/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Notification\\Coordinator Notification - Incidents & Alerts.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "AA4E2E6C670DBF268A653F4D874645A41F1059DB6B5B26895F7D08BB86EA4804",
+    "Route": "#/coordinator/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Notification\\Coordinator Notification - Mark as Read.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "F18475AC3E3E6E11A10AC5D747DA643738601C2A0F57BB7FBD400ED5DEB46A7E",
+    "Route": "#/coordinator/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Notification\\Coordinator Notification - Unread.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "20C513D5641DA97A9CB820BEF9CF79CFDC9013AA094D211F9BF1C65F3F7425B6",
+    "Route": "#/coordinator/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Notification\\Coordinator Notifications - Clear Read.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "4FE140D829C9AF86A17907287FFDB2F6845D35AF739AC8BEFCCE762B81DB7382",
+    "Route": "#/coordinator/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Comprehensive Analytics Dashboard.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "01533052934862ECCCA097475E165DE0DFA47CCE4E32EB50156E402317C23EC9",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation - CHED Report Generated.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "F401DA68B4DB7A86737CBA22A6CEC72DC168AFB94535AD64FE6C72FF46A472FB",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation - Completion Summary Report Generated.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "82E716D45363DFFCC6C6B97E38392DFDEC578847F1D027FC1E32F37C39D166AF",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation - Completion Summary Report Success -_ Send via Email.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "93A1F71877B1ADD6F8E508A968411AE429D2E1C6E90874B1420F9209BBD7F19B",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation - Compliance Audit Report Generated.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "28FF42E70B6B6960BD9C59226DF71B784DC5E1733032CA3B95E6117A45406951",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation - Compliance Audit Report Success - Send via Email.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "8205502B3FC7E347877664B1B79D1ED086D4051FCB1FC9F44C0646C7BD91E464",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation - HTE Performance Report Generated.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "F8A5AB02C6BE5B21B63B745E3DD5E2CA5A292A8717FAEDA711CB6F30A4157F45",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation - HTE Performance Report Generating.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "B9362E37086C56A47D8C074E0142A38AB4E9B9980834B2A7E62A202870D5CF45",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation - HTE Performance Report Success -_ Send via Email.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "FDE10CCBD6A9658C60579ECE31FAB1DB8E211D3D684D9883130C5D254C3A65DB",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation - Main.png",
+    "Width": 1440,
+    "Height": 1254,
+    "Hash": "49E3150A9273540403794918BBEA68D90E072FF63BAEE23E362A791DCAB933DE",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ CHED Report Generating.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "B742C238085F29F41534246CA18FCD837C2AE69A21467E25FF1B46CEB55991B1",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ CHED Report Successful -_ Share via Email.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "1CBC3B253F742EDEBECA616D40EDA1B8F8C723D285C533CA3A73DF73DC550026",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ CHED Report View Document-1.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "A4055F3527A81366234C3D8A9379859CF184D8F97FFF30AF09D140AA83C8C38D",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ CHED Report View Document.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "0DFB539B931062CC0F7EA44C00C90E5897896CE1474AB571FB5C6E1EB5C62DDA",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ CHED Report.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "02738532DB5CBF9598E00E00C3C343A82BBE7F92E710CFFB57836C5E334B3B61",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Completion Summary Report - View-1.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "1AF1D7A048DA439A723DB4759040A116945BDDCC44375D25D44E8EC3C6E34E08",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Completion Summary Report - View.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "48E9AEDF1ECB97DFD711F7186257724526E7FFFDB35BE380C3B117E483B956BB",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Completion Summary Report Generating.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "5DC8642C5B4B7EBE7F91A1F310A5FCD64F4FDD8072A2C6C693F5C90BC2ED9570",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Completion Summary Report.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "C23ABE7207C07B88B20589D999480229E45CD93596C32E25020957C35A427078",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Compliance Audit Report - View-1.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "E7BB1C8B2D444D0B528106819CB3622A638FAA6DDB411F64B12603C15F92923D",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Compliance Audit Report - View.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "E0CCFEA26D892092A88A3717A19DBC1692693DD872B0E9E6417B963E29CD9EE6",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Compliance Audit Report Generating.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "3CE3E9B785C30EFDC59D41B10A77ABB3BB5A9F2291E74252C4F01E5520D9186C",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Compliance Audit Report.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "152A1B9CC71DF9DDE31F48E181B127DAB3D941744DD63C17FFC5CA7B62513478",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ HTE Performance Report - View-1.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "D2B76117212471D88B6406E9A6965E1ACBF47CF61C55EA68530E3A78A8E5B77A",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ HTE Performance Report - View.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "D8FDAB14F87375C7553868B62C0D590F1190F5D0039355D549D27449CFCFB617",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ HTE Performance Report.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "39B3F255744344B3D1D2AE2D2EA72A2478860C430E841B7C29D1CA1BB2482120",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Student Deployment Report - View-1.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "0392EA8BD3CAB5D470FBFFBFAC10951E848DE5AF84509145B85AC416B3564FEB",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Student Deployment Report - View.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "18F6AA7A8F9559CAA59AE9125025CA2649235B308B5B08180D3376C55C1747F3",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Student Deployment Report Generated.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "0BD1E00D102FB7FA117B63314E388283B8FC565C3B87DC1F00D5E5DFE1FD281F",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Student Deployment Report Generating.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "B87D22F75044D6AD2135A840D4884DD76210A8C1351655CCC32B5DFAD02D95B4",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Student Deployment Report Successful -_ Send via Email.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "23E648F712A9A09C08D291B5DA97882462B4CFC0BA2F2DF77A37A432B9B4C5DC",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Coordinator Report Generation -_ Student Deployment Report.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "800E35C8D0EF81DA39FA46B612C0E211A7439A7AA66E494DF3ACA89F3D3F640A",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Generated Reports History-1.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "A98D2FA63B2F1348AD29668911502B5871D68D358D28BAEC3AB2680758C3AB21",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Generated Reports History-2.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "87B708F73DDCADB52371CC9D1DE66E8A05E030904B37AD93A1344928F0B1D006",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Report Generation\\Generated Reports History.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "EC11370ADC1673078CB7D0B2B61DB6CEEC64B0AF8CDEB7DACFDA052AADE1E6A8",
+    "Route": "#/coordinator/reports",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement - Advance Filter of Students.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "14273F8659E89F0BA714DB52F50C4D11F6F9F0DFE788833F0EA11D86DBDD83B2",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement - Batch HTE Placement Allocation.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "C72132247857ED0913DD0B6C9F26DADDEDBA2305E8CCE73CEB789A3BFAEA9827",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement - Bulk Student Placement Import Wizard.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "EAFFFC7889B125CD7F19C2920B4F0ED93DD787CB02C022CD5CE2B76A08B1EDBE",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement - Cohort Overview.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "9DCBC73E4A8FC51CECDF3CC135670DFD3498A5803513986FD0C2FE454C2DDC7E",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement - Endorsement Successfully made.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "D01B4098CC813569183F9068C47A39F733CEB464561CF7898922A964B24B9ABF",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement - Generate Endorsement.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "E57CFE4FB28F948F2FE3192C703D0ECC0598234FB9F271CE2B5AB38C780E86D9",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement - Grid View.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "A452A793341D12DA2DA6E01110E5920F1871442745F8FF71555F418995D45CB8",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement - HTE Breakdown - View Company Intern.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "8292EFCDBE637338BF7B74F8307C141614ED50BD30CBDB70863AB839C6013F1D",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement - Main.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "6DFF844804C3F4C15FAA9E29A6407A53F220DEA3F746FD46E80D795C79720291",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement - Table View.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "ABAE3FD330C070DEDA0F474BF4C25192B0D7D6C9BE0778C612EDF9366A0371E8",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement - Unassigned Pool.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "301B717AD735714D23761B435A88B2253C9154D9086C221B390DD12A212A7F22",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement - Unassinged Pool.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "53B0FA91189F27CBD7D103A92D84C62AF4DE4FD7F2E18BD035891F343362F86D",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement -_ Create Endorsement Letter.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "604C4C834F75B9FAA6B107DCB821A55D2FD08E63161650B918BF40A9D7051BDF",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Stud. Placement -_ Generate Endorsement Letter.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "3D0BACFC537EE35230715AF2A615934C22FC807E933000C4F99A3F16CCE91CB5",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Student Palcement -_ Intern Profile - Documents.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "7E821396263149F5ED9968592DC6652537CC83A726422DAAB8CB338B89D0E135",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Student Palcement -_ Intern Profile - DTR Records.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "C55BD61672BE27D9EF75A440D79C376A4E4CB77A16405F7C31C3EFAD509C4ED2",
+    "Route": "#/coordinator/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Student Palcement -_ Intern Profile - Evaluation.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "DDF2C260828E762ADF78D66DF6D81AB39A88DAA0AB04C34C2E56A42332E1E824",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Student Palcement -_ Intern Profile - Overview.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "FAFFB588E4C7E0F51F95EDA6F237BB8CC334AA24A2D0E16ED8CB0C94CA3E545F",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Student Placement -_ Export & Report-1.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "B28D26AA85827991C0B2D036F46BD120267C0217C2117999E2DCB0452E699A2E",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Student Placement -_ Export & Report-2.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "2A98DBC7BBD14BAA4F432AA84EB1EF51CC6C302ADBF144D7C12FAA704765AA7A",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Student Placement -_ Export & Report.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "E9CC1B3FD1FE5072619CF204BD44A8657E25972660F7F1002D6AABAD5E90E389",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Student Placement -_ Exprot & Report-1.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "66E5C898EDD372EE99EADE9CD9DCEA1539FB50E898921CF05BD124A4A71BFF0A",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Student Placement -_ Exprot & Report.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "F950C61708F533CF1B8A5A1FAD1793B3AA761004B6C6F27964D1469FF33F1712",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Student Placement -_ Track Performance - View Student Rubrics.png",
+    "Width": 1456,
+    "Height": 1064,
+    "Hash": "D0D68BDE6AFAA8323D26D86E30D2BD8C8C69599AE6A27323D88A8DF841926DF8",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator Student Placement\\Coordinator Student Placement -_ Track Performance.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "24CFAB317D95FCC30B6DC20EF26E377B49AAFB1DB66316109DB7D9C645710EA4",
+    "Route": "#/coordinator/candidates",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator User Management\\Coordinator User Management - Overview & Import.png",
+    "Width": 1440,
+    "Height": 1314,
+    "Hash": "119CB8E815CF6E2695E4C57A43BBCCCC0E0FAF21712C604ABD00D3E3DBF6F57A",
+    "Route": "#/coordinator/users",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator User Management\\Coordinator User Management - Registered Portal Users.png",
+    "Width": 1440,
+    "Height": 1030,
+    "Hash": "FEB04A9DB9D777A0295262B7268BB721B46A582EE033272F3EF51365727E8453",
+    "Route": "#/coordinator/users",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator User Management\\Coordinator User Management - Role-Based Access Control.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "C907308B756531EDAE40909CC3A5D17FC34E521080E4AFE25F14A9D5ECE319A9",
+    "Route": "#/coordinator/users",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator User Management\\Coordinator User Management -_ Activating Account.png",
+    "Width": 1440,
+    "Height": 1327,
+    "Hash": "70C97BA08B6BAE990C594A2AAB33E66287F158E4297DCCA2CF011AE699DCF1B3",
+    "Route": "#/coordinator/users",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator User Management\\Coordinator User Management -_ Add New User.png",
+    "Width": 1440,
+    "Height": 1320,
+    "Hash": "341F5E8C35264D83A73E7A3F69E23A377B03D8597B7474A8B59A0CB5FD991485",
+    "Route": "#/coordinator/users",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator User Management\\Coordinator User Management -_ Drop CSV File Lacked Content.png",
+    "Width": 1440,
+    "Height": 1349,
+    "Hash": "2F74CA0D1B86293E73AB87CEAFB1A3E9EDB1DCB8A24B500B374A1E65DD847402",
+    "Route": "#/coordinator/users",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator User Management\\Coordinator User Management -_ Drop CSV FIle.png",
+    "Width": 1440,
+    "Height": 1392,
+    "Hash": "1C8864A741593B7353A0787400A3C15FB9FA961B2B8E9A1ED0DA02214176469E",
+    "Route": "#/coordinator/users",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator User Management\\Coordinator User Management -_ Status User Locked.png",
+    "Width": 1440,
+    "Height": 1407,
+    "Hash": "FB19797E87E70AF711E146AE2F91A7F1EDB7B76ED5FCC4BBB5D7131A4B04B516",
+    "Route": "#/coordinator/users",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator User Management\\Coordinator User Management -_ Upload CSV File Seed Database-1.png",
+    "Width": 1440,
+    "Height": 1732,
+    "Hash": "FBBEEF13F9E23827ABB30F728B54B04812E270E24C2F3C6EBDD4556ED712790A",
+    "Route": "#/coordinator/users",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Coordinator Portal\\Coordinator User Management\\Coordinator User Management -_ Upload CSV File Seed Database.png",
+    "Width": 1440,
+    "Height": 1820,
+    "Hash": "C8D2D2C0F50AE3C01427EDEA3D825CD5D27A5C9B9CEF1F443C49B551CC7FCACF",
+    "Route": "#/coordinator/users",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Application Tracker\\Student Application Tracker.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "31901436CB4A0AE2D59FB48681F06BDAE4D4157251B33FD82AB5C597904FB0A6",
+    "Route": "#/student/applications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Dashboard\\Student Dashboard - main.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "979CAD901EA44066D4D5809C7D141AAB6E2779F039286648BA5FFBBA3A57A23A",
+    "Route": "#/student/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Dashboard\\Student Dashboard - Notification Dropbar.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "DCFB13E8B0140C0E135CFA8A51E53FBB2F90054F9311498E273AC7B1625D5BF6",
+    "Route": "#/student/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Dashboard\\Student Dashboard - User Window Dropbar.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "0C32E15E4E3CE8EBD417BB4116C1B9B2DB09718CB41F6A033EE79F8215BBE51A",
+    "Route": "#/student/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Documents\\Student Documents - Download Doc.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "49A2C5CB143567A95D233B2F5869111C206C9E3A5A6895E8385BFCFBA758562E",
+    "Route": "#/student/documents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Documents\\Student Documents - Main.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "B23CD0741B6983CABC436961AEC8B4C7E85115C5ABF4324504E7022DD17F3490",
+    "Route": "#/student/documents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Documents\\Student Documents - Preview Doc.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "B42D3134ADE3CB7AFA2C6C86D32484F6EB3A87B1C4138456A3A9C8FE905D4177",
+    "Route": "#/student/documents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Documents\\Student Documents - Success Down.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "E757D0C120D3B6AB02251C74A1935B0972497ABA8DE2C1D4885CBF02B5E4C871",
+    "Route": "#/student/documents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Documents\\Student Documents - Upload Doc..png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "3949EA6DB02F42F814036B5AAB2ADE2AF0198AA8BD8791FED02FF2234C2F3B21",
+    "Route": "#/student/documents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\dtr-not-clocked-v2.png",
+    "Width": 121,
+    "Height": 10,
+    "Hash": "49AD31ED27077C889CF0FE57B810A39EB568FE0A1DBDF3021058CDBB65B19CD4",
+    "Route": "#/student/dtr",
+    "Review": "Non-screen label fragment"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\Student DTR  Hub- Main (not Clock in).png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "A382C2D62180625F2B9E3D422FF3A1D9B7659A3260D74301A9E57C83A192D897",
+    "Route": "#/student/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\Student DTR - Main  (Daily Log Submitted).png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "16D17763F1C616C37D7C5B3D9ED354E71DA54D7A64EE167D552169F45A4148E7",
+    "Route": "#/student/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\Student DTR Hub - Main (Clocked In)-1.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "D6A7959DD0F8067B55DF887052962EC4B57C17ABA7624B8C0422644C90480E59",
+    "Route": "#/student/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\Student DTR Hub - Main (Clocked In).png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "602D10D56E38200E500A7B48D27AE29ACFC64E087F000D5BE96C0CC7A998583B",
+    "Route": "#/student/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\Student DTR Hub - Main (Clocking Out).png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "2DB6045A90F194F40F56A109057FF4EA84BDEBE598B01E96564EF5B17C37A92C",
+    "Route": "#/student/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\Student DTR Hub - Main (Download Log Summary).png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "27ACE122CD6C8A10162A9FA2284F8337C371F3837C0D0956A7F384DC6E4E0578",
+    "Route": "#/student/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\Student DTR Hub - Main (Export Log Summary).png",
+    "Width": 1441,
+    "Height": 1024,
+    "Hash": "96C6DFC4202BFAA68FF47A0BD0EFC5645D85EB85682D1F662E53E62796F91403",
+    "Route": "#/student/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\Student DTR Hub - Main (not Clock in)-1.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "03BB2C9D42F261ADD917E85BFB6B94917B3450D672DF32C384A47C5461852199",
+    "Route": "#/student/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\Student DTR Hub - Main (not Clock in).png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "7C3A4DE7A17549C95969BFC8C75AF972D01F5EBF98C3C41B74C80A77BA2BB375",
+    "Route": "#/student/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\Student DTR Hub - Main (Summary Submitted).png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "8645629AB4A991CFBACEC9FA49677F538EA9B46F7202B423C74E2D5D67908DEF",
+    "Route": "#/student/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\Student DTR Hub - Main (View Draft Summary).png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "E50C12D3A61B2F8C6C3FCFCFB3A44741AE1A9D327F3A4426BAD0E2B12A35C297",
+    "Route": "#/student/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\Student DTR Hub - Main (Write Justification).png",
+    "Width": 1441,
+    "Height": 1024,
+    "Hash": "76D1C543421C3815E3D8B8117A431EE94D4126C653F887453239C838C043F9ED",
+    "Route": "#/student/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student DTR Hub\\Student DTR Hub- Main (Clock In).png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "0402780DD70AE6AF1FE39E83721D3FD9F2E67F92FDFE734D3E1A8C753BB094F3",
+    "Route": "#/student/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Incident Reports\\Student Incident Reports - Main -_ All Claims.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "23D9390BA106C8260B9F0BC747F3AA8C1643A20DF5778FC5C6F4E05CF52CE357",
+    "Route": "#/student/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Incident Reports\\Student Incident Reports - Main -_ File Incident Claim.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "E0E77F24E279DACFEB8EBD74D1E589CA638CF5EAFCFAC0DFF75D62925BEBA5D2",
+    "Route": "#/student/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Incident Reports\\Student Incident Reports - Main -_ Resolved.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "87BA04062DD0D6C3037773E7CFF3E3D4A9901969DF936A09F19EF39AF05DFFFC",
+    "Route": "#/student/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Incident Reports\\Student Incident Reports - Main -_ Under Reviews.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "E75DC706797EA45FD84B3E825A12E409A3B15AC1BDB99DCECF360E49BC3EF186",
+    "Route": "#/student/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Incident Reports\\Student Incident Reports - Main -_ View Report.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "6784D82621FAF7D9EA2B1E5E2082CFAD60A17C6BF57F894F64FF8E581B781999",
+    "Route": "#/student/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Notification\\Student Notification - All Notif.-1.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "A47698D3B3FE8896F8BFAD404E76190ABD570817DA0FF4DB7311D99A418DCF92",
+    "Route": "#/student/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Notification\\Student Notification - All Notif..png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "0496588DE70D4CF805B046DDF935B300E71493175F4FBE246CFB0CC5C3071EFC",
+    "Route": "#/student/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Notification\\Student Notification - Incidents & Alerts.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "CC6342860F330B71666D96ADDB34E50DBC786DF9AFBF9CFDCB2010C27D41FB12",
+    "Route": "#/student/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Notification\\Student Notification - Mark as Read.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "AC7A2CDFE7F61B59AC10E7F72FC2637F81E28720EFC63616C1DAA239B6A69492",
+    "Route": "#/student/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Notification\\Student Notification - Unread.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "DF2A12E8AE786B68FD688D2C4E422FDA5D5D2BEAC8492C1034C86F8A55A35FB5",
+    "Route": "#/student/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Notification\\Student Notifications - Clear Read.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "780FBCADAA3F2D5BBF8C8AB2571259CBF06F7F4D49BA999F0BC93B6650AE8F23",
+    "Route": "#/student/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student OJT Placement\\Student OJT Placement -  Apply & Submitted Documents Successful.png",
+    "Width": 1440,
+    "Height": 1955,
+    "Hash": "704D9F40E2A7D1E3FA444F07507078FFBE7168FE019BF7742E3CA9AC87100C44",
+    "Route": "#/student/documents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student OJT Placement\\Student OJT Placement -  Filter Specific Work.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "98212D8775A9E777EF2BFC709B551790F480657D21472C4B3DBCDE207BBACE46",
+    "Route": "#/student/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student OJT Placement\\Student OJT Placement - Filter Work.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "1BFD3C61B0128AD26EACDF28F0E072C00CEFA22F46B84050722B250D15F131D6",
+    "Route": "#/student/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student OJT Placement\\Student OJT Placement - Main.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "B7F7C51EA2AE7CE17E47F302CC2C368F4BDC9D903C23E0DCB9E16A3C9F85127B",
+    "Route": "#/student/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student OJT Placement\\Student OJT Placement - Work Details.png",
+    "Width": 1440,
+    "Height": 1034,
+    "Hash": "62B3324E7DA1C3476728B9DCBCD07AE67CC222C1AB3235B7BED5C75075AEE2C8",
+    "Route": "#/student/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student OJT Placement\\Student OJT Placement -_ View Details.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "4795934E43602131F79850F413347BF9A0FD48967FC55E4A0093AFE390CBF493",
+    "Route": "#/student/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student OJT Placement\\Student OJT Placement -_ Work Details -_ Applying.png",
+    "Width": 1441,
+    "Height": 1025,
+    "Hash": "BCF89FEB0FFA43FA7E6A4AFC4F6048899C7C1B65C767A3214EA385F81C9D570A",
+    "Route": "#/student/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student OJT Placement\\Student OJT Placement-_ Main -_ Applying.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "86208EBD8A087BFC1769435D2FC812215CF204B46D7E943C40FB1CA234492145",
+    "Route": "#/student/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Student Portal\\Student Performance Appraisal\\Student Performance Appraisal.png",
+    "Width": 1440,
+    "Height": 1024,
+    "Hash": "983958C2442CEDA3C659BC73DBB62E6973843F3C10C95B8B3FEEB8D6619C0F8F",
+    "Route": "#/student/appraisals",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Attendance & DTR\\Supervisor Attendance & DTR - All Intern Approved.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "50C233AC792C9046B15E2FA6791A1FAA48808BAA5F97BEE90654213DD6142758",
+    "Route": "#/supervisor/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Attendance & DTR\\Supervisor Attendance & DTR - Approving All Intern.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "2AA917088C8FCD9CCA89FF277C84F6D9C2EFC3164A5E843712BC5FE742CF373B",
+    "Route": "#/supervisor/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Attendance & DTR\\Supervisor Attendance & DTR - Approving Individual Intern (Draw Mode).png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "0965633305C03436C2C4E207046B5060FAD6250061D6E3F8E4FC02EB578268A5",
+    "Route": "#/supervisor/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Attendance & DTR\\Supervisor Attendance & DTR - Approving Individual Intern (Upload mode).png",
+    "Width": 1440,
+    "Height": 1026,
+    "Hash": "AAA5F27B09B65C05BCB8C63442B0C8CFA4A87C7356F8820C044C7A4D7C996982",
+    "Route": "#/supervisor/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Attendance & DTR\\Supervisor Attendance & DTR - Intern Approved.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "A6B9BF2C268A423AC8CD9898B4828B41D02A442F7F30EBE667205DC7819D2EDB",
+    "Route": "#/supervisor/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Attendance & DTR\\Supervisor Attendance & DTR - Intern Rejected.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "5402830B8454CCBB8414CF779779E3EC05C67958AEC429FC3892C0BC2CA7205C",
+    "Route": "#/supervisor/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Attendance & DTR\\Supervisor Attendance & DTR - Reject Intern.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "76C07F7B6BF999722346C3541720C7100F13AE722B1BF6DE19D95B868DDDCE95",
+    "Route": "#/supervisor/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Attendance & DTR\\Supervisor Attendance & DTR -_ View Intern Profile 1.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "AA5A75260D246BD6DD6F065DD4A017464D1222D2A712D731BEC02966E81663C7",
+    "Route": "#/supervisor/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Attendance & DTR\\Supervisor Attendance & DTR -_ View Intern Profile 2.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "EC7896F01F9540AD205652B51791098B3F6E0D15177880E77BAC9434576A8383",
+    "Route": "#/supervisor/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Attendance & DTR\\Supervisor Attendance & DTR -Main.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "E51E86D0D3618353D495EE997009C5481CAFCE780916CD10612F51718DCE27AB",
+    "Route": "#/supervisor/dtr",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard - Add Intern Slot.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "BD48F7AC587EEF49424BBB983B24B57440BD9994381DD619DA740DA71B8FFE02",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard - Emergency Alert Sent.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "5128B1FF5AF7772824BB3FF5EC07DAB4C0D39B03FDC06801B6976C870C62EA9E",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard - Main-1.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "F271ECE306A58EFCD3574E60527321231D6CCA4AFF8B2C7F1C4F8F2554E78256",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard - Main-2.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "F271ECE306A58EFCD3574E60527321231D6CCA4AFF8B2C7F1C4F8F2554E78256",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard - Main-3.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "F271ECE306A58EFCD3574E60527321231D6CCA4AFF8B2C7F1C4F8F2554E78256",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard - Main-4.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "078031B30F8A45EB35B0589F6A18F8234BCE62EDD39D622991F2DC3E0896FE88",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard - Main.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "A78DA8071B09C52C0CFA2516058402DB1E3D3B33A42B09C6776FB7D294315DD0",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard - New Intern Added.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "641DF71AC3595563C9D36DAD84E5E39C69B4BFC6F16A02A06967ECED5F0AB8A5",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard - Send Emergency Alert -_ Send Emergency Broadcast Alert (Low).png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "D2D7B4F1B5959C61E15AE8CC2D4843DFD1E781313E852C63B96885BE249CF373",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard - Send Emergency Alert -_ Send Emergency Broadcast Alert (Medium).png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "AB72055AA13E137EBC345D587F3A90E222EC0D54333F39B3C8C4CD97CED23BAC",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard - Send Emergency Alert-1.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "BE828E4718D346FDDA90E336851A8B829C02CFA88D52A0662AB85C059AA15528",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard - Send Emergency Alert.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "9D6BF3E1B7B307987BA8B2B9B01B3092F1402C329D59C7E41F59EAB7E2C818B5",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard- Send Emergency Alert.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "8BDBD64206E64974EDFF7904E50B3FF612B4884DF96EBADFAC3BA8757ADE310C",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Dashboard\\Supervisor Dashboard - Send Emergency Alert -_ Send Emergency Broadcast Alert (High\\Critical).png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "452A241C9FAE31F5F9304A6BEB509D89B8B527302480C6A25CD2E098D020332F",
+    "Route": "#/supervisor/dashboard",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Incident Reports\\Supervisor Incident Reports - All Case.png",
+    "Width": 1442,
+    "Height": 1024,
+    "Hash": "C4377851BA5A7A5290FF1FC69295D3B9FF5BC9A76D9FEF59413F966AA2A05D41",
+    "Route": "#/supervisor/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Incident Reports\\Supervisor Incident Reports - Case Review.png",
+    "Width": 1442,
+    "Height": 1093,
+    "Hash": "D4056813FEE93028FE92A4B194353E3A8592AD307C9C7294E5B73D2370DD2A72",
+    "Route": "#/supervisor/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Incident Reports\\Supervisor Incident Reports - Create Supervisor Log.png",
+    "Width": 1442,
+    "Height": 1099,
+    "Hash": "D222C605D5EB714833BABA3D4588DF4B3B5112B6D79BE584E5A0E828EF152011",
+    "Route": "#/supervisor/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Incident Reports\\Supervisor Incident Reports - In Investigation.png",
+    "Width": 1442,
+    "Height": 1024,
+    "Hash": "764DD7AE0A87381AE52020BF7ACCCE1A2474BECAE28884DA3ABF571AF40C8291",
+    "Route": "#/supervisor/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Incident Reports\\Supervisor Incident Reports - Resolved.png",
+    "Width": 1442,
+    "Height": 1024,
+    "Hash": "F9D3AADF2BBC193DE70E31955908F035D7F428530B6331C01A04A2206716B643",
+    "Route": "#/supervisor/incidents",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Notification\\Supervisor Notification - All Notif.-1.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "2E26E4FFDDF603D7E0ABFDA74DDAA11BDC1BE28C124DA447FA3580663B2A5959",
+    "Route": "#/supervisor/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Notification\\Supervisor Notification - All Notif..png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "DC25C2898DA893C63D27F25ACBA1AE5AAB031C43508F97480A979FBEBBB8607E",
+    "Route": "#/supervisor/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Notification\\Supervisor Notification - Incidents & Alerts.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "254C74A6DA2CD7814D24CC4F40EC782084A4570FB7EBE7561B8D2F603C7D2B4B",
+    "Route": "#/supervisor/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Notification\\Supervisor Notification - Mark as Read.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "5EB1968E169AE416DA77834B0438CF796D37676AEE8F1EEA60B6379170954D04",
+    "Route": "#/supervisor/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Notification\\Supervisor Notification - Unread.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "050D9E34C85B67CC0AC90A8ED7553B8C6D1909AC0CE4CCDF9D91F41FDA61169C",
+    "Route": "#/supervisor/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Notification\\Supervisor Notifications - Clear Read.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "64D0ECF3FB821BF4D83BA8D105C75F5D891F315BEC72CB6E0BBF22385C3FA27A",
+    "Route": "#/supervisor/notifications",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Performance Appraisal\\Supervisor Performance Appraisal - Main.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "E4E8E33A90F7AFCB22D1E9CDA1B0FC6CB196DC453FC0D6431E94770DC425CC0B",
+    "Route": "#/supervisor/appraisals",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Performance Appraisal\\Supervisor Performance Appraisal -_ Student Evaluation - Checking Performance.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "9C197C35E95EC4D51A1DC19694671EE119F694D145CC9451B5D26BA02021D066",
+    "Route": "#/supervisor/appraisals",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Performance Appraisal\\Supervisor Performance Appraisal -_ Student Evaluation - Student Evaluated.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "5A8ABEF08FD8F18E00F29F87E0A19616D672C4B7DECC4A802524C09A26FDBC21",
+    "Route": "#/supervisor/appraisals",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Performance Appraisal\\Supervisor Performance Appraisal -_ Student Evaluation.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "9A2A4C7280990F3577DA8FB758131D412CA0EAC8B4E3468BB250D0F35552A194",
+    "Route": "#/supervisor/appraisals",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Slot Management\\Supervisor Management -_ Select Work.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "FCE8071923C55D2124A390C103AB86EE55BC6E68BA7EA832856FACD028D106E2",
+    "Route": "#/supervisor/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Slot Management\\Supervisor Slot Management - Post New Work.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "6D04A4494A776B2CEF5CC86A94AAA4D11BBB97724A345094299E2FB9050D95E4",
+    "Route": "#/supervisor/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Slot Management\\Supervisor Slot Management -_  Software Engineer Intern - Edit Position.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "17EA4C4237749F8E7827CA272D8E508229D5635EC771222D7D1D5B98DE6093B3",
+    "Route": "#/supervisor/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Slot Management\\Supervisor Slot Management -_ Archived Slot Position Updated And Restored.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "9B4353BC38EA892916724675E4F357AB1F2F544A0926356672C8DF67308CF93A",
+    "Route": "#/supervisor/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Slot Management\\Supervisor Slot Management -_ Archived Slots.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "1F832751C340D45AF45B02D15474173EEBC5C0FEF35E66935D7F777E87CF757C",
+    "Route": "#/supervisor/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Slot Management\\Supervisor Slot Management -_ Edit Archived Slot.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "3423B1FE782456E273E31EE90C1544AABD8C4F246A5BEFC21F538AD583BBE127",
+    "Route": "#/supervisor/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Slot Management\\Supervisor Slot Management -_ Main - Active Slots.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "56AE63F7F3140E0C2D812743DBC88D87039FA57BDFFB3E5F2ABFA04CB251609C",
+    "Route": "#/supervisor/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Slot Management\\Supervisor Slot Management -_ Select Archive Work.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "A9C0B5374AC274BA869039357FCF08B778CC61AA6B40A40DD98FE53E50AF4637",
+    "Route": "#/supervisor/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Slot Management\\Supervisor Slot Management -_ Software Engineer Intern - Deactivated.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "7E8269129A24B1BFD0F9FB88ED52CFE35610275147B9C8C16B726F08499A36CF",
+    "Route": "#/supervisor/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Slot Management\\Supervisor Slot Management -_ Software Engineer Intern - Deactivating work.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "1FC9D11212AD783CB0921255C8DEFBDFC3E2CEFC81E5FAB78E72C7A48F76A9F9",
+    "Route": "#/supervisor/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Slot Management\\Supervisor Slot Management -_ Software Engineer Intern - Position Updated.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "0D7B45584145ECD059D2FE0ED59351CDD5B931736F96913187F3E72D9F55746C",
+    "Route": "#/supervisor/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  },
+  {
+    "Reference": "Supervisor Portal\\Supervisor Slot Management\\Supervisor Slot Management -_ Software Engineer Intern - View.png",
+    "Width": 1440,
+    "Height": 1025,
+    "Hash": "0A017BA4645E6815BD33CB95584A7E6420C9026D677461BAF2299F5C2B4C1213",
+    "Route": "#/supervisor/jobs",
+    "Review": "Visually reviewed in reference contact sheet"
+  }
+]

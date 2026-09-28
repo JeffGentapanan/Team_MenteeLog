@@ -12,7 +12,7 @@ export function visibleLogs(db,user) {return db.logs.filter(l=>user.role==='Stud
 export function visibleApplications(db,user) {return db.applications.filter(a=>user.role==='Student'?a.studentId===user.id:user.role==='Supervisor'?db.jobs.some(j=>j.id===a.jobId&&j.supervisorId===user.id):true);}
 export function validateUpload(file) {
   if(!file||!file.name||file.size===0) throw new Error('Choose a non-empty file.');
-  if(file.size>5*1024*1024) throw new Error('Files must be 5 MB or smaller.');
+  if(file.size>10*1024*1024) throw new Error('Files must be 10 MB or smaller.');
   const allowed={pdf:'application/pdf',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg'};
   const ext=file.name.split('.').pop().toLowerCase();
   if(!allowed[ext]||(file.type&&file.type!==allowed[ext])) throw new Error('Upload a PDF, PNG, or JPEG file.');

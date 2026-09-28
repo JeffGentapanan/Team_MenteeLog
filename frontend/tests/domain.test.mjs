@@ -54,7 +54,7 @@ test('applications reject duplicates, closed jobs, and non-students',()=>{
 });
 test('upload checks reject active content, MIME mismatches and large files',()=>{
   assert.equal(validateUpload({name:'report.pdf',size:100,type:'application/pdf'}),true);
-  for(const file of [{name:'payload.svg',type:'image/svg+xml',size:100},{name:'x.pdf',type:'text/html',size:100},{name:'large.pdf',type:'application/pdf',size:6*1024*1024},{name:'empty.pdf',size:0}])assert.throws(()=>validateUpload(file));
+  for(const file of [{name:'payload.svg',type:'image/svg+xml',size:100},{name:'x.pdf',type:'text/html',size:100},{name:'large.pdf',type:'application/pdf',size:11*1024*1024},{name:'empty.pdf',size:0}])assert.throws(()=>validateUpload(file));
 });
 test('HTML escaping and CSV formula neutralization protect rendered/exported data',()=>{
   assert.equal(escapeHTML('<img src=x onerror="alert(1)">'),'&lt;img src=x onerror=&quot;alert(1)&quot;&gt;');
