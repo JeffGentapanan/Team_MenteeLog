@@ -27,8 +27,8 @@ These are public demo credentials, not real authentication. Never reuse this dem
 
 - Public landing page and role-based authentication hub; honest forgot-password and token-reset previews.
 - Student dashboard, filtered job directory and applications, profile, DTR clock-in/out and task drafts, document uploads/downloads, incidents with evidence, appraisal results.
-- Supervisor dashboard, assigned roster, application reviews, DTR review with comments and typed demo signatures, position management, five-criterion appraisal, disciplinary reports, local emergency alerts.
-- Coordinator dashboard, HTE accreditation/MOA management, job management, placement and clearance checks, DTR compliance, CSV reporting, case notes/mediation, candidate CSV import, faculty provisioning, account status controls, permissions summary, and local activity history.
+- Supervisor dashboard, assigned roster, application reviews, individual/bulk DTR review with comments and drawn/uploaded/typed demo signatures, active/archived positions, full-page five-criterion appraisal, disciplinary reports, and local emergency alerts.
+- Coordinator dashboard, three-step HTE accreditation and MOA renewal, company detail drawers, job management, placement table/grid/company/cohort views, batch assignment and clearance checks, DTR compliance, PDF/CSV report preview/history, case notes/mediation/resolution, candidate CSV preview/import, faculty provisioning, account status controls, permissions summary, and local activity history.
 - Shared notification drawer/center, read states, profile, 30-minute demo session, mobile navigation, keyboard-accessible dialogs, print styles, search/filter empty states, validation and feedback.
 
 ## How the demo works
@@ -45,6 +45,10 @@ Portal counts derive from the working sample cohort. Public landing statistics a
 dist/index.html          Application shell, metadata, CSP
 dist/styles.css         Base responsive components
 dist/reference.css      PNG-aligned public, authentication and portal styles
+dist/portal-reference.css September 28 portal page/detail/form layouts
+dist/js/portal-views.js  Portal pages and nested reference-image flows
+dist/js/portal-domain.js Atomic approvals/placements, imports, PDF/CSV reports
+dist/js/signature.js     Accessible signature drawing/upload controls
 dist/js/public.js        Landing variants and authentication views
 dist/tokens.css         Figma-derived burgundy/cream/sand tokens
 dist/assets/logo.svg    Supplied team logo
@@ -62,13 +66,15 @@ The `dist` directory is the deployable static frontend source; no compilation/bu
 
 ## Important boundaries
 
-This deliverable is **frontend only**. There is no live database, trusted authentication, email delivery, server-verified GPS, legally binding e-signature, malware scanner, or automatic calendar integration. Notifications only modify this browser's demo data. Report exports are CSV; CHED output is a preparation worksheet, not a certified government submission. The production API adapter is provided but intentionally not connected to the local demo repository. See API-CONTRACT.md for the migration steps.
+This deliverable is **frontend only**. There is no live database, trusted authentication, email delivery, server-verified GPS, legally binding e-signature, malware scanner, or automatic calendar integration. Notifications only modify this browser's demo data. Reports export to PDF or Excel-compatible CSV; CHED output is a preparation worksheet, not a certified government submission. Email sharing downloads a draft message. The production API adapter is provided but intentionally not connected to the local demo repository. See API-CONTRACT.md for the migration steps.
 
 ## Design references
 
 The student, supervisor, coordinator, DTR, appraisal, authentication, and governance layouts follow the provided exported screens: burgundy side navigation, cream canvas, sand cards, table headers, status badges, and compact typography. The corrected landing page follows the PNG photo hero, section order, opportunity cards, wording, and burgundy footer. The public variants and authentication hub use the same supplied imagery. Photos are displayed through SVG viewports cropped to photographic regions of the local PNG exports because separate original photos were not supplied. UI text, navigation, buttons, forms, cards, and tables are HTML/CSS; the website is not a screenshot overlay. Raster photo crops have the resolution of the exports. Mobile layouts are added because the source designs are desktop exports.
 
 ## Scope of this correction
+
+The September 28 correction is documented in `qa/PORTAL-REFERENCE-AUDIT.md`, with a complete inventory of the 206 new reference files. Nested routes preserve each sidebar selection while opening the corresponding full-page detail, form, or result state. Uploaded documents accept PDF/PNG/JPG up to 10 MB; signature images accept PNG/JPG up to 2 MB. Candidate CSV imports validate up to 5,000 rows before any accounts are created.
 
 Learning Goals, Messages & Meetings, and Program Settings have been removed from the frontend routes, navigation, and view handlers. Documents, HTE accreditation, and slot management remain because they are shown in the supplied PNGs and support the placement/reporting modules. The three portals use working records, so counts, names, dates, populated rows, and empty states can differ from the static exports. Dialogs share accessible form components; this is not a claim that every one of the 200+ exported modal states has been pixel-diff verified.
 
