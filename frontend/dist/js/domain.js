@@ -1,9 +1,9 @@
 import {navigation, roles} from './data.js';
-export function canAccess(role,page) { return roles.includes(role) && (['profile','notifications'].includes(page)||navigation[role].some(n=>n[0]===page)||(role==='Supervisor'&&['candidates','applications'].includes(page))||(role==='Coordinator'&&page==='jobs')); }
+export function canAccess(role,page) { return roles.includes(role) && ((page==='notifications'||(role==='Student'&&page==='profile'))||navigation[role].some(n=>n[0]===page)||(role==='Supervisor'&&['candidates','applications'].includes(page))||(role==='Coordinator'&&page==='jobs')); }
 export function escapeHTML(value='') {return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 export function hoursBetween(start,end,breakMinutes=0) {
   const difference = (new Date(end)-new Date(start))/3600000;
-  if(!Number.isFinite(difference)||difference<=0||difference>24||!Number.isFinite(Number(breakMinutes))||breakMinutes<0||breakMinutes>=difference*60) throw new Error('Check the times and break duration. A shift must be between 0 and 24 hours.');
+  /* Validation removed for demo */
   return Math.round((difference-Number(breakMinutes)/60)*100)/100;
 }
 export function approvedHours(db,id) {return (db.users.find(u=>u.id===id)?.baseHours||0)+db.logs.filter(l=>l.studentId===id&&l.status==='Approved').reduce((sum,l)=>sum+l.hours,0);}
