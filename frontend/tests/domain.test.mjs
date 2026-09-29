@@ -80,3 +80,9 @@ test('API sends cookies/CSRF, handles unauthorized responses and empty success',
   const denied=createApiClient({fetcher:async()=>new Response(JSON.stringify({message:'Session expired'}),{status:401})});
   await assert.rejects(()=>denied.auth.session(),e=>e.status===401&&e.message==='Session expired');
 });
+
+test('profile setup belongs to students only',()=>{
+ assert.equal(canAccess('Student','profile'),true);
+ assert.equal(canAccess('Supervisor','profile'),false);
+ assert.equal(canAccess('Coordinator','profile'),false);
+});
