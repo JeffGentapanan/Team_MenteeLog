@@ -5,13 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="MenteeLog — a connected OJT journey for students, company supervisors, and faculty coordinators.">
   <meta name="theme-color" content="#59131e">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' blob: data: https://*.tile.openstreetmap.org https://unpkg.com; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>MenteeLog | Your OJT journey, connected</title>
-  <link rel="icon" type="image/svg+xml" href="./assets/logo.svg">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="icon" type="image/svg+xml" href="./assets/MenteeLoo_Logo.svg?v=1">
+  <link rel="stylesheet" href="./styles.css?v=202">
   <link rel="stylesheet" href="./reference.css">
   <link rel="stylesheet" href="./portal-reference.css">
-  <script type="module" src="./js/app.js"></script>
+  <link rel="stylesheet" href="./portal-layout.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="./js/app.js?v=1034"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>

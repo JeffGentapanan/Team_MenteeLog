@@ -1,0 +1,314 @@
+[
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/dashboard",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/jobs",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/applications",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/appraisals",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/dtr",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/documents",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/incidents",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/dashboard",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/jobs",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/applications",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/appraisals",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/dtr",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/documents",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/student/incidents",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/dashboard",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/candidates",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/applications",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/dtr",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/appraisals",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/jobs",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/incidents",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/dashboard",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/candidates",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/applications",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/dtr",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/appraisals",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/jobs",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/supervisor/incidents",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/dashboard",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/jobs",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/hte",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/candidates",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/dtr",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/reports",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/users",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/incidents",
+    "width": 1440
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/dashboard",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/jobs",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/hte",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/candidates",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/dtr",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/reports",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/users",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/incidents",
+    "width": 390
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/dashboard",
+    "width": 768
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/jobs",
+    "width": 768
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/hte",
+    "width": 768
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/candidates",
+    "width": 768
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/dtr",
+    "width": 768
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/reports",
+    "width": 768
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/users",
+    "width": 768
+  },
+  {
+    "overflow": false,
+    "unavailable": false,
+    "url": "#/coordinator/incidents",
+    "width": 768
+  }
+]
