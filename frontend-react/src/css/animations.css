@@ -1,0 +1,91 @@
+/* =========================================
+   MENTEELOG GLOBAL ANIMATIONS
+   ========================================= */
+
+/* Keyframes */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* 1. Header Animation */
+.reference-header {
+    animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 2. Hero Section Animations (Staggered) */
+.reference-hero-content .hero-pill {
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out 0.2s forwards;
+}
+
+.reference-hero-content h1 {
+    opacity: 0;
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+}
+
+.reference-hero-content p {
+    opacity: 0;
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+}
+
+.reference-hero-content .hero-cta {
+    opacity: 0;
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+}
+
+/* 3. Smooth Hover Effects for Cards */
+.benefit-card, .how-card, .home-job, .directory-card, .role-feature-grid article {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    will-change: transform, box-shadow;
+}
+
+.benefit-card:hover, .how-card:hover, .home-job:hover, .directory-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 32px rgba(88, 17, 26, 0.08); /* Gentle burgundy shadow */
+}
+
+/* 4. Button Hover Effects */
+.btn {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.btn:not(.text-btn):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(88, 17, 26, 0.15);
+}
+
+.btn:not(.text-btn):active {
+    transform: translateY(1px);
+}
+
+/* 5. Smooth Stats Loading */
+.public-stats > div {
+    opacity: 0;
+    animation: scaleUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.public-stats > div:nth-child(1) { animation-delay: 0.2s; }
+.public-stats > div:nth-child(2) { animation-delay: 0.4s; }
+.public-stats > div:nth-child(3) { animation-delay: 0.6s; }
+.public-stats > div:nth-child(4) { animation-delay: 0.8s; }
+
+/* 6. Dashboard / Portal Cards Fade in */
+.student-dash-grid .card, .dashboard-quick, .reference-table-panel {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
+}
