@@ -1,13 +1,28 @@
-# MenteeLog — OJT & Internship Management System
+﻿# MenteeLog - OJT & Internship Management System
 
 ## Frontend website
 
-The working three-portal frontend is in **[frontend](./frontend/README.md)**. Your design references and team documents are preserved.
+The working three-portal frontend is in **[frontend-react](./frontend-react/README.md)**. Your design references and team documents are preserved.
 
-Run `cd frontend` then `npm start`, and open **http://127.0.0.1:4173**. No package installation is required. On the sign-in page, select Student, Supervisor, or Coordinator and use the creator credentials in [frontend/README.md](./frontend/README.md#creator-portal-accounts).
+Run "cd frontend-react" then "npm run dev" to start the Vite server. On the sign-in page, select Student, Supervisor, or Coordinator and use the sample credentials below.
 
-Backend teammates: see **[API integration contract](./frontend/API-CONTRACT.md)** and **[security boundaries](./frontend/SECURITY.md)**. This is a frontend demonstration; real authentication and database services are not connected.
+### Sample Demo Accounts
+(Password for all demo accounts: Demo@2026!)
 
+| Portal | Identifier |
+| --- | --- |
+| Student | 2021-00421 |
+| Supervisor | carlos.jose@example.com |
+| Coordinator | FAC-2026-001 |
+
+### Creator Portal Accounts
+| Portal | Identifier | Password |
+| --- | --- | --- |
+| Student | CREATOR-STUDENT | Demo@2026! |
+| Supervisor | creator.supervisor@example.com | Demo@2026! |
+| Coordinator | CREATOR-FACULTY | Demo@2026! |
+
+This is a frontend demonstration; real authentication and database services are not currently connected.
 ---
 
 ## Project Overview
@@ -38,3 +53,6 @@ MenteeLog is a multi-role web platform designed to streamline OJT tracking, DTR 
 - **Backend Developer:** Jhodie Alyssa Ladran
 - **Backend Developer:** Cristina Bernadette Porras
 - **Researcher:** Rolly G. Abella
+
+
+
