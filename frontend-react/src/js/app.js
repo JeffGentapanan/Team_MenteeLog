@@ -1,3 +1,6 @@
+import { supabase } from '../supabaseClient.js';
+const UNIVERSITY_NAME = 'Batangas State University';
+
 import {publicLanding,authScreen} from './public.js';
 import {ensureCreatorAccounts} from './creator.js';
 import {createPortalViews} from './portal-views.js';
@@ -5,6 +8,7 @@ import {seedData,roles,navigation,rubric} from './data.js';
 import {escapeHTML as e,canAccess,approvedHours,visibleStudents,visibleLogs,visibleApplications,hoursBetween,validateUpload,csvText,parseCSV,applyToJob,reviewLog} from './domain.js';
 
 const $=s=>document.querySelector(s), app=$('#app'), modal=$('#modal');
+
 const STORAGE='menteelog.demo.v1', SESSION='menteelog.demo.session';
 let storageIssue=false,filesDB=null;
 function load(){try{const saved=JSON.parse(localStorage.getItem(STORAGE));return saved?.version===1&&Array.isArray(saved.users)&&Array.isArray(saved.logs)?saved:seedData();}catch{return seedData();}}
@@ -183,7 +187,26 @@ function incidentDetail(id){const u=currentUser(),i=visibleIncidents(u).find(i=>
 function evaluate(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id===id);if(u.role!=='Supervisor'||!s)throw new Error('Student outside your evaluation scope.');const a=db.appraisals.find(a=>a.studentId===id);const body=`${person(s)}<hr class="hr"><p class="small muted">1 — Needs improvement · 3 — Meets expectations · 5 — Excellent</p>${rubric.map((r,i)=>`<fieldset class="rubric-row"><legend><strong>${i+1}. ${r}</strong></legend><div class="rating">${[1,2,3,4,5].map(n=>`<label><input type="radio" name="rating${i}" value="${n}" required ${a?.ratings[i]===n?'checked':''} ${a?'disabled':''}>${n}</label>`).join('')}</div></fieldset>`).join('')}${a?`<h3 class="mt16">Overall score: ${a.score.toFixed(1)} / 5</h3><p>${e(a.comments)}</p><p class="small">Signature: ${e(a.signature)}</p>`:textarea('Supervisor comments & observations','comments','','required minlength="20"')+field('Typed signature (demo)','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I confirm this evaluation reflects my review of the student.</label>'}`;showModal(a?'Submitted appraisal':'Performance appraisal rubric',body,a?null:data=>{const application=db.applications.find(a=>a.studentId===id&&a.status==='Accepted');if(!application)throw new Error('An accepted application is required before evaluation.');const ratings=rubric.map((r,i)=>Number(data['rating'+i]));if(ratings.some(n=>!Number.isInteger(n)||n<1||n>5))throw new Error('Complete every rubric criterion.');db.appraisals.push({id:crypto.randomUUID(),applicationId:application.id,studentId:id,supervisorId:u.id,ratings,score:ratings.reduce((a,b)=>a+b)/ratings.length,comments:data.comments,signature:data.signature,date:new Date().toISOString()});notify(id,'System','Your performance appraisal is ready','View your supervisor’s rubric scores and feedback.');audit('Submitted appraisal for '+s.name);save();toast('Evaluation submitted. The student can now view it.');},'Submit evaluation');}
 function editHTE(id){const h=db.htes.find(h=>h.id===id);showModal(h?'Host training establishment':'Add new HTE',field('Company name','name','text',h?.name||'','required maxlength="120"')+field('Industry','industry','text',h?.industry||'','required maxlength="100"')+field('Location','location','text',h?.location||'','required maxlength="100"')+field('Contact email','contact','email',h?.contact||'','required')+field('MOA expiry','expiry','date',h?.expiry||'','required')+select('Accreditation status','status',['Pending','Accredited','Expired'],h?.status||'Pending'),data=>{if(data.status==='Accredited'&&new Date(data.expiry+'T23:59:59')<new Date())throw new Error('An accredited HTE must have a valid MOA expiry date.');if(db.htes.some(other=>other.id!==id&&other.name.toLowerCase()===data.name.toLowerCase()))throw new Error('This HTE already exists.');if(h){const oldName=h.name;Object.assign(h,data);db.jobs.filter(j=>j.company===oldName).forEach(j=>j.company=data.name);db.users.filter(u=>u.company===oldName).forEach(u=>u.company=data.name);}else db.htes.push({id:crypto.randomUUID(),...data});audit('Updated HTE accreditation: '+data.name);save();toast('HTE details saved.');},'Save HTE');}
 function userNew(){showModal('Provision a user',select('Role','role',roles)+field('Full name','name','text','','required maxlength="100"')+field('SR code / faculty ID / corporate email','identifier','text','','required maxlength="100"')+field('Email address','email','email','','required')+select('Course (students)','course',['BS Computer Science','BS Information Technology','BS Computer Engineering'])+field('Company (supervisors)','company','text','','maxlength="120"')+'<p class="note">The demo creates a pending account. Production provisioning must send a server-generated activation link.</p>',data=>{if(db.users.some(u=>u.identifier.toLowerCase()===data.identifier.toLowerCase()||u.email.toLowerCase()===data.email.toLowerCase()))throw new Error('The identifier or email is already registered.');if(data.role==='Supervisor'&&!data.company.trim())throw new Error('A supervisor needs a company.');db.users.push({id:crypto.randomUUID(),...data,status:'Pending_Activation',badge:'Pre_Seeded',baseHours:0,requiredHours:db.program.requiredHours,supervisorId:null});audit('Provisioned '+data.role+' account for '+data.name);save();toast('Pending demo account created.');},'Create pending account');}
-function importUsers(){showModal('Import OJT candidates',`<p>Required headers: <strong>identifier,name,email,course</strong>. Up to 500 students, maximum 1 MB. Duplicate identifiers or emails will stop the import.</p>${field('CSV file','csv','file','','required accept=".csv,text/csv"')}`,async(data,form)=>{const file=form.elements.csv.files[0];if(!file||file.size>1024*1024)throw new Error('Choose a CSV file smaller than 1 MB.');const rows=parseCSV(await file.text()),header=rows.shift()?.map(v=>v.toLowerCase());const required=['identifier','name','email','course'];if(!header||required.some(k=>!header.includes(k)))throw new Error('The CSV is missing required headers.');if(rows.length<1||rows.length>500)throw new Error('Import between 1 and 500 students.');const ids=new Set(db.users.map(u=>u.identifier.toLowerCase())),emails=new Set(db.users.map(u=>u.email.toLowerCase()));const batch=rows.map((r,index)=>{const o=Object.fromEntries(required.map(k=>[k,r[header.indexOf(k)]||'']));if(Object.values(o).some(v=>!v||v.length>150)||!/^\S+@\S+\.\S+$/.test(o.email))throw new Error('Invalid or missing values on row '+(index+2));if(ids.has(o.identifier.toLowerCase())||emails.has(o.email.toLowerCase()))throw new Error('Duplicate identifier or email on row '+(index+2));ids.add(o.identifier.toLowerCase());emails.add(o.email.toLowerCase());return {id:crypto.randomUUID(),...o,role:'Student',status:'Pending_Activation',badge:'Pre_Seeded',baseHours:0,requiredHours:db.program.requiredHours,company:'',supervisorId:null};});db.users.push(...batch);audit('Imported '+batch.length+' OJT candidates');save();toast(batch.length+' pending candidates imported.');},'Validate & import');}
+async function importUsers() {
+  showModal('Import OJT candidates', `<p>Required headers: <strong>identifier,name,email,course</strong>. Up to 500 students, maximum 1 MB. Duplicate identifiers or emails will stop the import.</p>${field('CSV file','csv','file','','required accept=".csv,text/csv"')}`, async (data, form) => {
+    const file = form.elements.csv.files[0];
+    if(!file||file.size>1024*1024) throw new Error('Choose a CSV file smaller than 1 MB.');
+    const rows = parseCSV(await file.text()), header = rows.shift()?.map(v=>v.toLowerCase());
+    const required = ['identifier','name','email','course'];
+    if(!header||required.some(k=>!header.includes(k))) throw new Error('The CSV is missing required headers.');
+    if(rows.length<1||rows.length>500) throw new Error('Import between 1 and 500 students.');
+    
+    const batch = rows.map(r => {
+      return Object.fromEntries(required.map(k=>[k, r[header.indexOf(k)]||'']));
+    });
+    
+    const { data: insertedCount, error } = await supabase.rpc('preseed_candidates', { p_rows: batch });
+    if (error) throw new Error(error.message);
+    
+    audit('Imported '+insertedCount+' OJT candidates');
+    toast(insertedCount+' pending candidates imported.');
+  }, 'Validate & import');
+}
 function announcement(){const u=currentUser();showModal('Post a demo announcement',field('Title','title','text','','required maxlength="120"')+textarea('Announcement','message','','required minlength="10"')+'<p class="note">This creates local demo notifications. No emails or external messages are sent.</p>',data=>{const recipients=u.role==='Coordinator'?db.users.filter(v=>v.id!==u.id):visibleStudents(db,u);recipients.forEach(v=>notify(v.id,'System',data.title,data.message));audit('Posted announcement: '+data.title);save();toast('Announcement saved for '+recipients.length+' demo recipients.');},'Post announcement');}
 
 function openFiles(){return new Promise((resolve,reject)=>{if(filesDB)return resolve(filesDB);const request=indexedDB.open('menteelog-demo-files',1);request.onupgradeneeded=()=>request.result.createObjectStore('files');request.onsuccess=()=>{filesDB=request.result;resolve(filesDB);};request.onerror=()=>reject(new Error('Browser file storage is unavailable.'));});}
@@ -206,7 +229,7 @@ async function action(name,id,el){
     case 'demo':{const role=roles.includes(id)?id:'Student',user=db.users.find(u=>u.role===role&&u.status==='Active');if(!user)throw new Error('This demo role has no active account. Reset demo data from an active coordinator account.');storeSession(user);modal.close();view={search:'',filter:'All',course:'All',mode:'All'};location.hash='/'+role.toLowerCase()+'/dashboard';render();return;}
     case 'auth-role':authRole=id;render();return;
     case 'toggle-password':{const input=$('#password');input.type=input.type==='password'?'text':'password';el.setAttribute('aria-label',input.type==='password'?'Show password':'Hide password');return;}
-    case 'forgot':showModal('Forgot your password?',`<p>Enter the email associated with your account.</p>${field('Email address','email','email','','required autocomplete="email"')}<p class="note">Demo preview: no reset email will be sent. Production password recovery requires the authentication API.</p>`,()=>{toast('Demo preview complete. No email was sent.');},'Preview reset request');return;
+    case 'forgot': { const id = $('#identifier')?.value?.trim(); if(!id) { toast('Please enter your email or SR code first.'); return; } let target = id; if(!target.includes('@')) { supabase.rpc('get_email_by_identifier', {p_identifier: target}).then(({data}) => { if(data) supabase.auth.resetPasswordForEmail(data); }); } else { supabase.auth.resetPasswordForEmail(target); } toast('Password reset email sent.'); return; }
     case 'logout':logout();return;
     case 'switch-role':showModal('Explore another portal',`<p>Use the sample accounts to see how the three roles work together.</p><div class="stack">${roles.map(r=>button('Open '+r+' demo','demo',r,'secondary full')).join('')}</div>`);return;
     case 'menu':togglePortalMenu();return;
@@ -252,11 +275,89 @@ document.addEventListener('input',event=>{if(event.target.id==='draft'){db.draft
 document.addEventListener('search',event=>{if(event.target.closest('#search-form')){event.target.form.requestSubmit();}});
 document.addEventListener('change',event=>{if(event.target.id==='partner'){view.partner=event.target.value;render();}if(event.target.closest('#search-form')&&event.target.tagName==='SELECT')event.target.form.requestSubmit();});
 document.addEventListener('keydown',event=>{if(event.key==='Escape')togglePortalMenu(false);if(event.target.id==='global-search'&&event.key==='Enter'){event.preventDefault();const q=event.target.value.toLowerCase().trim();const match=navigation[currentUser().role].find(n=>n[1].toLowerCase().includes(q));if(q&&match)location.hash='/'+currentUser().role.toLowerCase()+'/'+match[0];else toast('No matching page found. Try “DTR”, “placement”, or “reports”.');}});
+let failedLoginAttempts = 0;
+let loginCooldownUntil = 0;
 document.addEventListener('submit',async event=>{
   const form=event.target;if(!form.id)return;event.preventDefault();const values=Object.fromEntries(new FormData(form));const errorBox=form.querySelector('.form-error');if(errorBox)errorBox.textContent='';const submit=form.querySelector('[type="submit"]');if(submit)submit.disabled=true;
   try{
-    if(form.id==='login-form'){const user=db.users.find(u=>u.role===authRole&&u.identifier.toLowerCase()===values.identifier.trim().toLowerCase()&&u.status==='Active');if(!user||values.password!=='Demo@2026!')throw new Error('The identifier or password is incorrect for this portal. See README.md for the sample accounts.');storeSession(user);location.hash='/'+authRole.toLowerCase()+'/dashboard';return;}
-    if(form.id==='activation-form'){form.reset();toast('Activation request preview complete. Email delivery and token verification require the backend.');return;}
+    if(form.id==='login-form'){
+        if (Date.now() < loginCooldownUntil) {
+           throw new Error('Too many attempts. Try again in ' + Math.ceil((loginCooldownUntil - Date.now())/1000) + 's.');
+        }
+        
+        let targetEmail = values.identifier.trim();
+        if (!targetEmail.includes('@')) {
+          const { data: emailData, error: rpcError } = await supabase.rpc('get_login_email', { p_identifier: targetEmail });
+          if (rpcError || !emailData) {
+             failedLoginAttempts++;
+             if (failedLoginAttempts >= 5) loginCooldownUntil = Date.now() + 60000;
+             throw new Error('Invalid SR code or password.');
+          }
+          targetEmail = emailData;
+        }
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: targetEmail,
+          password: values.password
+        });
+        
+        if (error) {
+           failedLoginAttempts++;
+           if (failedLoginAttempts >= 5) loginCooldownUntil = Date.now() + 60000;
+           throw new Error('Invalid SR code or password.');
+        }
+
+        const { data: profile, error: profileError } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+        
+        if (profileError || !profile || profile.is_activated === false || profile.role !== authRole) {
+           failedLoginAttempts++;
+           if (failedLoginAttempts >= 5) loginCooldownUntil = Date.now() + 60000;
+           await supabase.auth.signOut();
+           throw new Error('Invalid SR code or password.');
+        }
+        
+        failedLoginAttempts = 0;
+        const role = profile.role;
+
+        let localUser = db.users.find(u => u.id === data.user.id);
+        if (!localUser) {
+          localUser = {
+            id: data.user.id,
+            role: role,
+            identifier: profile.identifier || values.identifier.trim(),
+            email: data.user.email,
+            name: profile.full_name || 'Supabase User',
+            status: 'Active'
+          };
+          db.users.push(localUser);
+        }
+
+        storeSession(localUser);
+        location.hash='/' + role.toLowerCase() + '/dashboard';
+        return;
+      }
+      if(form.id==='activation-form'){
+        submit.textContent = 'Submitting...';
+        
+        const targetEmail = (values.email || values.identifier).trim();
+        const targetId = values.identifier.trim();
+        
+        const { data: isEligible, error: rpcError } = await supabase.rpc('verify_activation_eligibility', { p_identifier: targetId, p_email: targetEmail });
+        
+        if (isEligible) {
+           await supabase.auth.signInWithOtp({
+             email: targetEmail,
+             options: {
+               shouldCreateUser: true,
+               emailRedirectTo: window.location.origin + '/activate.html'
+             }
+           });
+        }
+        
+        form.reset();
+        toast('If the details match our records, an activation link was sent.');
+        return;
+      }
     if(form.id==='reset-form'){if(values.password!==values.confirm)throw new Error('Passwords do not match.');form.reset();toast('Demo validation passed. Token verification requires the backend; no password was changed.');return;}
     if(form.id==='search-form'){view.search=values.search||'';view.mode=values.mode||'All';view.course=values.course||'All';render();return;}
     const user=currentUser();if(form.id!=='modal-form'&&!user)throw new Error('Your session expired. Sign in again.');
@@ -279,4 +380,35 @@ document.addEventListener('drop',event=>{const dropzone=event.target.closest('.u
 document.addEventListener('click',event=>{const drawer=$('#notice-drawer');if(drawer&&!event.target.closest('#notice-drawer')&&!event.target.closest('[data-action="notifications"]'))drawer.remove();});
 
 
+
+
+
+
+
+
+// MAIN APP GATE
+supabase.auth.onAuthStateChange(async (event, sessionObj) => {
+  if (event === 'SIGNED_OUT' || event === 'PASSWORD_RECOVERY') return;
+  if (sessionObj?.user) {
+    const { data: profile, error } = await supabase.from('profiles').select('is_activated').eq('id', sessionObj.user.id).single();
+    if (error || !profile || profile.is_activated === false) {
+      await supabase.auth.signOut();
+      if (location.hash !== '#/login') {
+        location.hash = '/login';
+      }
+    }
+  }
+});
+
+supabase.auth.getSession().then(async ({ data: { session: initSession } }) => {
+  if (initSession?.user) {
+    const { data: profile, error } = await supabase.from('profiles').select('is_activated').eq('id', initSession.user.id).single();
+    if (error || !profile || profile.is_activated === false) {
+      await supabase.auth.signOut();
+      if (location.hash !== '#/login') {
+        location.hash = '/login';
+      }
+    }
+  }
+});
 

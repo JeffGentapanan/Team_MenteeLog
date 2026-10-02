@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#59131e">
+  <title>Create Your Password | MenteeLog</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/MenteeLoo_Logo.svg">
+  <link rel="stylesheet" href="./src/css/tokens.css" />
+  <link rel="stylesheet" href="./src/css/styles.css" />
+  <link rel="stylesheet" href="./src/css/reference.css" />
+  <link rel="stylesheet" href="./src/css/portal-reference.css" />
+  <link rel="stylesheet" href="./src/css/portal-layout.css" />
+  <link rel="stylesheet" href="./src/css/animations.css" />
+</head>
+<body class="public-site">
+  <div id="activate-app">
+    <div class="auth-reference">
+      <section class="auth-reference-photo">
+        <svg class="reference-photo auth-photo" viewBox="178 2398 500 268" preserveAspectRatio="xMidYMid slice" role="img" aria-label="MenteeLog students">
+          <image href="./assets/team/img1.jpg" x="178" y="2398" width="500" height="268" preserveAspectRatio="xMidYMid slice" />
+        </svg>
+        <div class="auth-tint"></div>
+        <img class="auth-watermark" src="./assets/MenteeLoo_Logo.svg" alt="">
+        <h1>Join the MenteeLog<br>Journey.<br>Step Forward into<br>Your Future.</h1>
+        <span class="auth-rule"></span>
+        <p>
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;vertical-align:middle;margin-right:8px;"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg> 
+          Official Student Mentorship Network
+        </p>
+      </section>
+      <main class="auth-reference-main" id="main">
+        <section class="auth-reference-card">
+          <header>
+            <a class="brand-link" href="/#/login" aria-label="MenteeLog home">
+              <img class="logo" src="./assets/MenteeLoo_Logo.svg" alt="MenteeLog">
+            </a>
+            <h2>MenteeLog &#x2014; Create Your Password</h2>
+            <p>Secure your new account with a password</p>
+          </header>
+          <div class="auth-reference-body">
+            <div id="activate-message" style="display: none; text-align: center; margin-bottom: 20px;">
+              <p class="form-error" style="display: block;"></p>
+              <a class="btn full" href="/#/login">Go to Login</a>
+            </div>
+            <form id="set-password-form" style="display: none; flex-direction: column; gap: 20px;">
+              <div class="field">
+                <label for="password">NEW PASSWORD</label>
+                <div class="password-field">
+                  <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password">
+                  <button type="button" data-action="toggle-password" aria-label="Show password">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12 M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="form-error" role="alert" style="margin-top:4px; font-size:11px;"></p>
+              </div>
+              <div class="field">
+                <label for="confirm_password">CONFIRM PASSWORD</label>
+                <div class="password-field">
+                  <input id="confirm_password" name="confirm_password" type="password" required minlength="8" autocomplete="new-password">
+                  <button type="button" data-action="toggle-password" aria-label="Show password">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12 M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="form-error" role="alert" style="margin-top:4px; font-size:11px;"></p>
+              </div>
+              <p class="form-error main-error" role="alert"></p>
+              <button type="submit" class="btn full" style="margin-top: 8px;">Activate Account</button>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script type="module" src="./src/js/activate.js"></script>
+</body>
+</html>
