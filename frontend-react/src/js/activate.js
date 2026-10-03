@@ -13,7 +13,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     form.style.display = 'none';
     messageDiv.style.display = 'block';
     messageText.textContent = msg;
-    messageText.style.color = isSuccess ? 'green' : 'var(--error)';
+    if (isSuccess) {
+      messageText.style.color = '#155724';
+      messageText.style.backgroundColor = '#d4edda';
+      messageText.style.borderColor = '#c3e6cb';
+    } else {
+      messageText.style.color = 'var(--error)';
+      messageText.style.backgroundColor = '';
+      messageText.style.borderColor = '';
+    }
   }
 
   function resetBtn() {
@@ -64,8 +72,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         formError.textContent = 'Passwords do not match.';
         return resetBtn();
       }
-      if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-        formError.textContent = 'Password must be at least 8 characters and contain at least one letter and one number.';
+      
+      const hasUpper = /[A-Z]/.test(password);
+      const hasLower = /[a-z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+      const hasSymbol = /[!@#$%^&*(),.?":{}|<>\-_]/.test(password);
+
+      if (password.length < 8 || !hasUpper || !hasLower || !hasNumber || !hasSymbol) {
+        formError.textContent = 'Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.';
         return resetBtn();
       }
 
@@ -76,12 +90,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             token_hash: tokenHash,
             type: otpType,
           });
-          if (otpError) return showMessage(INVALID_MSG);
+          if (otpError) return showMessage("Token Error: " + otpError.message);
           verified = true;
         }
 
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return showMessage(INVALID_MSG);
+        if (!user) return showMessage("Session dead: User not found or deleted from database.");
 
         const { data: profile, error: profileError } = await supabase
           .from('profiles').select('is_activated, role').eq('id', user.id).single();

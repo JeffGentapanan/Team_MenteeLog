@@ -339,23 +339,32 @@ document.addEventListener('submit',async event=>{
       if(form.id==='activation-form'){
         submit.textContent = 'Submitting...';
         
-        const targetEmail = (values.email || values.identifier).trim();
-        const targetId = values.identifier.trim();
-        
-        const { data: isEligible, error: rpcError } = await supabase.rpc('verify_activation_eligibility', { p_identifier: targetId, p_email: targetEmail });
-        
-        if (isEligible) {
-           await supabase.auth.signInWithOtp({
-             email: targetEmail,
-             options: {
-               shouldCreateUser: true,
-               emailRedirectTo: window.location.origin + '/activate.html'
-             }
-           });
+        try {
+          const targetEmail = (values.email || values.identifier).trim();
+          const targetId = values.identifier.trim();
+          
+          const { data: isEligible, error: rpcError } = await supabase.rpc('verify_activation_eligibility', { p_identifier: targetId, p_email: targetEmail });
+          if (rpcError) throw new Error(rpcError.message);
+          
+          if (isEligible) {
+             const { error: otpError } = await supabase.auth.signInWithOtp({
+               email: targetEmail,
+               options: {
+                 shouldCreateUser: true,
+                 emailRedirectTo: window.location.origin + '/activate.html'
+               }
+             });
+             if (otpError) throw new Error(otpError.message);
+          } else {
+             // For debugging purposes right now, let's reveal if eligibility failed
+             throw new Error('Eligibility check failed. SR Code/Email not found or already activated.');
+          }
+          
+          form.reset();
+          toast('If the details match our records, an activation link was sent.');
+        } finally {
+          submit.textContent = 'Send Activation Link';
         }
-        
-        form.reset();
-        toast('If the details match our records, an activation link was sent.');
         return;
       }
     if(form.id==='reset-form'){if(values.password!==values.confirm)throw new Error('Passwords do not match.');form.reset();toast('Demo validation passed. Token verification requires the backend; no password was changed.');return;}
