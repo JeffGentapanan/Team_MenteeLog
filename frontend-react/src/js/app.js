@@ -255,7 +255,9 @@ document.addEventListener('keydown',event=>{if(event.key==='Escape')togglePortal
 document.addEventListener('submit',async event=>{
   const form=event.target;if(!form.id)return;event.preventDefault();const values=Object.fromEntries(new FormData(form));const errorBox=form.querySelector('.form-error');if(errorBox)errorBox.textContent='';const submit=form.querySelector('[type="submit"]');if(submit)submit.disabled=true;
   try{
-    if(form.id==='login-form'){const user=db.users.find(u=>u.role===authRole&&u.identifier.toLowerCase()===values.identifier.trim().toLowerCase()&&u.status==='Active');if(!user||values.password!=='Demo@2026!')throw new Error('The identifier or password is incorrect for this portal. See README.md for the sample accounts.');storeSession(user);location.hash='/'+authRole.toLowerCase()+'/dashboard';return;}
+    
+      if(form.id==='public-contact-form'){form.reset();toast('Thank you! Your demo request has been safely captured. Our team will contact you shortly to provide access.');return;}
+      if(form.id==='login-form'){const user=db.users.find(u=>u.role===authRole&&u.identifier.toLowerCase()===values.identifier.trim().toLowerCase()&&u.status==='Active');if(!user||values.password!=='Demo@2026!')throw new Error('The identifier or password is incorrect for this portal. See README.md for the sample accounts.');storeSession(user);location.hash='/'+authRole.toLowerCase()+'/dashboard';return;}
     if(form.id==='activation-form'){form.reset();toast('Activation request preview complete. Email delivery and token verification require the backend.');return;}
     if(form.id==='reset-form'){if(values.password!==values.confirm)throw new Error('Passwords do not match.');form.reset();toast('Demo validation passed. Token verification requires the backend; no password was changed.');return;}
     if(form.id==='search-form'){view.search=values.search||'';view.mode=values.mode||'All';view.course=values.course||'All';render();return;}
