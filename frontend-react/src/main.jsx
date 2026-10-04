@@ -48,6 +48,38 @@ if (!window.revealObserver) {
 }
 window.initScrollReveals();
 
+
+// FAQ Accordion Logic
+document.addEventListener('click', (e) => {
+    const header = e.target.closest('.faq-header');
+    if (!header) return;
+    const item = header.closest('.faq-item');
+    const container = item.closest('.faq-container');
+    
+    // Toggle current item
+    const isOpen = item.classList.contains('open');
+    
+    // Close all other items for that smooth "only one open" accordion feel
+    container.querySelectorAll('.faq-item').forEach(el => {
+        el.classList.remove('open');
+        el.querySelector('.faq-header').setAttribute('aria-expanded', 'false');
+    });
+    
+    if (!isOpen) {
+        item.classList.add('open');
+        header.setAttribute('aria-expanded', 'true');
+    }
+});
+
+
+// Guide Drawer Toggle Logic
+document.addEventListener('click', (e) => {
+    const toggle = e.target.closest('.guide-toggle');
+    if (!toggle) return;
+    const card = toggle.closest('.guide-card');
+    card.classList.toggle('expanded');
+});
+
 ReactDOM.createRoot(document.getElementById('react-root')).render(
   <React.StrictMode>
     {/* React tree is empty for now. The app.js script is taking over #app manually */}

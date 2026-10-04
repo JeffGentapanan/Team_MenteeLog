@@ -1,128 +1,149 @@
+import '../css/styles.css';
+import '../css/reference.css';
+import '../css/portal-reference.css';
+import '../css/portal-layout.css';
+import '../css/animations.css';
 import { supabase } from '../supabaseClient.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const form = document.getElementById('set-password-form');
-  const messageDiv = document.getElementById('activate-message');
-  const messageText = messageDiv.querySelector('.form-error');
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const formError = form.querySelector('.form-error.main-error') || form.querySelector('.form-error');
+document.addEventListener('DOMContentLoaded', () => {
 
-  const INVALID_MSG = 'This activation link is invalid or expired. Request a new one from the login page.';
+  // ── Element refs ──────────────────────────────────────────────
+  const step1Form   = document.getElementById('step1-form');
+  const step2Form   = document.getElementById('step2-form');
+  const step3Form   = document.getElementById('step3-form');
+  const successDiv  = document.getElementById('activate-success');
 
-  function showMessage(msg, isSuccess = false) {
-    form.style.display = 'none';
-    messageDiv.style.display = 'block';
-    messageText.textContent = msg;
-    if (isSuccess) {
-      messageText.style.color = '#155724';
-      messageText.style.backgroundColor = '#d4edda';
-      messageText.style.borderColor = '#c3e6cb';
-    } else {
-      messageText.style.color = 'var(--error)';
-      messageText.style.backgroundColor = '';
-      messageText.style.borderColor = '';
-    }
-  }
+  const sendBtn     = document.getElementById('send-otp-btn');
+  const verifyBtn   = document.getElementById('verify-otp-btn');
+  const setPassBtn  = document.getElementById('set-password-btn');
+  const backBtn     = document.getElementById('back-to-step1');
 
-  function resetBtn() {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Activate Account';
-  }
+  const step1Error  = document.getElementById('step1-error');
+  const step2Error  = document.getElementById('step2-error');
+  const step3Error  = document.getElementById('step3-error');
+  const emailDisplay = document.getElementById('otp-email-display');
 
-  document.querySelectorAll('[data-action="toggle-password"]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const input = e.currentTarget.previousElementSibling;
-      input.type = input.type === 'password' ? 'text' : 'password';
-    });
+  let resolvedEmail = '';
+
+  // ── Toggle password visibility ─────────────────────────────────
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('[data-action="toggle-password"]');
+    if (!btn) return;
+    const input = btn.previousElementSibling;
+    if (input) input.type = input.type === 'password' ? 'text' : 'password';
   });
 
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const tokenHash = params.get('token_hash');
-    const otpType = params.get('type') || 'email';
-    let verified = false; // the token can only be used once
+  // ── STEP 1: Send OTP ──────────────────────────────────────────
+  step1Form.addEventListener('submit', async e => {
+    e.preventDefault();
+    step1Error.textContent = '';
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending...';
 
-    if (tokenHash) {
-      // New flow: do NOT touch the token until the user submits the form
-      form.style.display = 'flex';
-    } else {
-      // Fallback: old-style link that already created a session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return showMessage(INVALID_MSG);
-      verified = true;
+    const role       = window.selectedRole || 'Student';
+    const identifier = document.getElementById('activate-identifier').value.trim();
+    const emailField = document.getElementById('activate-email');
+    const email      = role === 'Supervisor' ? identifier : emailField.value.trim();
 
-      const { data: profile, error } = await supabase
-        .from('profiles').select('is_activated, role').eq('id', session.user.id).single();
-      if (error || !profile) return showMessage('Error retrieving your profile. Please contact support.');
-      if (profile.is_activated === true) return showMessage('Account already activated');
+    try {
+      // 1. Verify eligibility via RPC (bypasses RLS)
+      const { data: isEligible, error: rpcErr } = await supabase
+        .rpc('verify_activation_eligibility', { p_identifier: identifier, p_email: email });
 
-      form.style.display = 'flex';
+      if (rpcErr) throw new Error(rpcErr.message);
+      if (!isEligible) throw new Error('Account not found or already activated. Please check your details.');
+
+      // 2. Send 6-digit OTP to email
+      const { error: otpErr } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: true }
+      });
+
+      if (otpErr) throw new Error(otpErr.message);
+
+      resolvedEmail = email;
+      emailDisplay.textContent = email;
+
+      step1Form.style.display = 'none';
+      step2Form.style.display = 'flex';
+
+    } catch (err) {
+      step1Error.textContent = err.message || 'Something went wrong. Please try again.';
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send Activation Code';
     }
+  });
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      formError.textContent = '';
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Activating...';
+  // ── STEP 2: Verify OTP Code ───────────────────────────────────
+  step2Form.addEventListener('submit', async e => {
+    e.preventDefault();
+    step2Error.textContent = '';
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verifying...';
 
-      const password = document.getElementById('password').value;
-      const confirm = document.getElementById('confirm_password').value;
+    const token = document.getElementById('otp-code').value.trim();
 
-      if (password !== confirm) {
-        formError.textContent = 'Passwords do not match.';
-        return resetBtn();
-      }
-      
-      const hasUpper = /[A-Z]/.test(password);
-      const hasLower = /[a-z]/.test(password);
-      const hasNumber = /[0-9]/.test(password);
-      const hasSymbol = /[!@#$%^&*(),.?":{}|<>\-_]/.test(password);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: resolvedEmail,
+        token,
+        type: 'email'
+      });
 
-      if (password.length < 8 || !hasUpper || !hasLower || !hasNumber || !hasSymbol) {
-        formError.textContent = 'Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.';
-        return resetBtn();
-      }
+      if (error) throw new Error('Invalid or expired code. Please check and try again.');
 
-      try {
-        // Verify the token now, once. A retry after a later error skips this.
-        if (tokenHash && !verified) {
-          const { error: otpError } = await supabase.auth.verifyOtp({
-            token_hash: tokenHash,
-            type: otpType,
-          });
-          if (otpError) return showMessage("Token Error: " + otpError.message);
-          verified = true;
-        }
+      step2Form.style.display = 'none';
+      step3Form.style.display = 'flex';
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return showMessage("Session dead: User not found or deleted from database.");
+    } catch (err) {
+      step2Error.textContent = err.message;
+    } finally {
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify Code →';
+    }
+  });
 
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles').select('is_activated, role').eq('id', user.id).single();
-        if (profileError || !profile) throw new Error('Error retrieving your profile. Please contact support.');
-        if (profile.is_activated === true) {
-          await supabase.auth.signOut();
-          return showMessage('Account already activated');
-        }
+  // ── STEP 3: Set Password ──────────────────────────────────────
+  step3Form.addEventListener('submit', async e => {
+    e.preventDefault();
+    step3Error.textContent = '';
+    setPassBtn.disabled = true;
+    setPassBtn.textContent = 'Activating...';
 
-        const { error: updateError } = await supabase.auth.updateUser({ password });
-        if (updateError) throw new Error(updateError.message);
+    const password = document.getElementById('new-password').value;
+    const confirm  = document.getElementById('confirm-password').value;
 
-        const { error: rpcError } = await supabase.rpc('complete_activation');
-        if (rpcError) throw new Error(rpcError.message);
+    try {
+      if (password !== confirm) throw new Error('Passwords do not match.');
+      if (password.length < 8)  throw new Error('Password must be at least 8 characters.');
 
-        const successMsg = profile.role === 'Supervisor' 
-          ? 'Account activated! Log in with your corporate email and password.' 
-          : 'Account activated! Log in with your SR code and password.';
+      // Set password on the now-authenticated user
+      const { error: passErr } = await supabase.auth.updateUser({ password });
+      if (passErr) throw new Error(passErr.message);
 
-        await supabase.auth.signOut();
-        showMessage(successMsg, true);
-      } catch (err) {
-        formError.textContent = err.message;
-        resetBtn();
-      }
-    });
-  } catch (err) {
-    showMessage('An unexpected error occurred.');
-  }
+      // Mark as activated in school_registry (ignore error if RPC doesn't exist yet)
+      await supabase.rpc('complete_activation', { p_email: resolvedEmail });
+
+      // Sign out so they log in fresh with their new password
+      await supabase.auth.signOut();
+
+      step3Form.style.display = 'none';
+      successDiv.style.display = 'block';
+
+    } catch (err) {
+      step3Error.textContent = err.message;
+    } finally {
+      setPassBtn.disabled = false;
+      setPassBtn.textContent = 'Complete Activation';
+    }
+  });
+
+  // ── Back to Step 1 ────────────────────────────────────────────
+  backBtn?.addEventListener('click', () => {
+    step2Form.style.display = 'none';
+    step1Form.style.display = 'flex';
+    document.getElementById('otp-code').value = '';
+    step2Error.textContent = '';
+  });
 });
