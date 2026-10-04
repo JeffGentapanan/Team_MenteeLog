@@ -1,19 +1,17 @@
-﻿// Rebuild of the supplied landing/authentication exports. Only photograph
+// Rebuild of the supplied landing/authentication exports. Only photograph
 // regions are reused from PNGs; text, navigation, cards and buttons are HTML.
 const crops={group:['home',178,2398,500,268],employers:['home',711,2398,497,268],skills:['home',169,1548,318,177],connections:['home',520,1548,319,177],tomorrow:['home',869,1548,318,177],supervisor:['company',97,997,509,287],company:['company',791,997,510,287],career:['company',467,1529,509,286],portrait:['company',246,2427,279,267]};
 export function photo(name,cls='',label='MenteeLog students'){const overrides={group:'img1.jpg',employers:'img2.jpg',skills:'img3.jpg',connections:'img4.jpg',tomorrow:'img5.jpg',supervisor:'img6.jpg',company:'img7.jpg',career:'img8.jpg',portrait:'img9.jpg'};const [file,x,y,w,h]=crops[name]||crops.group;if(overrides[name]){return `<svg class="reference-photo ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${label}"><image href="./assets/team/${overrides[name]}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice" /></svg>`;}return `<svg class="reference-photo ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${label}"><image href="./assets/references/${file}.png" width="${file==='home'?1359:1400}" height="${file==='home'?4633:5211}"/></svg>`;}
 const partners=['Accenture PH','Globe Telecom','BDO Unibank','Meralco','SM Technologies','PLDT','Metrobank','PhilStar Digital'];
-function partnerSection(dark=false){return `<section class="partner-section ${dark?'maroon':''}"><h3>ACCREDITED HOST TRAINING ESTABLISHMENTS</h3><div class="partner-list">${partners.map(p=>`<span>${p}</span>`).join('')}</div></section>`;}
-function joinSection(safe=true){return `<section class="join-section">${safe?'<p class="public-kicker">— Safe. Verified. Reliable. —</p><h2 class="reveal-on-scroll">Strong Local Partnerships, Nationwide.</h2><p class="public-small">Trusted companies. Real opportunities.</p>':''}<p class="public-kicker">— Join MenteeLog —</p><h2 class="reveal-on-scroll">Where Talent Connects with Opportunity.</h2><p class="public-small">Empowering careers and simplifying hiring: Menteelog makes connecting with skilled Filipino interns effortless.</p><a class="btn" href="#/login">Get Started</a></section>`;}
+function partnerSection(dark=false){return `<section id="partnerships" class="partner-section ${dark?'maroon':''}"><h3>ACCREDITED HOST TRAINING ESTABLISHMENTS</h3><div class="partner-list">${partners.map(p=>`<span>${p}</span>`).join('')}</div></section>`;}
+function joinSection(safe=true){return `<section class="join-section">${safe?'<p class="public-kicker">&mdash; Safe. Verified. Reliable. &mdash;</p><h2 class="reveal-on-scroll">Strong Local Partnerships, Nationwide.</h2><p class="public-small">Trusted companies. Real opportunities.</p>':''}<p class="public-kicker">&mdash; Join MenteeLog &mdash;</p><h2 class="reveal-on-scroll">Where Talent Connects with Opportunity.</h2><p class="public-small">Empowering careers and simplifying hiring: Menteelog makes connecting with skilled Filipino interns effortless.</p><a class="btn" href="#/login">Get Started</a></section>`;}
 
 function contactSection(icon) {
-    return `<section class="contact-section reveal-on-scroll">
+    return `<section id="contact" class="contact-section reveal-on-scroll">
         <div class="contact-container">
-            <!-- Left Side: Photo -->
             <div class="contact-photo">
                 ${photo('portrait', 'contact-img')}
             </div>
-            <!-- Right Side: Form -->
             <div class="contact-form-card">
                 <h3 class="contact-title">Connect with our team to explore partnership or request a demo.</h3>
                 <p class="contact-subtitle">Let's Work Together</p>
@@ -22,21 +20,21 @@ function contactSection(icon) {
                     <div class="form-row">
                         <div class="form-group">
                             <label>Name <span>*</span></label>
-                            <input type="text" placeholder="Your full name" required>
+                            <input type="text" name="name" placeholder="Your full name" required>
                         </div>
                         <div class="form-group">
                             <label>Email <span>*</span></label>
-                            <input type="email" placeholder="you@company.com" required>
+                            <input type="email" name="email" placeholder="your@email.com" required>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>Company / Organization</label>
-                            <input type="text" placeholder="Your company (optional)">
+                            <input type="text" name="company" placeholder="Your company (optional)">
                         </div>
                         <div class="form-group">
                             <label>I am a</label>
-                            <select required>
+                            <select name="role" required>
                                 <option value="Employer">Employer</option>
                                 <option value="University">University</option>
                                 <option value="Student">Student</option>
@@ -46,7 +44,7 @@ function contactSection(icon) {
                     </div>
                     <div class="form-group">
                         <label>Message <span>*</span></label>
-                        <textarea placeholder="Tell us about your inquiry or how we can help..." rows="4" required></textarea>
+                        <textarea name="message" placeholder="Tell us about your inquiry or how we can help..." rows="4" required></textarea>
                     </div>
                     <button type="submit" class="btn full contact-submit">Send Message</button>
                 </form>
@@ -58,21 +56,62 @@ function contactSection(icon) {
 function footer(){
   return `<footer class="reference-footer" style="background-color: var(--burgundy); color: white; padding: 60px 5%; display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden; min-height: unset;">
   
-  <div class="footer-contact" style="align-self: flex-start; text-align: left; margin-bottom: 20px;">
-    <a href="#/" aria-label="MenteeLog home" style="display: block; margin-bottom: 20px;">
-      <img class="footer-logo" src="./assets/MenteeLoo_Logo.svg" alt="MenteeLog" style="height: 45px; object-fit: contain; margin-left: -4px;">
-    </a>
-    <p style="margin: 10px 0; display: flex; align-items: center; gap: 12px; font-size: 15px; color: #f2e3df;">
-      <svg viewBox="0 0 24 24" fill="currentColor" style="width: 16px; height: 16px;"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-      info@menteelog.com
-    </p>
-    <p style="margin: 10px 0; display: flex; align-items: center; gap: 12px; font-size: 15px; color: #f2e3df;">
-      <svg viewBox="0 0 24 24" fill="currentColor" style="width: 16px; height: 16px;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-      Iloilo, Philippines
-    </p>
+  <div style="display: flex; flex-wrap: wrap; gap: 48px; width: 100%; justify-content: space-between; margin-bottom: 48px; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 48px;">
+    
+    <!-- Logo & Contact -->
+    <div class="footer-contact" style="text-align: left; flex: 1; min-width: 200px;">
+      <a href="#/" aria-label="MenteeLog home" style="display: block; margin-bottom: 20px;">
+        <img class="footer-logo" src="./assets/MenteeLoo_Logo.svg" alt="MenteeLog" style="height: 45px; object-fit: contain; margin-left: -4px;">
+      </a>
+      <p style="margin: 10px 0; display: flex; align-items: center; gap: 12px; font-size: 14px; color: #f2e3df;">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 15px; height: 15px; flex-shrink:0;"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        info@menteelog.com
+      </p>
+      <p style="margin: 10px 0; display: flex; align-items: center; gap: 12px; font-size: 14px; color: #f2e3df;">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 15px; height: 15px; flex-shrink:0;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        Iloilo, Philippines
+      </p>
+    </div>
+
+    <!-- Nav Column: Students -->
+    <div style="flex: 1; min-width: 130px;">
+      <p style="font-weight: 700; font-size: 13px; letter-spacing: 0.08em; color: #f2e3df; margin-bottom: 16px; text-transform: uppercase;">Students</p>
+      <a href="#/" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">Home</a>
+      <a href="#/public/students" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">Student Portal</a>
+      <a href="#/public/guide" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">OJT Success Guide</a>
+      <a href="#/login" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">Sign In</a>
+    </div>
+
+    <!-- Nav Column: Employers -->
+    <div style="flex: 1; min-width: 130px;">
+      <p style="font-weight: 700; font-size: 13px; letter-spacing: 0.08em; color: #f2e3df; margin-bottom: 16px; text-transform: uppercase;">Employers</p>
+      <a href="#/public/supervisor" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">Supervisor Portal</a>
+      <a href="#/public/company" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">About MenteeLog</a>
+      <a href="#/public/students" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">Browse Interns</a>
+      <a href="#/public/supervisor" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">Request Demo</a>
+    </div>
+
+    <!-- Nav Column: Institutions -->
+    <div style="flex: 1; min-width: 130px;">
+      <p style="font-weight: 700; font-size: 13px; letter-spacing: 0.08em; color: #f2e3df; margin-bottom: 16px; text-transform: uppercase;">Institutions</p>
+      <a href="#/public/career-centers" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">Career Centers</a>
+      <a href="#/public/career-centers" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">Partnerships</a>
+      <a href="#/public/guide" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">Compliance Guide</a>
+      <a href="#/public/career-centers" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">Request Demo</a>
+    </div>
+
+    <!-- Nav Column: Company -->
+    <div style="flex: 1; min-width: 130px;">
+      <p style="font-weight: 700; font-size: 13px; letter-spacing: 0.08em; color: #f2e3df; margin-bottom: 16px; text-transform: uppercase;">Company</p>
+      <a href="#/public/company" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">About Us</a>
+      <a href="#/public/company" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">Our Team</a>
+      <a href="#/public/students" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">Press</a>
+      <a href="#/public/company" style="display: block; color: #d6babb; font-size: 14px; margin-bottom: 10px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#d6babb'">Contact</a>
+    </div>
+
   </div>
-  
-  <h2 style="font-size: clamp(28px, 4vw, 42px); line-height: 1.4; font-weight: 700; margin: 40px auto 60px; text-align: center; color: white;">
+
+  <h2 style="font-size: clamp(28px, 4vw, 42px); line-height: 1.4; font-weight: 700; margin: 0 auto 48px; text-align: center; color: white;">
     Inspiring Excellence.<br>
     Linking Opportunities.<br>
     Transforming the Future.
@@ -90,12 +129,11 @@ function footer(){
       <a href="#/" aria-label="YouTube" style="color: white; transition: opacity 0.2s;"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg></a>
     </div>
   </div>
-</footer>`;
-}
+</footer>`;}
 const homeJobs=[['A','Technology Analyst Intern','Accenture Philippines','BSCS / BSIT','BGC, Taguig',12],['G','Network Engineering Intern','Globe Telecom','BSEE / BSIT','Pioneer, Mandaluyong',8],['B','FinTech & Systems Intern','BDO Unibank','BSCS / BSBA','Makati CBD',6],['M','ICT Infrastructure Intern','Meralco','BSECE / BSIT','Ortigas, Pasig',4],['P','Software Development Intern','PhilStar Digital','BSCS / BSIT','Makati',5],['S','Business Intelligence Intern','SM Technologies','BSCS / BSBA','Mall of Asia, Pasay',10]];
-export function publicLanding(page,{brand,icon}){const selected=['students','supervisor','career-centers','company','guide'].includes(page)?page:'home';const nav=[['home','Home'],['students','Students'],['supervisor','Supervisor'],['career-centers','Career Centers'],['company','Company']];const heroes={home:['One Platform.<br>Every OJT Journey.','Seamlessly connect students, industry supervisors, and OJT<br>coordinators. From placement to completion — fully digital, fully<br>tracked.','Get Started — It’s Free','group','Student'],students:['BE NOTICED. GET PLACED.','Connect with accredited local and international internship opportunities.','Begin Your OJT Journey','connections','Student'],supervisor:['PARTNER SMARTER.<br>MANAGE INTERNS EFFORTLESSLY.','Connect with verified student interns,<br>streamline MOA accreditations, and evaluate performance in one place.','Become a Partner HTE','supervisor','Supervisor'],'career-centers':["STREAMLINE OJT GOVERNANCE & COMPLIANCE",'Manage student placements, track real-time hours, and monitor MOA accreditations in one platform.','Access Coordinator Portal','career','Coordinator'],company:['MENTEELOG','Manage student placements, track real-time hours, and monitor MOA accreditations in one platform','Get Started','company','Student'], guide:['THE COMPLETE OJT GUIDE','Master every module of the MenteeLog ecosystem from onboarding to graduation.','Enter MenteeLog','group','Student']};const [title,subtitle,cta,img,role]=heroes[selected];return `<div class="public-site public-${selected}"><header class="reference-header">${brand()}<nav aria-label="Public navigation">${nav.map(([id,label])=>`<a href="#/${id==='home'?'':'public/'+id}" class="${selected===id?'selected':''}" ${selected===id?'aria-current="page"':''}>${label}</a>`).join('')}</nav><a class="btn" href="#/login">Sign In</a></header><main id="main" tabindex="-1"><section class="reference-hero">${photo(img,'hero-photo')}<div class="hero-overlay"></div><div class="reference-hero-content"><span class="hero-pill">${icon('shield')} Real-time OJT Placement & Tracking</span><h1>${title}</h1><p>${subtitle}</p><div class="hero-cta"><a class="btn" data-role="${role}" href="#/login">${cta}</a>${selected==='home'?'<button class="btn watch-button" data-action="watch-demo">Watch Demo</button>':''}</div></div></section>${selected==='home'?homeBody(icon):selected==='company'?companyBody(icon):selected==='guide'?guideBody(icon):roleBody(selected,icon)}${selected==='home'?partnerSection()+joinSection()+faqSection():selected==='company'?joinSection(false):partnerSection(selected!=='students')+joinSection()}${['students', 'supervisor', 'career-centers', 'company'].includes(selected) ? contactSection(icon) : ''}</main>${footer()}</div>`;}
-function homeBody(icon){return `<section class="opportunities reference-width"><div class="row between"><div><h2 class="reveal-on-scroll">Open OJT Opportunities</h2><p>Currently accepting applications for AY 2025–2026</p></div><div class="public-filters"><select id="public-course" aria-label="Filter opportunities by course"><option value="All">All Courses</option><option>BSCS</option><option>BSIT</option><option>BSBA</option><option>BSEE</option><option>BSECE</option></select><select id="public-location" aria-label="Filter opportunities by location"><option value="All">All Locations</option>${['Taguig','Mandaluyong','Makati','Pasig','Pasay'].map(v=>`<option>${v}</option>`).join('')}</select></div></div><div class="home-jobs">${homeJobs.map(([initial,title,company,courses,location,slots])=>`<article class="home-job reveal-on-scroll" data-courses="${courses}" data-location="${location}"><div class="row"><span class="home-job-logo">${initial}</span><div><h3>${title}</h3><p>${company}</p></div></div><ul><li>${icon('users')} ${courses}</li><li>${icon('pin')} ${location}</li><li>${icon('users')} ${slots} slots available</li></ul><a class="btn" href="#/login">Apply Now</a></article>`).join('')}</div><p id="public-empty" class="small" hidden>No opportunities match these filters.</p></section><section class="why-section reference-width"><p class="section-kicker reveal-on-scroll">— Why MenteeLog is the Right Choice —</p><h2 class="reveal-on-scroll">Aligning skills with opportunities:<br>connecting driven interns and trusted employers.</h2><p class="public-small">Simplifying local internships through trusted listings and authentic paths to employment.</p><div class="public-stats">${[['1,240+','Registered Students'],['86','Accredited HTEs'],['98%','Placement Rate'],['500K+','DTR Hours Logged']].map(([n,l])=>`<div><strong>${n}</strong><span>${l}</span></div>`).join('')}</div><div class="benefit-grid">${[['skills','Unlocking Capabilities','— Grow Your Skills —','Build confidence, gain experience, and step directly into your field. Menteelog gives you guided app features and verified internships to fast-track your career growth.'],['connections','Connecting Opportunities','— Step Into Your Career —','Discover relevant roles, apply fast, and step directly into your field. Menteelog aligns your skills with real-world opportunities across the Philippines and beyond.'],['tomorrow','Building a Stronger Tomorrow','— Define Your Career Path —','Build your future on a solid foundation. Menteelog brings interns and companies together through trusted opportunities designed for real career advancement.']].map(([p,t,k,d])=>`<article class="benefit-card reveal-on-scroll">${photo(p)}<div><h3>${t}</h3><p class="card-kicker">${k}</p><p>${d}</p><a class="btn" href="#/public/students">Learn more</a></div></article>`).join('')}</div></section><section class="how-section"><p class="section-kicker reveal-on-scroll">— How MenteeLog Works —</p><h2 class="reveal-on-scroll">Simplifying Internship Hiring for Students and Verified Companies</h2><p class="public-small">Post opportunities, submit applications, and connect directly—Menteelog streamlines your entire internship workflow.</p><div class="how-grid reference-width">${[['group','For Interns','— Your Path to the Right Internship —','Find opportunities that truly fit your goals.',['Explore verified job listings from global companies','Search by role, skills, location, setup, and date posted','Apply to multiple listings with ease','Track your applications inside the platform','Get interview invites directly from employers','Build early exposure to real industry environments'],'students'],['employers','For Employers','— A Simpler Way to Find Talent —','Connect with skilled and dependable Filipino interns.',['Post clear and detailed OJT listings','Access a diverse pool of student applicants','Message and manage candidates on the platform','Schedule interviews in-app','Streamline your entire OJT recruitment workflow','Gain visibility across hundreds of active student users'],'supervisor']].map(([p,t,k,d,items,to])=>`<article class="how-card reveal-on-scroll">${photo(p)}<div><h3>${t}</h3><p class="card-kicker">${k}</p><p>${d}</p><ul>${items.map(i=>`<li>${i}</li>`).join('')}</ul><a class="btn" href="#/public/${to}">Learn more</a></div></article>`).join('')}</div></section>`;}
-function roleBody(page,icon){let title,kicker,sub,items;if(page==='students'){title='YOUR SEAMLESS PATH TO PLACEMENT';kicker='— How MenteeLog Works —';sub='Discover accredited opportunities, log your hours, track performance, and fulfill your OJT requirements—all in one platform.';items=[['pin','Discover','accredited listings from partner HTEs'],['search','Apply','with one-click resume attachments'],['file','Track','to multiple listings with ease'],['chart','Filter','by program, required skills, and location'],['users','Log','GPS-verified clock-ins and daily task summaries'],['briefcase','Complete','supervisor approvals and live hour count']];}else if(page==='supervisor'){title='A STREAMLINED PATHWAY FOR INDUSTRY PARTNERS';kicker='— Host Training Establishment (HTE) Ecosystem —';sub='Onboard student interns, satisfy institutional compliance, and review performance seamlessly.';items=[['plus','Post Placements','Publish OJT roles tied to degree tracks'],['users','Review Applicants','Screen verified student profiles and resumes'],['briefcase','Track Candidates','Manage application pipelines and offers'],['users','Verify DTR','Approve GPS clock-ins and daily task logs workflow'],['chart','Manage MOAs','Track company accreditations and renewals'],['star','Evaluate Interns','Submit final supervisor performance reviews']];}else{title="ELEVATE YOUR INSTITUTION’S OJT MANAGEMENT";kicker='';sub='';items=[['users','Manage HTEs','Accredit partner companies and track active listings'],['briefcase','Place Students','Match interns with accredited host companies'],['target','Resolve Incidents','Handle student reports, mediation, and reassignments'],['chart','Monitor Hours','Audit GPS-verified DTR logs and progress live'],['file','Govern MOAs','Track document renewals and legal compliance'],['star','Generate Reports','Export batch certificates and partner analytics']];}return `<section class="role-info ${page==='students'?'maroon':''}"><p class="section-kicker reveal-on-scroll">${kicker}</p><h2 class="reveal-on-scroll">${title}</h2>${sub?`<p>${sub}</p>`:''}<div class="role-feature-grid reference-width">${items.map(([i,t,d])=>`<article><span class="feature-icon">${icon(i)}</span><div><h3>${t}</h3><p>${d}</p></div></article>`).join('')}</div>${page==='students'?`<div class="industry-list reference-width"><p class="section-kicker reveal-on-scroll">— Explore By Industry & Specialization —</p><h2 class="reveal-on-scroll">Find Internships Across Popular Fields</h2><p>Browse accredited host training establishments by domain, academic track, or career interest.</p>
+export function publicLanding(page,{brand,icon}){const selected=['students','supervisor','career-centers','company','guide'].includes(page)?page:'home';const nav=[['home','Home'],['students','Students'],['supervisor','Supervisor'],['career-centers','Career Centers'],['company','Company']];const heroes={home:['One Platform.<br>Every OJT Journey.','Seamlessly connect students, industry supervisors, and OJT<br>coordinators. From placement to completion - fully digital, fully<br>tracked.','Get Started - Its Free','group','Student'],students:['BE NOTICED. GET PLACED.','Connect with accredited local and international internship opportunities.','Begin Your OJT Journey','connections','Student'],supervisor:['PARTNER SMARTER.<br>MANAGE INTERNS EFFORTLESSLY.','Connect with verified student interns,<br>streamline MOA accreditations, and evaluate performance in one place.','Become a Partner HTE','supervisor','Supervisor'],'career-centers':["STREAMLINE OJT GOVERNANCE & COMPLIANCE",'Manage student placements, track real-time hours, and monitor MOA accreditations in one platform.','Access Coordinator Portal','career','Coordinator'],company:['MENTEELOG','Manage student placements, track real-time hours, and monitor MOA accreditations in one platform','Get Started','company','Student'], guide:['THE COMPLETE OJT GUIDE','Master every module of the MenteeLog ecosystem from onboarding to graduation.','Enter MenteeLog','group','Student']};const [title,subtitle,cta,img,role]=heroes[selected];return `<div class="public-site public-${selected}"><header class="reference-header">${brand()}<nav aria-label="Public navigation">${nav.map(([id,label])=>`<a href="#/${id==='home'?'':'public/'+id}" class="${selected===id?'selected':''}" ${selected===id?'aria-current="page"':''}>${label}</a>`).join('')}</nav><a class="btn" href="#/login">Sign In</a></header><main id="main" tabindex="-1"><section class="reference-hero">${photo(img,'hero-photo')}<div class="hero-overlay"></div><div class="reference-hero-content"><span class="hero-pill">${icon('shield')} Real-time OJT Placement & Tracking</span><h1>${title}</h1><p>${subtitle}</p><div class="hero-cta"><a class="btn" data-role="${role}" href="#/login">${cta}</a>${selected==='home'?'<button class="btn watch-button" data-action="watch-demo">Watch Demo</button>':''}</div></div></section>${selected==='home'?homeBody(icon):selected==='company'?companyBody(icon):selected==='guide'?guideBody(icon):roleBody(selected,icon)}${selected==='home'?partnerSection()+joinSection()+faqSection():selected==='company'?joinSection(false):partnerSection(selected!=='students')+joinSection()}${['students', 'supervisor', 'career-centers', 'company'].includes(selected) ? contactSection(icon) : ''}</main>${footer()}</div>`;}
+function homeBody(icon){return `<section class="opportunities reference-width"><div class="row between"><div><h2 class="reveal-on-scroll">Open OJT Opportunities</h2><p>Currently accepting applications for AY 2025-2026</p></div><div class="public-filters"><select id="public-course" aria-label="Filter opportunities by course"><option value="All">All Courses</option><option>BSCS</option><option>BSIT</option><option>BSBA</option><option>BSEE</option><option>BSECE</option></select><select id="public-location" aria-label="Filter opportunities by location"><option value="All">All Locations</option>${['Taguig','Mandaluyong','Makati','Pasig','Pasay'].map(v=>`<option>${v}</option>`).join('')}</select></div></div><div class="home-jobs">${homeJobs.map(([initial,title,company,courses,location,slots])=>`<article class="home-job reveal-on-scroll" data-courses="${courses}" data-location="${location}"><div class="row"><span class="home-job-logo">${initial}</span><div><h3>${title}</h3><p>${company}</p></div></div><ul><li>${icon('users')} ${courses}</li><li>${icon('pin')} ${location}</li><li>${icon('users')} ${slots} slots available</li></ul><a class="btn" href="#/login">Apply Now</a></article>`).join('')}</div><p id="public-empty" class="small" hidden>No opportunities match these filters.</p></section><section class="why-section reference-width"><p class="section-kicker reveal-on-scroll">&mdash; Why MenteeLog is the Right Choice &mdash;</p><h2 class="reveal-on-scroll">Aligning skills with opportunities:<br>connecting driven interns and trusted employers.</h2><p class="public-small">Simplifying local internships through trusted listings and authentic paths to employment.</p><div class="public-stats">${[['1,240+','Registered Students'],['86','Accredited HTEs'],['98%','Placement Rate'],['500K+','DTR Hours Logged']].map(([n,l])=>`<div><strong>${n}</strong><span>${l}</span></div>`).join('')}</div><div class="benefit-grid">${[['skills','Unlocking Capabilities','&mdash; Grow Your Skills &mdash;','Build confidence, gain experience, and step directly into your field. Menteelog gives you guided app features and verified internships to fast-track your career growth.'],['connections','Connecting Opportunities','&mdash; Step Into Your Career &mdash;','Discover relevant roles, apply fast, and step directly into your field. Menteelog aligns your skills with real-world opportunities across the Philippines and beyond.'],['tomorrow','Building a Stronger Tomorrow','&mdash; Define Your Career Path &mdash;','Build your future on a solid foundation. Menteelog brings interns and companies together through trusted opportunities designed for real career advancement.']].map(([p,t,k,d])=>`<article class="benefit-card reveal-on-scroll">${photo(p)}<div><h3>${t}</h3><p class="card-kicker">${k}</p><p>${d}</p><a class="btn" href="#/public/students">Learn more</a></div></article>`).join('')}</div></section><section class="how-section"><p class="section-kicker reveal-on-scroll">&mdash; How MenteeLog Works &mdash;</p><h2 class="reveal-on-scroll">Simplifying Internship Hiring for Students and Verified Companies</h2><p class="public-small">Post opportunities, submit applications, and connect directly-Menteelog streamlines your entire internship workflow.</p><div class="how-grid reference-width">${[['group','For Interns','&mdash; Your Path to the Right Internship &mdash;','Find opportunities that truly fit your goals.',['Explore verified job listings from global companies','Search by role, skills, location, setup, and date posted','Apply to multiple listings with ease','Track your applications inside the platform','Get interview invites directly from employers','Build early exposure to real industry environments'],'students'],['employers','For Employers','&mdash; A Simpler Way to Find Talent &mdash;','Connect with skilled and dependable Filipino interns.',['Post clear and detailed OJT listings','Access a diverse pool of student applicants','Message and manage candidates on the platform','Schedule interviews in-app','Streamline your entire OJT recruitment workflow','Gain visibility across hundreds of active student users'],'supervisor']].map(([p,t,k,d,items,to])=>`<article class="how-card reveal-on-scroll">${photo(p)}<div><h3>${t}</h3><p class="card-kicker">${k}</p><p>${d}</p><ul>${items.map(i=>`<li>${i}</li>`).join('')}</ul><a class="btn" href="#/public/${to}">Learn more</a></div></article>`).join('')}</div></section>`;}
+function roleBody(page,icon){let title,kicker,sub,items;if(page==='students'){title='YOUR SEAMLESS PATH TO PLACEMENT';kicker='&mdash; How MenteeLog Works &mdash;';sub='Discover accredited opportunities, log your hours, track performance, and fulfill your OJT requirements-all in one platform.';items=[['pin','Discover','accredited listings from partner HTEs'],['search','Apply','with one-click resume attachments'],['file','Track','to multiple listings with ease'],['chart','Filter','by program, required skills, and location'],['users','Log','GPS-verified clock-ins and daily task summaries'],['briefcase','Complete','supervisor approvals and live hour count']];}else if(page==='supervisor'){title='A STREAMLINED PATHWAY FOR INDUSTRY PARTNERS';kicker='&mdash; Host Training Establishment (HTE) Ecosystem &mdash;';sub='Onboard student interns, satisfy institutional compliance, and review performance seamlessly.';items=[['plus','Post Placements','Publish OJT roles tied to degree tracks'],['users','Review Applicants','Screen verified student profiles and resumes'],['briefcase','Track Candidates','Manage application pipelines and offers'],['users','Verify DTR','Approve GPS clock-ins and daily task logs workflow'],['chart','Manage MOAs','Track company accreditations and renewals'],['star','Evaluate Interns','Submit final supervisor performance reviews']];}else{title="ELEVATE YOUR INSTITUTION'S OJT MANAGEMENT";kicker='';sub='';items=[['users','Manage HTEs','Accredit partner companies and track active listings'],['briefcase','Place Students','Match interns with accredited host companies'],['target','Resolve Incidents','Handle student reports, mediation, and reassignments'],['chart','Monitor Hours','Audit GPS-verified DTR logs and progress live'],['file','Govern MOAs','Track document renewals and legal compliance'],['star','Generate Reports','Export batch certificates and partner analytics']];}return `<section class="role-info ${page==='students'?'maroon':''}"><p class="section-kicker reveal-on-scroll">${kicker}</p><h2 class="reveal-on-scroll">${title}</h2>${sub?`<p>${sub}</p>`:''}<div class="role-feature-grid reference-width">${items.map(([i,t,d])=>`<article><span class="feature-icon">${icon(i)}</span><div><h3>${t}</h3><p>${d}</p></div></article>`).join('')}</div>${page==='students'?`<div id="browse-interns" class="industry-list reference-width"><div style="text-align: center; margin-bottom: 40px;"><p class="section-kicker reveal-on-scroll">&mdash; Explore By Industry & Specialization &mdash;</p><h2 class="reveal-on-scroll">Find Internships Across Popular Fields</h2><p>Browse accredited host training establishments by domain, academic track, or career interest.</p></div>
 <div class="marquee-container">
     <div class="marquee-track track-left">
         <a href="#/login">Design & UI/UX</a><a href="#/login">Marketing</a><a href="#/login">Others</a><a href="#/login">Computer and Technology</a><a href="#/login">Retail</a><a href="#/login">Finance</a><a href="#/login">Advertising and Marketing</a><a href="#/login">Design & UI/UX</a><a href="#/login">Marketing</a><a href="#/login">Others</a><a href="#/login">Computer and Technology</a><a href="#/login">Retail</a><a href="#/login">Finance</a><a href="#/login">Advertising and Marketing</a><a href="#/login">Design & UI/UX</a><a href="#/login">Marketing</a><a href="#/login">Others</a><a href="#/login">Computer and Technology</a><a href="#/login">Retail</a><a href="#/login">Finance</a><a href="#/login">Advertising and Marketing</a><a href="#/login">Design & UI/UX</a><a href="#/login">Marketing</a><a href="#/login">Others</a><a href="#/login">Computer and Technology</a><a href="#/login">Retail</a><a href="#/login">Finance</a><a href="#/login">Advertising and Marketing</a>
@@ -107,7 +145,7 @@ function roleBody(page,icon){let title,kicker,sub,items;if(page==='students'){ti
         <a href="#/login">Human Resources</a><a href="#/login">Project Management</a><a href="#/login">Information Technology</a><a href="#/login">Customer Services</a><a href="#/login">Sales</a><a href="#/login">Business</a><a href="#/login">Research</a><a href="#/login">Human Resources</a><a href="#/login">Project Management</a><a href="#/login">Information Technology</a><a href="#/login">Customer Services</a><a href="#/login">Sales</a><a href="#/login">Business</a><a href="#/login">Research</a><a href="#/login">Human Resources</a><a href="#/login">Project Management</a><a href="#/login">Information Technology</a><a href="#/login">Customer Services</a><a href="#/login">Sales</a><a href="#/login">Business</a><a href="#/login">Research</a><a href="#/login">Human Resources</a><a href="#/login">Project Management</a><a href="#/login">Information Technology</a><a href="#/login">Customer Services</a><a href="#/login">Sales</a><a href="#/login">Business</a><a href="#/login">Research</a>
     </div>
 </div></div>
-  <section class="ojt-success-guide reference-width" style="margin-top: 64px; padding-bottom: 64px;">
+  <section id="compliance-guide" class="ojt-success-guide reference-width" style="margin-top: 64px; padding-bottom: 64px;">
       <div style="text-align: center; margin-bottom: 48px;">
           <p class="guide-kicker">OJT Success Guide</p>
           <h2 class="guide-heading">Get Ready for Your OJT Journey</h2>
@@ -115,11 +153,10 @@ function roleBody(page,icon){let title,kicker,sub,items;if(page==='students'){ti
       </div>
       
       <div class="guide-grid">
-          <!-- Card 1 -->
           <article class="guide-card reveal-on-scroll">
               <div class="guide-gradient">${icon('users')}</div>
               <div class="guide-content">
-                  <span class="guide-subtitle">Modules 2.1 & 2.2 • Quick Setup Guide</span>
+                  <span class="guide-subtitle">Modules 2.1 & 2.2 - Quick Setup Guide</span>
                   <h3>Step 1: Complete Setup & Apply for HTE Slots</h3>
                   <p class="excerpt">Before submitting applications, set up your SR Code profile, upload required clearance documents, and browse accredited Host Training Establishments (HTEs).</p>
                   
@@ -139,11 +176,10 @@ function roleBody(page,icon){let title,kicker,sub,items;if(page==='students'){ti
               </div>
           </article>
 
-          <!-- Card 2 -->
           <article class="guide-card reveal-on-scroll">
               <div class="guide-gradient">${icon('clock')}</div>
               <div class="guide-content">
-                  <span class="guide-subtitle">Module 2.4 • Compliance Rules</span>
+                  <span class="guide-subtitle">Module 2.4 - Compliance Rules</span>
                   <h3>Step 2: Master Your Daily Time Record (DTR)</h3>
                   <p class="excerpt">Ensure your OJT hours count by logging daily clock-ins, enabling GPS location verification, and writing daily summaries with at least 150 characters.</p>
                   
@@ -163,11 +199,10 @@ function roleBody(page,icon){let title,kicker,sub,items;if(page==='students'){ti
               </div>
           </article>
 
-          <!-- Card 3 -->
           <article class="guide-card reveal-on-scroll">
               <div class="guide-gradient">${icon('star')}</div>
               <div class="guide-content">
-                  <span class="guide-subtitle">Modules 2.5 & 2.6 • Support & Evaluation</span>
+                  <span class="guide-subtitle">Modules 2.5 & 2.6 - Support & Evaluation</span>
                   <h3>Step 3: Track Appraisals & Handle Incidents</h3>
                   <p class="excerpt">View supervisor rubric evaluation scores and submit incident claims with evidence if workplace issues or DTR discrepancies arise.</p>
                   
@@ -187,7 +222,7 @@ function roleBody(page,icon){let title,kicker,sub,items;if(page==='students'){ti
               </div>
           </article>
       </div>
-  <div style="text-align: center; margin-top: 48px;"><a href="#/public/guide" style="color: #D85A63; font-weight: bold; text-decoration: none; font-size: 16px;">Browse all OJT Success Guides →</a></div>
+  <div style="text-align: center; margin-top: 48px;"><a href="#/public/guide" style="color: #D85A63; font-weight: bold; text-decoration: none; font-size: 16px;">Browse all OJT Success Guides &rarr;</a></div>
   </section>
 `:''}</section>`;}
 
@@ -201,7 +236,7 @@ function faqSection() {
     ];
 
     return `<section class="faq-section reveal-on-scroll">
-        <p class="section-kicker">- Frequently Asked Questions -</p>
+        <p class="section-kicker">&mdash; Frequently Asked Questions &mdash;</p>
         <h2>Frequently Asked Questions</h2>
         <div class="faq-container">
             ${faqs.map(([q, a]) => `
@@ -224,14 +259,12 @@ function faqSection() {
 }
 
 function companyBody(icon){return `
-        <!-- SECTION A: HERO OVERVIEW -->
-        <section class="about-hero reveal-on-scroll">
+        <section id="about-us" class="about-hero reveal-on-scroll">
             <p class="about-hero-kicker">ABOUT MENTEELOG</p>
             <h2>Bridging Academics and Industry through Seamless OJT Management</h2>
             <p class="about-hero-intro">MenteeLog is a centralized On-the-Job Training (OJT) management platform designed to streamline student internships, employer supervision, and university compliance. By unifying daily time tracking, incident reporting, and performance evaluations into one intelligent gateway, MenteeLog ensures transparency and efficiency across every step of the internship journey.</p>
         </section>
 
-        <!-- SECTION B: CORE MISSION & VISION (2-COLUMN) -->
         <section class="about-grid-2">
             <article class="about-card reveal-on-scroll">
                 <div class="about-card-icon">${icon('target')}</div>
@@ -245,7 +278,6 @@ function companyBody(icon){return `
             </article>
         </section>
 
-        <!-- SECTION C: PLATFORM PILLARS (3-COLUMN) -->
         <section class="about-grid-3">
             <article class="about-card reveal-on-scroll" style="padding: 0; overflow: hidden; border-radius: 16px;">
                 <div style="height: 200px; width: 100%;">
@@ -276,7 +308,6 @@ function companyBody(icon){return `
             </article>
         </section>
 
-        <!-- SECTION D: INSTITUTIONAL PLATFORM STATS -->
         <section class="about-stats-banner reveal-on-scroll">
             <div class="about-stats-grid">
                 <div class="about-stat-item">
@@ -294,7 +325,7 @@ function companyBody(icon){return `
             </div>
         </section>
 
-        <section class="team-section maroon"><h2 class="reveal-on-scroll">THE TEAM BEHIND MENTEELOG</h2><p>Driven by Innovation: The Team Building Menteelog</p><div class="team-grid">${[['Jeff Gentapanan','Lead / Project Manager'],['Kyle Renzo Alis','Software Generalist'],['Sean Nicole Guipo','UI/UX Designer'],['John Paul Wendam','Frontend Developer'],['Jhodie Alyssa Ladran','Backend Developer'],['Christina Bernadett Porras','Backend Developer'],['Rolly Abella','Researcher']].map(([n,r])=>`<article class="reveal-on-scroll"><img src="./assets/team/${n}.jpg" alt="${n}" class="reference-photo" style="height: 350px !important; object-fit: cover; object-position: top; width: 100%; border-radius: var(--radius); border-bottom-left-radius: 0; border-bottom-right-radius: 0;"><div><h3>${n}</h3><em>${r}</em><p style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;opacity:0.8"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Philippines</p><button class="btn" data-action="team-connect" data-id="${n}">Connect</button></div></article>`).join('')}</div></section>`;
+        <section id="our-team" class="team-section maroon"><h2 class="reveal-on-scroll">THE TEAM BEHIND MENTEELOG</h2><p>Driven by Innovation: The Team Building Menteelog</p><div class="team-grid">${[['Jeff Gentapanan','Lead / Project Manager'],['Kyle Renzo Alis','Software Generalist'],['Sean Nicole Guipo','UI/UX Designer'],['John Paul Wendam','Frontend Developer'],['Jhodie Alyssa Ladran','Backend Developer'],['Christina Bernadett Porras','Backend Developer'],['Rolly Abella','Researcher']].map(([n,r])=>`<article class="reveal-on-scroll"><img src="./assets/team/${n}.jpg" alt="${n}" class="reference-photo" style="height: 350px !important; object-fit: cover; object-position: top; width: 100%; border-radius: var(--radius); border-bottom-left-radius: 0; border-bottom-right-radius: 0;"><div><h3>${n}</h3><em>${r}</em><p style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;opacity:0.8"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Philippines</p><button class="btn" data-action="team-connect" data-id="${n}">Connect</button></div></article>`).join('')}</div></section>`;
 }
 
 function guideBody(icon) {
@@ -330,7 +361,7 @@ function guideBody(icon) {
 
     return `<section class="guide-full-page reference-width" style="padding: 64px 5%;">
         <div style="text-align: center; margin-bottom: 64px;">
-            <p class="guide-kicker">- Knowledge Base -</p>
+            <p class="guide-kicker">&mdash; Knowledge Base &mdash;</p>
             <h2 class="guide-heading" style="font-size: 36px;">Master the MenteeLog Flow</h2>
             <p class="guide-subtext">Everything you need to know about navigating the modules, maintaining compliance, and succeeding in your OJT.</p>
         </div>
@@ -340,12 +371,12 @@ function guideBody(icon) {
                 <h3 style="color: var(--burgundy); font-size: 24px; margin-bottom: 24px; border-bottom: 2px solid #EFDFBB; padding-bottom: 12px; text-align: center;">${cat.title}</h3>
                 <div class="guide-grid">
                     ${cat.cards.map(([mod, title, desc, fullText]) => `
-                        <article class="guide-card reveal-on-scroll">
-                            <div class="guide-gradient" style="height: 100px;">
-                                <span style="font-size: 24px; font-weight: bold; opacity: 0.9;">Module ${mod}</span>
-                            </div>
-                            <div class="guide-content" style="padding: 24px; display: flex; flex-direction: column; flex-grow: 1;">
-                                <h4 style="color: var(--burgundy); font-size: 18px; margin-bottom: 12px;">${title}</h4>
+                        <article class="guide-card reveal-on-scroll" style="border-top: 4px solid var(--maroon); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div class="guide-content" style="padding: 28px 24px; display: flex; flex-direction: column; flex-grow: 1;">
+                                <div style="width: 40px; height: 40px; background: #f5ebe0; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--maroon);">
+                                    ${icon('file')}
+                                </div>
+                                <h4 style="color: var(--burgundy); font-size: 17px; font-weight: 700; margin-bottom: 10px; line-height: 1.3;">${title}</h4>
                                 <p class="excerpt" style="color: #4B5563; font-size: 14px; line-height: 1.6; margin-bottom: 16px; flex-grow: 1;">${desc}</p>
                                 
                                 <button class="btn secondary guide-toggle" style="width: 100%; justify-content: space-between; margin-top: auto;">Read Guide ${icon('chevron-down')}</button>
@@ -366,8 +397,7 @@ function guideBody(icon) {
         `).join('')}
     </section>`;
 }
-
-export function authScreen(mode,role,{brand,icon,field}){const activate=mode==='activate',reset=mode==='reset';return `<div class="auth-reference"><section class="auth-reference-photo">${photo('group','auth-photo')}<div class="auth-tint"></div><img class="auth-watermark" src="./assets/MenteeLoo_Logo.svg" alt=""><h1>Join the MenteeLog<br>Journey.<br>Step Forward into<br>Your Future.</h1><span class="auth-rule"></span><p>${icon('shield')} Official Student Mentorship Network</p></section><main class="auth-reference-main" id="main"><section class="auth-reference-card"><header>${brand()}<h2 class="reveal-on-scroll">${activate?'Activate Your MenteeLog Account':reset?'Reset Your MenteeLog Password':'MenteeLog – Authentication Hub'}</h2><p>${activate?'Complete the steps below to set up your account':reset?'Verify your token and set a new password':'Select your role to continue'}</p></header><div class="auth-reference-body">${activate?`<p class="auth-role-label">I AM A...</p><div class="activation-roles">${['Student','Supervisor'].map(r=>`<button type="button" class="btn ${role===r?'':'secondary'}" data-action="auth-role" data-id="${r}">${icon(r==='Student'?'users':'building')} ${r}</button>`).join('')}</div><form id="activation-form">${field(role==='Supervisor'?'CORPORATE EMAIL':'SR CODE','identifier',role==='Supervisor'?'email':'text','','required')}${role==='Supervisor' ? '' : field('REGISTERED EMAIL ADDRESS','email','email','','required')}<p class="form-error" role="alert"></p><button type="submit" class="btn full">Send Activation Link</button></form><a class="auth-return" href="#/login">← Back to Login</a>`:reset?`<form id="reset-form">${field('VERIFICATION TOKEN','token','text','','required minlength="6"')}${field('NEW PASSWORD','password','password','','required minlength="12"')}${field('CONFIRM PASSWORD','confirm','password','','required minlength="12"')}<p class="form-error" role="alert"></p><button type="submit" class="btn full">Reset Password</button></form><a class="auth-return" href="#/login">← Back to Login</a>`:`<div class="auth-tabs" role="group" aria-label="Authentication portals">${['Student','Supervisor','Coordinator'].map(r=>`<button class="${r===role?'selected':''}" data-action="auth-role" data-id="${r}" aria-pressed="${r===role}">${icon(r==='Student'?'users':r==='Supervisor'?'building':'users')} ${r}</button>`).join('')}</div><form id="login-form">${field(role==='Student'?'SR CODE':role==='Supervisor'?'CORPORATE EMAIL':'FACULTY ID','identifier',role==='Supervisor'?'email':'text','','required autocomplete="username"')}<div class="field"><label for="password">PASSWORD</label><div class="password-field"><input id="password" name="password" type="password" required autocomplete="current-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div><button type="button" class="forgot-link" data-action="forgot">Forgot Password?</button><p class="form-error" role="alert"></p><button class="btn full" type="submit">Login as ${role}</button></form>${role === "Coordinator" ? "" : `<p class="activate-link">First time here? <a href="#/activate">Activate ${role} Account</a></p>`}<a class="auth-return" href="#/">← Back to Landing Page</a>`}</div></section></main></div>`;}
+export function authScreen(mode,role,{brand,icon,field}){const activate=mode==='activate',reset=mode==='reset';return `<div class="auth-reference"><section class="auth-reference-photo">${photo('group','auth-photo')}<div class="auth-tint"></div><img class="auth-watermark" src="./assets/MenteeLoo_Logo.svg" alt=""><h1>Join the MenteeLog<br>Journey.<br>Step Forward into<br>Your Future.</h1><span class="auth-rule"></span><p>${icon('shield')} Official Student Mentorship Network</p></section><main class="auth-reference-main" id="main"><section class="auth-reference-card"><header>${brand()}<h2>${activate?'Activate Your MenteeLog Account':reset?'Reset Your MenteeLog Password':'MenteeLog - Authentication Hub'}</h2><p>${activate?'Complete the steps below to set up your account':reset?'Verify your token and set a new password':'Select your role to continue'}</p></header><div class="auth-reference-body">${activate?`<p class="auth-role-label">I AM A...</p><div class="activation-roles">${['Student','Supervisor'].map(r=>`<button type="button" class="btn ${role===r?'':'secondary'}" data-action="auth-role" data-id="${r}">${icon(r==='Student'?'users':'building')} ${r}</button>`).join('')}</div><form id="activation-form">${field(role==='Supervisor'?'CORPORATE EMAIL':'SR CODE','identifier',role==='Supervisor'?'email':'text','','required')}${role==='Supervisor' ? '' : field('REGISTERED EMAIL ADDRESS','email','email','','required')}<p class="form-error" role="alert"></p><button type="submit" class="btn full">Send Activation Link</button></form><a class="auth-return" href="#/login">&larr; Back to Login</a>`:reset?`<form id="reset-form">${field('VERIFICATION TOKEN','token','text','','required minlength="6"')}${field('NEW PASSWORD','password','password','','required minlength="12"')}${field('CONFIRM PASSWORD','confirm','password','','required minlength="12"')}<p class="form-error" role="alert"></p><button type="submit" class="btn full">Reset Password</button></form><a class="auth-return" href="#/login">&larr; Back to Login</a>`:`<div class="auth-tabs" role="group" aria-label="Authentication portals">${['Student','Supervisor','Coordinator'].map(r=>`<button class="${r===role?'selected':''}" data-action="auth-role" data-id="${r}" aria-pressed="${r===role}">${icon(r==='Student'?'users':r==='Supervisor'?'building':'users')} ${r}</button>`).join('')}</div><form id="login-form">${field(role==='Student'?'SR CODE':role==='Supervisor'?'CORPORATE EMAIL':'FACULTY ID','identifier',role==='Supervisor'?'email':'text','','required autocomplete="username"')}<div class="field"><label for="password">PASSWORD</label><div class="password-field"><input id="password" name="password" type="password" required autocomplete="current-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div><button type="button" class="forgot-link" data-action="forgot">Forgot Password?</button><p class="form-error" role="alert"></p><button class="btn full" type="submit">Login as ${role}</button></form>${role === "Coordinator" ? "" : `<p class="activate-link">First time here? <a href="#/activate">Activate ${role} Account</a></p>`}<a class="auth-return" href="#/">&larr; Back to Landing Page</a>`}</div></section></main></div>`;}
 
 
 
