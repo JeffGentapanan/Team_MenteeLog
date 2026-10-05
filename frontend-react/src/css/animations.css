@@ -762,3 +762,188 @@ html, body {
     .public-site .reference-header nav { justify-self: center; }
     .public-site .reference-header .header-actions { justify-self: end; }
 }
+
+/* =========================================
+   COMPREHENSIVE MOBILE RESPONSIVE FIXES
+   ========================================= */
+
+/* ── PUBLIC HEADER MOBILE (≤ 768px) ── */
+@media (max-width: 768px) {
+    .public-site .reference-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        padding: 10px 16px;
+        gap: 6px;
+    }
+    .public-site .reference-header .logo { width: 100px; }
+    .public-site .reference-header nav {
+        order: 3;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        gap: 4px;
+        padding-top: 6px;
+    }
+    .public-site .reference-header nav a { font-size: 11px; white-space: nowrap; }
+    .public-site .reference-header .header-actions { gap: 6px; }
+    .public-site .reference-header .header-actions .btn { font-size: 11px; padding: 5px 10px; min-height: 28px; }
+
+    /* Scrolled state on mobile still solid */
+    .public-site .reference-header {
+        background: #FAF4E8 !important;
+        box-shadow: 0 4px 12px rgba(88, 17, 26, 0.1) !important;
+    }
+    .public-site .reference-header nav a { color: #58111A !important; }
+    .public-site .reference-header .header-actions .header-activate { color: #58111A !important; border-color: #58111A !important; }
+    .public-site .reference-header .header-actions .btn:not(.header-activate) { background: #58111A !important; color: #FFFFFF !important; }
+}
+
+/* ── HERO SECTION MOBILE ── */
+@media (max-width: 650px) {
+    .reference-hero { height: 380px; }
+    .reference-hero h1 { font-size: 28px !important; }
+    .reference-hero p { font-size: 14px; }
+    .hero-cta { flex-direction: column; gap: 10px; align-items: center; }
+    .hero-cta .btn { width: 80%; text-align: center; }
+    .hero-pill { font-size: 10px; padding: 4px 12px; }
+}
+
+/* ── LANDING PAGE SECTIONS MOBILE ── */
+@media (max-width: 768px) {
+    /* OJT Opportunities */
+    .opportunities > .row { flex-direction: column; gap: 16px; }
+    .opportunities .public-filters { width: 100%; }
+    .home-jobs { grid-template-columns: 1fr !important; }
+
+    /* Benefits / Why section */
+    .benefit-grid { grid-template-columns: 1fr !important; }
+    .benefit-card > div { min-height: auto; }
+
+    /* How it works cards */
+    .how-card { flex-direction: column !important; }
+    .how-card .reference-photo { width: 100% !important; height: 200px !important; }
+
+    /* Stats */
+    .public-stats { grid-template-columns: 1fr 1fr !important; gap: 16px; }
+
+    /* Partner Section */
+    .partner-list { flex-wrap: wrap; gap: 12px; justify-content: center; }
+
+    /* Join Section */
+    .join-section { padding: 48px 20px !important; }
+    .join-section h2 { font-size: 24px !important; }
+
+    /* FAQ Accordion */
+    .faq-section { padding: 48px 16px !important; }
+    .faq-container { padding: 16px !important; }
+    .faq-question { font-size: 14px; }
+
+    /* OJT Success Guide Cards */
+    .guide-grid { grid-template-columns: 1fr !important; }
+
+    /* About Us page */
+    .about-hero { padding: 2rem 1rem !important; }
+    .about-hero h2 { font-size: 1.5rem !important; }
+    .about-hero-intro { font-size: 0.95rem; }
+    .about-grid-2 { grid-template-columns: 1fr !important; padding: 0 1rem !important; }
+    .about-grid-3 { grid-template-columns: 1fr !important; padding: 0 1rem !important; }
+    .about-stats-banner { padding: 2rem 1rem !important; }
+    .about-stats-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+    .about-stat-item h4 { font-size: 2rem; }
+
+    /* Team Grid */
+    .team-grid { grid-template-columns: 1fr 1fr !important; gap: 16px !important; max-width: 100% !important; padding: 0 16px; }
+    .team-section { padding: 48px 0 !important; }
+    .team-section h2 { font-size: 22px !important; }
+
+    /* Contact Form */
+    .contact-section { padding: 48px 16px !important; }
+    .contact-container { flex-direction: column !important; gap: 24px !important; }
+    .contact-photo { display: none; }
+    .contact-form-card { padding: 28px 20px !important; }
+    .contact-form .form-row { flex-direction: column !important; gap: 16px !important; }
+    .contact-title { font-size: 1.1rem !important; }
+
+    /* Role Info Grid */
+    .role-feature-grid { grid-template-columns: 1fr 1fr !important; gap: 16px; }
+    .role-info h2 { font-size: 24px !important; }
+
+    /* Marquee / Industry list */
+    .industry-list { padding: 32px 0 !important; }
+    .marquee-container { gap: 8px; }
+}
+
+/* ── SMALL PHONE (≤ 420px) ── */
+@media (max-width: 420px) {
+    .reference-hero h1 { font-size: 24px !important; }
+    .reference-hero p { font-size: 13px; }
+
+    .public-site .reference-header nav a { font-size: 10px; }
+
+    .team-grid { grid-template-columns: 1fr !important; }
+
+    .role-feature-grid { grid-template-columns: 1fr !important; }
+
+    .public-stats { grid-template-columns: 1fr !important; }
+
+    .about-stat-item h4 { font-size: 1.75rem; }
+}
+
+/* ── AUTH TABS MOBILE ── */
+@media (max-width: 650px) {
+    .auth-tabs { flex-wrap: wrap; gap: 4px; }
+    .auth-tabs button { font-size: 12px; padding: 8px 12px; flex: 1; min-width: 0; }
+}
+
+/* Push hero below fixed header on mobile */
+@media (max-width: 768px) {
+    .public-site main { padding-top: 0; }
+    .public-site .reference-hero { margin-top: 0; }
+}
+
+/* ── PUBLIC HERO PADDING FIX (Pill Visibility) ── */
+@media (max-width: 768px) {
+    .public-site .reference-hero-content {
+        padding-top: 80px !important;
+    }
+}
+
+/* ── MOBILE MENU TOGGLE ── */
+.mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 4px;
+    margin-left: 4px;
+}
+@media (max-width: 768px) {
+    .mobile-menu-btn { display: inline-flex; align-items: center; justify-content: center; }
+    .public-site .reference-header nav {
+        display: none !important;
+        flex-direction: column;
+        align-items: center;
+        background: #FAF4E8;
+        padding: 16px 0;
+        border-top: 1px solid #EFDFBB;
+        margin-top: 8px;
+    }
+    body.menu-open .public-site .reference-header nav {
+        display: flex !important;
+    }
+    body.menu-open .public-site .reference-header {
+        background: #FAF4E8 !important;
+    }
+    body.menu-open .public-site .reference-header nav a {
+        font-size: 14px !important;
+        padding: 12px 0;
+        width: 100%;
+        text-align: center;
+        color: #58111A !important;
+    }
+    body.menu-open .public-site .reference-header .mobile-menu-btn {
+        color: #58111A !important;
+    }
+}
