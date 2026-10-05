@@ -19,10 +19,7 @@
     to { opacity: 1; transform: scale(1); }
 }
 
-/* 1. Header Animation */
-.reference-header {
-    animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
+/* 1. Header animation removed: public header is static (see transparent-on-top header below) */
 /* 2. Hero Section Animations (Staggered) */
 .reference-hero-content .hero-pill {
     opacity: 0;
@@ -677,5 +674,276 @@ html, body {
     .contact-form .form-row {
         flex-direction: column;
         gap: 20px;
+    }
+}
+
+/* =========================================
+   PUBLIC FILTER DROPDOWNS (Open OJT Opportunities)
+   ========================================= */
+.opportunities .public-filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.opportunities .public-filters select {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    width: auto; min-width: 150px; height: 42px;
+    padding: 0 40px 0 16px;
+    font-size: 14px; font-weight: 600; font-family: inherit;
+    color: #58111A;
+    background-color: #FFFFFF;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2358111A' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; background-size: 16px;
+    border: 1px solid #EFDFBB; border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(88, 17, 26, 0.06);
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    text-overflow: ellipsis;
+}
+.opportunities .public-filters select:hover {
+    border-color: #D85A63; box-shadow: 0 6px 16px rgba(88, 17, 26, 0.12); transform: translateY(-1px);
+}
+.opportunities .public-filters select:focus {
+    outline: none; border-color: #D85A63; box-shadow: 0 0 0 4px rgba(216, 90, 99, 0.15);
+}
+.opportunities .public-filters select option { color: #1F2937; background: #FFFFFF; }
+@media (max-width: 640px) {
+    .opportunities .public-filters { width: 100%; }
+    .opportunities .public-filters select { flex: 1; min-width: 0; }
+}
+
+
+/* =========================================
+   PUBLIC HEADER ACTIONS (Activate + Sign In)
+   ========================================= */
+.reference-header .header-actions { display: flex; align-items: center; gap: 10px; }
+.reference-header .header-actions .btn { min-height: 34px; font-size: 13px; padding: 7px 18px; white-space: nowrap; }
+.reference-header .header-actions .header-activate {
+    background: transparent; color: #58111A; border: 1.5px solid #58111A;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+.reference-header .header-actions .header-activate:hover { background: #58111A; color: #FFFFFF; transform: translateY(-1px); }
+@media (max-width: 640px) {
+    .reference-header .header-actions { gap: 6px; }
+    .reference-header .header-actions .btn { min-height: 29px; font-size: 12px; padding: 6px 12px; }
+}
+
+
+/* =========================================
+   PUBLIC HEADER: TRANSPARENT AT TOP, SOLID ON SCROLL
+   ========================================= */
+.public-site .reference-header {
+    position: fixed; top: 0; left: 0; right: 0; width: 100%;
+    animation: none;
+    background: linear-gradient(to bottom, rgba(20, 5, 8, 0.55), rgba(20, 5, 8, 0));
+    box-shadow: none;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+.public-site .reference-header nav a { color: #FFFFFF; transition: color 0.3s ease; }
+.public-site .reference-header .header-actions .header-activate { color: #FFFFFF; border-color: #FFFFFF; }
+.public-site .reference-header .header-actions .header-activate:hover { background: #FFFFFF; color: #58111A; }
+.public-site .reference-header .header-actions .btn:not(.header-activate) { background: #FAF4E8; color: #58111A; }
+
+/* Scrolled state: cream bar + burgundy text */
+.public-site .reference-header.scrolled-header {
+    background: #FAF4E8;
+    box-shadow: 0 6px 20px rgba(88, 17, 26, 0.12) !important;
+}
+.public-site .reference-header.scrolled-header nav a { color: #58111A; }
+.public-site .reference-header.scrolled-header .header-actions .header-activate { color: #58111A; border-color: #58111A; }
+.public-site .reference-header.scrolled-header .header-actions .header-activate:hover { background: #58111A; color: #FFFFFF; }
+.public-site .reference-header.scrolled-header .header-actions .btn:not(.header-activate) { background: #58111A; color: #FFFFFF; }
+
+/* Perfectly centered public nav: brand | nav | actions with equal side columns */
+@media (min-width: 651px) {
+    .public-site .reference-header {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+    }
+    .public-site .reference-header > .brand-link,
+    .public-site .reference-header > a:first-child { justify-self: start; }
+    .public-site .reference-header nav { justify-self: center; }
+    .public-site .reference-header .header-actions { justify-self: end; }
+}
+
+/* =========================================
+   COMPREHENSIVE MOBILE RESPONSIVE FIXES
+   ========================================= */
+
+/* ── PUBLIC HEADER MOBILE (≤ 768px) ── */
+@media (max-width: 768px) {
+    .public-site .reference-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        padding: 10px 16px;
+        gap: 6px;
+    }
+    .public-site .reference-header .logo { width: 100px; }
+    .public-site .reference-header nav {
+        order: 3;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        gap: 4px;
+        padding-top: 6px;
+    }
+    .public-site .reference-header nav a { font-size: 11px; white-space: nowrap; }
+    .public-site .reference-header .header-actions { gap: 6px; }
+    .public-site .reference-header .header-actions .btn { font-size: 11px; padding: 5px 10px; min-height: 28px; }
+
+    /* Scrolled state on mobile still solid */
+    .public-site .reference-header {
+        background: #FAF4E8 !important;
+        box-shadow: 0 4px 12px rgba(88, 17, 26, 0.1) !important;
+    }
+    .public-site .reference-header nav a { color: #58111A !important; }
+    .public-site .reference-header .header-actions .header-activate { color: #58111A !important; border-color: #58111A !important; }
+    .public-site .reference-header .header-actions .btn:not(.header-activate) { background: #58111A !important; color: #FFFFFF !important; }
+}
+
+/* ── HERO SECTION MOBILE ── */
+@media (max-width: 650px) {
+    .reference-hero { height: 380px; }
+    .reference-hero h1 { font-size: 28px !important; }
+    .reference-hero p { font-size: 14px; }
+    .hero-cta { flex-direction: column; gap: 10px; align-items: center; }
+    .hero-cta .btn { width: 80%; text-align: center; }
+    .hero-pill { font-size: 10px; padding: 4px 12px; }
+}
+
+/* ── LANDING PAGE SECTIONS MOBILE ── */
+@media (max-width: 768px) {
+    /* OJT Opportunities */
+    .opportunities > .row { flex-direction: column; gap: 16px; }
+    .opportunities .public-filters { width: 100%; }
+    .home-jobs { grid-template-columns: 1fr !important; }
+
+    /* Benefits / Why section */
+    .benefit-grid { grid-template-columns: 1fr !important; }
+    .benefit-card > div { min-height: auto; }
+
+    /* How it works cards */
+    .how-card { flex-direction: column !important; }
+    .how-card .reference-photo { width: 100% !important; height: 200px !important; }
+
+    /* Stats */
+    .public-stats { grid-template-columns: 1fr 1fr !important; gap: 16px; }
+
+    /* Partner Section */
+    .partner-list { flex-wrap: wrap; gap: 12px; justify-content: center; }
+
+    /* Join Section */
+    .join-section { padding: 48px 20px !important; }
+    .join-section h2 { font-size: 24px !important; }
+
+    /* FAQ Accordion */
+    .faq-section { padding: 48px 16px !important; }
+    .faq-container { padding: 16px !important; }
+    .faq-question { font-size: 14px; }
+
+    /* OJT Success Guide Cards */
+    .guide-grid { grid-template-columns: 1fr !important; }
+
+    /* About Us page */
+    .about-hero { padding: 2rem 1rem !important; }
+    .about-hero h2 { font-size: 1.5rem !important; }
+    .about-hero-intro { font-size: 0.95rem; }
+    .about-grid-2 { grid-template-columns: 1fr !important; padding: 0 1rem !important; }
+    .about-grid-3 { grid-template-columns: 1fr !important; padding: 0 1rem !important; }
+    .about-stats-banner { padding: 2rem 1rem !important; }
+    .about-stats-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+    .about-stat-item h4 { font-size: 2rem; }
+
+    /* Team Grid */
+    .team-grid { grid-template-columns: 1fr 1fr !important; gap: 16px !important; max-width: 100% !important; padding: 0 16px; }
+    .team-section { padding: 48px 0 !important; }
+    .team-section h2 { font-size: 22px !important; }
+
+    /* Contact Form */
+    .contact-section { padding: 48px 16px !important; }
+    .contact-container { flex-direction: column !important; gap: 24px !important; }
+    .contact-photo { display: none; }
+    .contact-form-card { padding: 28px 20px !important; }
+    .contact-form .form-row { flex-direction: column !important; gap: 16px !important; }
+    .contact-title { font-size: 1.1rem !important; }
+
+    /* Role Info Grid */
+    .role-feature-grid { grid-template-columns: 1fr 1fr !important; gap: 16px; }
+    .role-info h2 { font-size: 24px !important; }
+
+    /* Marquee / Industry list */
+    .industry-list { padding: 32px 0 !important; }
+    .marquee-container { gap: 8px; }
+}
+
+/* ── SMALL PHONE (≤ 420px) ── */
+@media (max-width: 420px) {
+    .reference-hero h1 { font-size: 24px !important; }
+    .reference-hero p { font-size: 13px; }
+
+    .public-site .reference-header nav a { font-size: 10px; }
+
+    .team-grid { grid-template-columns: 1fr !important; }
+
+    .role-feature-grid { grid-template-columns: 1fr !important; }
+
+    .public-stats { grid-template-columns: 1fr !important; }
+
+    .about-stat-item h4 { font-size: 1.75rem; }
+}
+
+/* ── AUTH TABS MOBILE ── */
+@media (max-width: 650px) {
+    .auth-tabs { flex-wrap: wrap; gap: 4px; }
+    .auth-tabs button { font-size: 12px; padding: 8px 12px; flex: 1; min-width: 0; }
+}
+
+/* Push hero below fixed header on mobile */
+@media (max-width: 768px) {
+    .public-site main { padding-top: 0; }
+    .public-site .reference-hero { margin-top: 0; }
+}
+
+/* ── PUBLIC HERO PADDING FIX (Pill Visibility) ── */
+@media (max-width: 768px) {
+    .public-site .reference-hero-content {
+        padding-top: 80px !important;
+    }
+}
+
+/* ── MOBILE MENU TOGGLE ── */
+.mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 4px;
+    margin-left: 4px;
+}
+@media (max-width: 768px) {
+    .mobile-menu-btn { display: inline-flex; align-items: center; justify-content: center; }
+    .public-site .reference-header nav {
+        display: none !important;
+        flex-direction: column;
+        align-items: center;
+        background: #FAF4E8;
+        padding: 16px 0;
+        border-top: 1px solid #EFDFBB;
+        margin-top: 8px;
+    }
+    body.menu-open .public-site .reference-header nav {
+        display: flex !important;
+    }
+    body.menu-open .public-site .reference-header {
+        background: #FAF4E8 !important;
+    }
+    body.menu-open .public-site .reference-header nav a {
+        font-size: 14px !important;
+        padding: 12px 0;
+        width: 100%;
+        text-align: center;
+        color: #58111A !important;
+    }
+    body.menu-open .public-site .reference-header .mobile-menu-btn {
+        color: #58111A !important;
     }
 }
