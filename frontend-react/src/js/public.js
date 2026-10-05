@@ -325,7 +325,7 @@ function companyBody(icon){return `
             </div>
         </section>
 
-        <section id="our-team" class="team-section maroon"><h2 class="reveal-on-scroll">THE TEAM BEHIND MENTEELOG</h2><p>Driven by Innovation: The Team Building Menteelog</p><div class="team-grid">${[['Jeff Gentapanan','Lead / Project Manager'],['Kyle Renzo Alis','Software Generalist'],['Sean Nicole Guipo','UI/UX Designer'],['John Paul Wendam','Frontend Developer'],['Jhodie Alyssa Ladran','Backend Developer'],['Christina Bernadett Porras','Backend Developer'],['Rolly Abella','Researcher']].map(([n,r])=>`<article class="reveal-on-scroll"><img src="./assets/team/${n}.jpg" alt="${n}" class="reference-photo" style="height: 350px !important; object-fit: cover; object-position: top; width: 100%; border-radius: var(--radius); border-bottom-left-radius: 0; border-bottom-right-radius: 0;"><div><h3>${n}</h3><em>${r}</em><p style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;opacity:0.8"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Philippines</p><button class="btn" data-action="team-connect" data-id="${n}">Connect</button></div></article>`).join('')}</div></section>`;
+        <section id="our-team" class="team-section maroon"><h2 class="reveal-on-scroll">THE TEAM BEHIND MENTEELOG</h2><p>Driven by Innovation: The Team Building Menteelog</p><div class="team-grid">${[['Jeff Gentapanan','Lead / Project Manager'],['Kyle Renzo Alis','Software Generalist'],['Sean Nicole Guipo','Backend Developer'],['John Paul Wendam','Frontend Developer'],['Jhodie Alyssa Ladran','Backend Developer'],['Christina Bernadett Porras','UI/UX Designer'],['Rolly Abella','Researcher']].map(([n,r])=>`<article class="reveal-on-scroll"><img src="./assets/team/${n}.jpg" alt="${n}" class="reference-photo" style="height: 350px !important; object-fit: cover; object-position: top; width: 100%; border-radius: var(--radius); border-bottom-left-radius: 0; border-bottom-right-radius: 0;"><div><h3>${n}</h3><em>${r}</em><p style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;opacity:0.8"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Philippines</p><button class="btn" data-action="team-connect" data-id="${n}">Connect</button></div></article>`).join('')}</div></section>`;
 }
 
 function guideBody(icon) {
@@ -397,7 +397,46 @@ function guideBody(icon) {
         `).join('')}
     </section>`;
 }
-export function authScreen(mode,role,{brand,icon,field}){const activate=mode==='activate',reset=mode==='reset';return `<div class="auth-reference"><section class="auth-reference-photo">${photo('group','auth-photo')}<div class="auth-tint"></div><img class="auth-watermark" src="./assets/MenteeLoo_Logo.svg" alt=""><h1>Join the MenteeLog<br>Journey.<br>Step Forward into<br>Your Future.</h1><span class="auth-rule"></span><p>${icon('shield')} Official Student Mentorship Network</p></section><main class="auth-reference-main" id="main"><section class="auth-reference-card"><header>${brand()}<h2>${activate?'Activate Your MenteeLog Account':reset?'Reset Your MenteeLog Password':'MenteeLog - Authentication Hub'}</h2><p>${activate?'Complete the steps below to set up your account':reset?'Verify your token and set a new password':'Select your role to continue'}</p></header><div class="auth-reference-body">${activate?`<p class="auth-role-label">I AM A...</p><div class="activation-roles">${['Student','Supervisor'].map(r=>`<button type="button" class="btn ${role===r?'':'secondary'}" data-action="auth-role" data-id="${r}">${icon(r==='Student'?'users':'building')} ${r}</button>`).join('')}</div><form id="activation-form">${field(role==='Supervisor'?'CORPORATE EMAIL':'SR CODE','identifier',role==='Supervisor'?'email':'text','','required')}${role==='Supervisor' ? '' : field('REGISTERED EMAIL ADDRESS','email','email','','required')}<p class="form-error" role="alert"></p><button type="submit" class="btn full">Send Activation Link</button></form><a class="auth-return" href="#/login">&larr; Back to Login</a>`:reset?`<form id="reset-form">${field('VERIFICATION TOKEN','token','text','','required minlength="6"')}${field('NEW PASSWORD','password','password','','required minlength="12"')}${field('CONFIRM PASSWORD','confirm','password','','required minlength="12"')}<p class="form-error" role="alert"></p><button type="submit" class="btn full">Reset Password</button></form><a class="auth-return" href="#/login">&larr; Back to Login</a>`:`<div class="auth-tabs" role="group" aria-label="Authentication portals">${['Student','Supervisor','Coordinator'].map(r=>`<button class="${r===role?'selected':''}" data-action="auth-role" data-id="${r}" aria-pressed="${r===role}">${icon(r==='Student'?'users':r==='Supervisor'?'building':'users')} ${r}</button>`).join('')}</div><form id="login-form">${field(role==='Student'?'SR CODE':role==='Supervisor'?'CORPORATE EMAIL':'FACULTY ID','identifier',role==='Supervisor'?'email':'text','','required autocomplete="username"')}<div class="field"><label for="password">PASSWORD</label><div class="password-field"><input id="password" name="password" type="password" required autocomplete="current-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div><button type="button" class="forgot-link" data-action="forgot">Forgot Password?</button><p class="form-error" role="alert"></p><button class="btn full" type="submit">Login as ${role}</button></form>${role === "Coordinator" ? "" : `<p class="activate-link">First time here? <a href="#/activate">Activate ${role} Account</a></p>`}<a class="auth-return" href="#/">&larr; Back to Landing Page</a>`}</div></section></main></div>`;}
+export function authScreen(mode,role,{brand,icon,field}){
+  const activate=mode==='activate',reset=mode==='reset-password',forgot=mode==='forgot',authError=mode==='auth-error';
+  return `<div class="auth-reference">
+    <section class="auth-reference-photo">${photo('group','auth-photo')}<div class="auth-tint"></div><img class="auth-watermark" src="./assets/MenteeLoo_Logo.svg" alt=""><h1>Join the MenteeLog<br>Journey.<br>Step Forward into<br>Your Future.</h1><span class="auth-rule"></span><p>${icon('shield')} Official Student Mentorship Network</p></section>
+    <main class="auth-reference-main" id="main">
+      <section class="auth-reference-card">
+        <header>
+          ${brand()}
+          <h2>${activate?'Activate Your MenteeLog Account':reset?'Reset Your Password':forgot?'Forgot Password?':authError?'Link Expired':'MenteeLog - Authentication Hub'}</h2>
+          <p>${activate?'Complete the steps below to set up your account':reset?'Enter a new password for your account':forgot?'Enter your email or SR code to reset your password':authError?'This reset link is invalid or has expired. Please request a new one.':'Select your role to continue'}</p>
+        </header>
+        <div class="auth-reference-body">
+          ${activate?
+            `<p class="auth-role-label">I AM A...</p><div class="activation-roles">${['Student','Supervisor'].map(r=>`<button type="button" class="btn ${role===r?'':'secondary'}" data-action="auth-role" data-id="${r}">${icon(r==='Student'?'users':'building')} ${r}</button>`).join('')}</div><form id="activation-form">${field(role==='Supervisor'?'CORPORATE EMAIL':'SR CODE','identifier',role==='Supervisor'?'email':'text','','required')}${role==='Supervisor' ? '' : field('REGISTERED EMAIL ADDRESS','email','email','','required')}<p class="form-error" role="alert"></p><button type="submit" class="btn full">Send Activation Link</button></form><a class="auth-return" href="#/login">&larr; Back to Login</a>`
+          : reset?
+            `<form id="reset-password-form">
+               <div class="field"><label for="password">NEW PASSWORD</label><div class="password-field"><input id="password" name="password" type="password" required minlength="8" autocomplete="new-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div>
+               <div class="field"><label for="confirm">CONFIRM PASSWORD</label><div class="password-field"><input id="confirm" name="confirm" type="password" required minlength="8" autocomplete="new-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div>
+               <p class="form-error" role="alert"></p>
+               <button type="submit" class="btn full">Save New Password</button>
+             </form>
+             <a class="auth-return" href="#/forgot">&larr; Back to Forgot Password</a>`
+          : forgot?
+            `<form id="forgot-form">
+               ${field('EMAIL OR SR CODE','identifier','text','','required')}
+               <p class="form-error" role="alert"></p>
+               <button type="submit" class="btn full">Send Reset Link</button>
+             </form>
+             <a class="auth-return" href="#/login">&larr; Back to Login</a>`
+          : authError?
+            `<button type="button" class="btn full" onclick="location.hash='/forgot'">Request New Link</button>
+             <a class="auth-return" href="#/login" style="display:block;margin-top:1rem;text-align:center;">&larr; Back to Login</a>`
+          :
+            `<div class="auth-tabs" role="group" aria-label="Authentication portals">${['Student','Supervisor','Coordinator'].map(r=>`<button class="${r===role?'selected':''}" data-action="auth-role" data-id="${r}" aria-pressed="${r===role}">${icon(r==='Student'?'users':r==='Supervisor'?'building':'users')} ${r}</button>`).join('')}</div><form id="login-form">${field(role==='Student'?'SR CODE':role==='Supervisor'?'CORPORATE EMAIL':'FACULTY ID','identifier',role==='Supervisor'?'email':'text','','required autocomplete="username"')}<div class="field"><label for="password">PASSWORD</label><div class="password-field"><input id="password" name="password" type="password" required autocomplete="current-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div><button type="button" class="forgot-link" data-action="forgot">Forgot Password?</button><p class="form-error" role="alert"></p><button class="btn full" type="submit">Login as ${role}</button></form>${role === "Coordinator" ? "" : `<p class="activate-link">First time here? <a href="#/activate">Activate ${role} Account</a></p>`}<a class="auth-return" href="#/">&larr; Back to Landing Page</a>`
+          }
+        </div>
+      </section>
+    </main>
+  </div>`;
+}
 
 
 
