@@ -64,7 +64,7 @@ function showModal(title,body,onSubmit,label='Save changes'){
 }
 modal.addEventListener('close',()=>{modalSubmit=null;if(modalOpener?.isConnected)modalOpener.focus();});
 function download(name,content,type='text/csv;charset=utf-8'){const url=URL.createObjectURL(content instanceof Blob?content:new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function route(){const [path, query]=location.hash.replace(/^#\/?/,'').split('?');const parts=path.split('/');return {role:parts[0],page:parts[1]||'dashboard',sub:parts[2]||'',id:parts[3]||'',query:query||''};}
+function route(){const hashStr=location.hash.replace(/^#\/?/,'');const [path, query]=hashStr.split('?');const parts=path.split('/');return {role:parts[0],page:parts[1]||'dashboard',sub:parts[2]||'',id:parts[3]||'',query:query||''};}
 function render(){
   const {role,page}=route();
   if(!role||role==='public'){app.innerHTML=landing();
@@ -82,7 +82,8 @@ function render(){
   }, 100);
 document.title='MenteeLog | Your OJT journey, connected';return;}
   if(role==='activate'){window.location.replace('/activate.html');return;}
-  if(['login','reset'].includes(role)){app.innerHTML=authPage(role);document.title='MenteeLog | Authentication';return;}
+
+  if(['login','reset','forgot','reset-password'].includes(role)){app.innerHTML=authPage(role);document.title='MenteeLog | Authentication';return;}
   const user=currentUser();
   if(!user){location.hash='/login';return;}
   if(role!==user.role.toLowerCase()||!canAccess(user.role,page)){location.hash=`/${user.role.toLowerCase()}/dashboard`;toast('This page is not available in your portal.');return;}
@@ -230,7 +231,7 @@ async function action(name,id,el){
     case 'demo':{const role=roles.includes(id)?id:'Student',user=db.users.find(u=>u.role===role&&u.status==='Active');if(!user)throw new Error('This demo role has no active account. Reset demo data from an active coordinator account.');storeSession(user);modal.close();view={search:'',filter:'All',course:'All',mode:'All'};location.hash='/'+role.toLowerCase()+'/dashboard';render();return;}
     case 'auth-role':authRole=id;render();return;
     case 'toggle-password':{const input=$('#password');input.type=input.type==='password'?'text':'password';el.setAttribute('aria-label',input.type==='password'?'Show password':'Hide password');return;}
-    case 'forgot': { const id = $('#identifier')?.value?.trim(); if(!id) { toast('Please enter your email or SR code first.'); return; } let target = id; if(!target.includes('@')) { supabase.rpc('get_email_by_identifier', {p_identifier: target}).then(({data}) => { if(data) supabase.auth.resetPasswordForEmail(data); }); } else { supabase.auth.resetPasswordForEmail(target); } toast('Password reset email sent.'); return; }
+    case 'forgot': location.hash = '/forgot'; return;
     case 'logout':logout();return;
     case 'switch-role':showModal('Explore another portal',`<p>Use the sample accounts to see how the three roles work together.</p><div class="stack">${roles.map(r=>button('Open '+r+' demo','demo',r,'secondary full')).join('')}</div>`);return;
     case 'menu':togglePortalMenu();return;
@@ -358,11 +359,11 @@ document.addEventListener('submit',async event=>{
 
         const { data: profile, error: profileError } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
         
-        if (profileError || !profile || profile.is_activated === false || profile.role !== authRole) {
+        if (profileError || !profile || profile.status !== 'Active' || profile.role !== authRole) {
            failedLoginAttempts++;
            if (failedLoginAttempts >= 5) loginCooldownUntil = Date.now() + 60000;
            await supabase.auth.signOut();
-           if (profile && profile.is_activated === false) {
+           if (profile && profile.status !== 'Active') {
              throw new Error('Your account is not activated yet. Please activate it first.');
            }
            throw new Error('Invalid credentials or role mismatch.');
@@ -429,7 +430,34 @@ document.addEventListener('submit',async event=>{
         }
         return;
       }
-    if(form.id==='reset-form'){if(values.password!==values.confirm)throw new Error('Passwords do not match.');form.reset();toast('Demo validation passed. Token verification requires the backend; no password was changed.');return;}
+      if (form.id === 'forgot-form') {
+        const id = values.identifier?.trim();
+        if (!id) throw new Error('Please enter your email or SR code first.');
+        let targetEmail = id;
+        if (!targetEmail.includes('@')) {
+          const { data: emailData, error: rpcError } = await supabase.rpc('get_login_email', { p_identifier: targetEmail });
+          if (rpcError || !emailData) throw new Error('Account not found.');
+          targetEmail = emailData;
+        }
+        submit.textContent = 'Sending...';
+        const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, { redirectTo: window.location.origin + '/?reset=1' });
+        if (error) throw new Error(error.message);
+        form.reset();
+        toast('Reset link sent. Please check your email.');
+        return;
+      }
+      if (form.id === 'reset-password-form') {
+        if (values.password !== values.confirm) throw new Error('Passwords do not match.');
+        if (values.password.length < 8) throw new Error('Password must be at least 8 characters.');
+        submit.textContent = 'Saving...';
+        const { error } = await supabase.auth.updateUser({ password: values.password });
+        if (error) throw new Error(error.message);
+        await supabase.auth.signOut();
+        form.reset();
+        toast('Password updated. Please log in.');
+        location.hash = '/login';
+        return;
+      }
     if(form.id==='search-form'){view.search=values.search||'';view.mode=values.mode||'All';view.course=values.course||'All';render();return;}
     const user=currentUser();if(form.id!=='modal-form'&&!user)throw new Error('Your session expired. Sign in again.');
     if(form.id==='portal-form'){await portals.submit(values,form);return;}
@@ -458,7 +486,6 @@ window.addEventListener('hashchange', () => {
 window.addEventListener('storage',event=>{if(event.key===STORAGE){db=ensureCreatorAccounts(load());render();}});
 setInterval(()=>{const timer=$('#shift-timer');if(timer&&db.shift&&!db.shift.clockOut)timer.textContent=elapsed(db.shift.clockIn);if(session&&!currentUser()){logout();location.hash='/login';toast('Your demo session ended. Sign in to continue.');}},1000);
 portals=createPortalViews({get db(){return db;},get view(){return view;},get user(){return currentUser();},route,e,icon,button,link,heading,field,textarea,select,badge,person,table,empty,progress,date,time,today,student,job,save,notify,audit,toast,render,showModal,download,fileOp,putFile,dtrTable,visibleIncidents,legacy:{applicationDetail,editJob,studentDetail,incidentNew,incidentDetail,evaluate,logDetail,editHTE,userNew,importUsers,documentUpload},capture(fn){capturingForm=true;capturedForm=null;try{fn();return capturedForm;}finally{capturingForm=false;}}});
-render();
 
 document.addEventListener('change',event=>{if(!['public-course','public-location'].includes(event.target.id))return;const course=$('#public-course').value,place=$('#public-location').value;let count=0;document.querySelectorAll('.home-job').forEach(card=>{card.hidden=!((course==='All'||card.dataset.courses.includes(course))&&(place==='All'||card.dataset.location.includes(place)));if(!card.hidden)count++;});$('#public-empty').hidden=count>0;});
 
@@ -474,11 +501,19 @@ document.addEventListener('click',event=>{const drawer=$('#notice-drawer');if(dr
 
 
 // MAIN APP GATE
+let recoverySessionDetected = false;
+
 supabase.auth.onAuthStateChange(async (event, sessionObj) => {
-  if (event === 'SIGNED_OUT' || event === 'PASSWORD_RECOVERY') return;
+  if (event === 'SIGNED_OUT') return;
+  if (event === 'PASSWORD_RECOVERY') {
+    recoverySessionDetected = true;
+    history.replaceState(null, '', location.pathname);
+    location.hash = '/reset-password';
+    return;
+  }
   if (sessionObj?.user) {
-    const { data: profile, error } = await supabase.from('profiles').select('is_activated').eq('id', sessionObj.user.id).single();
-    if (error || !profile || profile.is_activated === false) {
+    const { data: profile, error } = await supabase.from('profiles').select('status').eq('id', sessionObj.user.id).single();
+    if (error || !profile || profile.status !== 'Active') {
       await supabase.auth.signOut();
       if (location.hash !== '#/login') {
         location.hash = '/login';
@@ -487,15 +522,39 @@ supabase.auth.onAuthStateChange(async (event, sessionObj) => {
   }
 });
 
-supabase.auth.getSession().then(async ({ data: { session: initSession } }) => {
+(async () => {
+  const urlParams = new URLSearchParams(location.search);
+  const hashStr = location.hash.replace(/^#\/?/, '');
+  const hashParams = new URLSearchParams(hashStr);
+
+  const isAuthError = urlParams.has('error') || urlParams.has('error_code') || hashParams.has('error') || hashParams.has('error_code');
+
+  if (urlParams.has('code')) {
+    const { error } = await supabase.auth.exchangeCodeForSession(urlParams.get('code'));
+    history.replaceState(null, '', location.pathname);
+    if (!error) {
+      location.hash = '/reset-password';
+      return; // hashchange handles render
+    }
+  } else if (hashParams.get('type') === 'recovery' && hashParams.has('access_token')) {
+    // Wait for Supabase to handle the session
+    await new Promise(r => setTimeout(r, 500));
+    history.replaceState(null, '', location.pathname);
+  } else if (isAuthError) {
+    history.replaceState(null, '', location.pathname);
+    app.innerHTML = authPage('auth-error');
+    document.title = 'MenteeLog | Error';
+    return; // Stop initialization, show error
+  }
+
+  const { data: { session: initSession } } = await supabase.auth.getSession();
   if (initSession?.user) {
-    const { data: profile, error } = await supabase.from('profiles').select('is_activated').eq('id', initSession.user.id).single();
-    if (error || !profile || profile.is_activated === false) {
+    const { data: profile, error } = await supabase.from('profiles').select('status').eq('id', initSession.user.id).single();
+    if (error || !profile || profile.status !== 'Active') {
       await supabase.auth.signOut();
-      if (location.hash !== '#/login') {
-        location.hash = '/login';
-      }
+      if (location.hash !== '#/login') location.hash = '/login';
     }
   }
-});
+  render();
+})();
 
