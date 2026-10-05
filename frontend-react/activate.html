@@ -10,7 +10,7 @@
 
     <!-- LEFT: Photo Panel -->
     <section class="auth-reference-photo">
-      <img class="auth-photo" src="/assets/photos/group.jpg" alt="">
+      <svg class="reference-photo auth-photo" viewBox="178 2398 500 268" preserveAspectRatio="xMidYMid slice" role="img" aria-label="MenteeLog students"><image href="./assets/team/img1.jpg" x="178" y="2398" width="500" height="268" preserveAspectRatio="xMidYMid slice" /></svg>
       <div class="auth-tint"></div>
       <img class="auth-watermark" src="/assets/MenteeLoo_Logo.svg" alt="">
       <h1>Join the MenteeLog<br>Journey.<br>Step Forward into<br>Your Future.</h1>
@@ -39,16 +39,9 @@
 
           <!-- ── STEP 1: Role + Identifier ── -->
           <form id="step1-form" style="display:flex;flex-direction:column;gap:20px;">
-            <p class="auth-role-label">I AM A...</p>
-            <div class="activation-roles">
-              <button type="button" class="btn" id="role-student" onclick="setRole('Student')">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                Student
-              </button>
-              <button type="button" class="btn secondary" id="role-supervisor" onclick="setRole('Supervisor')">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                Supervisor
-              </button>
+            <div class="auth-tabs" role="group" aria-label="Account type">
+              <button type="button" class="selected" id="role-student" aria-pressed="true" onclick="setRole('Student')"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-3a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v3 M15 4a4 4 0 0 1 0 8 M22 21v-3a4 4 0 0 0-3-3.8 M13 6a4 4 0 1 1-8 0 4 4 0 0 1 8 0"/></svg> Student</button>
+              <button type="button" id="role-supervisor" aria-pressed="false" onclick="setRole('Supervisor')"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 22V2h14v20 M2 22h20 M9 6h1 M14 6h1 M9 10h1 M14 10h1 M9 14h1 M14 14h1 M10 22v-4h4v4"/></svg> Supervisor</button>
             </div>
 
             <div class="field">
@@ -132,8 +125,9 @@
 
     function setRole(role) {
       window.selectedRole = role;
-      document.getElementById('role-student').className = role === 'Student' ? 'btn' : 'btn secondary';
-      document.getElementById('role-supervisor').className = role === 'Supervisor' ? 'btn' : 'btn secondary';
+      const rs = document.getElementById('role-student'), rv = document.getElementById('role-supervisor');
+      rs.classList.toggle('selected', role === 'Student'); rs.setAttribute('aria-pressed', role === 'Student');
+      rv.classList.toggle('selected', role === 'Supervisor'); rv.setAttribute('aria-pressed', role === 'Supervisor');
       const label    = document.getElementById('identifier-label');
       const input    = document.getElementById('activate-identifier');
       const emailGrp = document.getElementById('student-email-group');

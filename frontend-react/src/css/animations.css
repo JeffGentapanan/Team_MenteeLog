@@ -19,10 +19,7 @@
     to { opacity: 1; transform: scale(1); }
 }
 
-/* 1. Header Animation */
-.reference-header {
-    animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
+/* 1. Header animation removed: public header is static (see transparent-on-top header below) */
 /* 2. Hero Section Animations (Staggered) */
 .reference-hero-content .hero-pill {
     opacity: 0;
@@ -678,4 +675,90 @@ html, body {
         flex-direction: column;
         gap: 20px;
     }
+}
+
+/* =========================================
+   PUBLIC FILTER DROPDOWNS (Open OJT Opportunities)
+   ========================================= */
+.opportunities .public-filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.opportunities .public-filters select {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    width: auto; min-width: 150px; height: 42px;
+    padding: 0 40px 0 16px;
+    font-size: 14px; font-weight: 600; font-family: inherit;
+    color: #58111A;
+    background-color: #FFFFFF;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2358111A' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; background-size: 16px;
+    border: 1px solid #EFDFBB; border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(88, 17, 26, 0.06);
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    text-overflow: ellipsis;
+}
+.opportunities .public-filters select:hover {
+    border-color: #D85A63; box-shadow: 0 6px 16px rgba(88, 17, 26, 0.12); transform: translateY(-1px);
+}
+.opportunities .public-filters select:focus {
+    outline: none; border-color: #D85A63; box-shadow: 0 0 0 4px rgba(216, 90, 99, 0.15);
+}
+.opportunities .public-filters select option { color: #1F2937; background: #FFFFFF; }
+@media (max-width: 640px) {
+    .opportunities .public-filters { width: 100%; }
+    .opportunities .public-filters select { flex: 1; min-width: 0; }
+}
+
+
+/* =========================================
+   PUBLIC HEADER ACTIONS (Activate + Sign In)
+   ========================================= */
+.reference-header .header-actions { display: flex; align-items: center; gap: 10px; }
+.reference-header .header-actions .btn { min-height: 34px; font-size: 13px; padding: 7px 18px; white-space: nowrap; }
+.reference-header .header-actions .header-activate {
+    background: transparent; color: #58111A; border: 1.5px solid #58111A;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+.reference-header .header-actions .header-activate:hover { background: #58111A; color: #FFFFFF; transform: translateY(-1px); }
+@media (max-width: 640px) {
+    .reference-header .header-actions { gap: 6px; }
+    .reference-header .header-actions .btn { min-height: 29px; font-size: 12px; padding: 6px 12px; }
+}
+
+
+/* =========================================
+   PUBLIC HEADER: TRANSPARENT AT TOP, SOLID ON SCROLL
+   ========================================= */
+.public-site .reference-header {
+    position: fixed; top: 0; left: 0; right: 0; width: 100%;
+    animation: none;
+    background: linear-gradient(to bottom, rgba(20, 5, 8, 0.55), rgba(20, 5, 8, 0));
+    box-shadow: none;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+.public-site .reference-header nav a { color: #FFFFFF; transition: color 0.3s ease; }
+.public-site .reference-header .header-actions .header-activate { color: #FFFFFF; border-color: #FFFFFF; }
+.public-site .reference-header .header-actions .header-activate:hover { background: #FFFFFF; color: #58111A; }
+.public-site .reference-header .header-actions .btn:not(.header-activate) { background: #FAF4E8; color: #58111A; }
+
+/* Scrolled state: cream bar + burgundy text */
+.public-site .reference-header.scrolled-header {
+    background: #FAF4E8;
+    box-shadow: 0 6px 20px rgba(88, 17, 26, 0.12) !important;
+}
+.public-site .reference-header.scrolled-header nav a { color: #58111A; }
+.public-site .reference-header.scrolled-header .header-actions .header-activate { color: #58111A; border-color: #58111A; }
+.public-site .reference-header.scrolled-header .header-actions .header-activate:hover { background: #58111A; color: #FFFFFF; }
+.public-site .reference-header.scrolled-header .header-actions .btn:not(.header-activate) { background: #58111A; color: #FFFFFF; }
+
+/* Perfectly centered public nav: brand | nav | actions with equal side columns */
+@media (min-width: 651px) {
+    .public-site .reference-header {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+    }
+    .public-site .reference-header > .brand-link,
+    .public-site .reference-header > a:first-child { justify-self: start; }
+    .public-site .reference-header nav { justify-self: center; }
+    .public-site .reference-header .header-actions { justify-self: end; }
 }
