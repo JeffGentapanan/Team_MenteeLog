@@ -57,53 +57,61 @@ function currentUser(){
     if(!session||session.expires<Date.now())return null;
     const u = db.users.find(u=>u.id===session.id&&u.status==='Active')||null;
     
-    // DEMO FIX: Ensure exactly ONE dummy user and ONE dummy log exists
+    // DEMO FIX: Inject 5 Example Interns to demonstrate roster scaling
     if (u && u.role === 'Supervisor') {
-        let hasDummy = db.users.find(x => x.id === 's_dummy');
-        if (!hasDummy) {
-            db.users.push({
-                id: 's_dummy',
-                identifier: 'DEMO-2026',
-                name: 'Example Intern',
-                email: 'example@demo.com',
-                role: 'Student',
-                status: 'Active',
-                course: 'BS Information Technology',
-                company: u.company || 'Demo Company',
-                supervisorId: u.id,
-                baseHours: 120,
-                requiredHours: 500,
-                badge: 'Active'
-            });
-        } else if (hasDummy.supervisorId !== u.id) {
-            hasDummy.supervisorId = u.id; // ensure they belong to current supervisor
-        }
+        const dummyNames = ['Alice Chen', 'Bob Smith', 'Charlie Cruz', 'Diana Reyes', 'Example Intern'];
+        const courses = ['BS Information Technology', 'BS Computer Science', 'BS Computer Engineering', 'BS Information Technology', 'BS Information Technology'];
+        const todayStr = new Date().toISOString().split('T')[0];
 
-        // Clean up any duplicate logs. Keep EXACTLY one.
-        const dummyLogs = db.logs.filter(l => l.studentId === 's_dummy');
-        if (dummyLogs.length !== 1) {
-            // Remove all existing dummy logs
-            db.logs = db.logs.filter(l => l.studentId !== 's_dummy');
-            // Inject exactly one pending log for today
-            const dateStr = new Date().toISOString().split('T')[0];
-            db.logs.push({
-                id: 'log_dummy_single',
-                studentId: 's_dummy',
-                supervisorId: u.id,
-                date: dateStr,
-                clockIn: dateStr + 'T08:00:00.000Z',
-                clockOut: dateStr + 'T17:00:00.000Z',
-                breakMinutes: 60,
-                hours: 8,
-                status: 'Pending',
-                task: 'Completed assigned programming tasks and attended daily standups.',
-                gps: true,
-                remarks: '',
-                justification: ''
-            });
-            save();
-        }
+        dummyNames.forEach((name, idx) => {
+            let uid = 's_dummy_' + idx;
+            // Ensure the original example intern keeps the s_dummy ID so the View button links still work
+            if (name === 'Example Intern') uid = 's_dummy'; 
+            
+            let hasDummy = db.users.find(x => x.id === uid);
+            if (!hasDummy) {
+                db.users.push({
+                    id: uid,
+                    identifier: 'DEMO-202' + idx,
+                    name: name,
+                    email: 'student' + idx + '@demo.com',
+                    role: 'Student',
+                    status: 'Active',
+                    course: courses[idx],
+                    company: u.company || 'Demo Company',
+                    supervisorId: u.id,
+                    baseHours: 120 + (idx * 15),
+                    requiredHours: 500,
+                    badge: 'Active'
+                });
+            } else if (hasDummy.supervisorId !== u.id) {
+                hasDummy.supervisorId = u.id; 
+            }
+
+            // Ensure exactly 1 pending log per student
+            const dummyLogs = db.logs.filter(l => l.studentId === uid);
+            if (dummyLogs.length !== 1) {
+                db.logs = db.logs.filter(l => l.studentId !== uid);
+                db.logs.push({
+                    id: 'log_dummy_' + idx,
+                    studentId: uid,
+                    supervisorId: u.id,
+                    date: todayStr,
+                    clockIn: todayStr + 'T08:00:00.000Z',
+                    clockOut: todayStr + 'T17:00:00.000Z',
+                    breakMinutes: 60,
+                    hours: 8,
+                    status: idx % 2 === 0 ? 'Pending' : 'Approved',
+                    task: name === 'Example Intern' ? 'Completed assigned programming tasks and attended daily standups.' : 'Assisted with database migration and API testing for the new microservice.',
+                    gps: true,
+                    remarks: '',
+                    justification: ''
+                });
+                save();
+            }
+        });
     }
+    
     if(u && u.role === 'Supervisor') {
         let assigned = db.users.filter(s => s.role === 'Student' && s.supervisorId === u.id);
         if(assigned.length === 0) {
