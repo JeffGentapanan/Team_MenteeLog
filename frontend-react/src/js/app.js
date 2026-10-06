@@ -437,7 +437,25 @@ async function action(name,id,el){
         if(db.activeShifts.find(sh => sh.studentId === id)) throw new Error('Intern is already clocked in.');
         db.activeShifts.push({ studentId: id, supervisorId: u.id, clockIn: new Date().toISOString(), clockOut: null });
         audit('Supervisor clocked in student ' + id);
-        save(); toast('Intern clocked in successfully.'); tkTerminal(id); render(); return;
+        save(); toast('Intern clocked in successfully.'); render(); return;
+    }
+    case 'sup-toggle-break': {
+        if(u.role !== 'Supervisor') throw new Error('Unauthorized');
+        const shift = (db.activeShifts || []).find(sh => sh.studentId === id);
+        if(!shift) throw new Error('Intern is not active.');
+        
+        if (shift.onBreak) {
+            // End break
+            const elapsed = Math.floor((Date.now() - new Date(shift.onBreak).getTime()) / 60000);
+            shift.breakMinutes = (shift.breakMinutes || 0) + Math.max(0, elapsed);
+            shift.onBreak = null;
+            toast('Break ended. Resuming shift timer.');
+        } else {
+            // Start break
+            shift.onBreak = new Date().toISOString();
+            toast('Intern is now on break.');
+        }
+        save(); render(); return;
     }
     case 'sup-clock-out': {
         if(u.role !== 'Supervisor') throw new Error('Unauthorized');
@@ -446,18 +464,25 @@ async function action(name,id,el){
         if(idx === -1) throw new Error('Intern is not active.');
         const shift = db.activeShifts[idx];
         shift.clockOut = new Date().toISOString();
-        const hours = hoursBetween(shift.clockIn, shift.clockOut, 0);
+        
+        // finalize any ongoing break
+        if (shift.onBreak) {
+            const elapsed = Math.floor((Date.now() - new Date(shift.onBreak).getTime()) / 60000);
+            shift.breakMinutes = (shift.breakMinutes || 0) + Math.max(0, elapsed);
+        }
+        const totalBreakMinutes = shift.breakMinutes || 0;
+        const hours = hoursBetween(shift.clockIn, shift.clockOut, totalBreakMinutes);
         
         // Push a pending log that awaits the student's task summary
         db.logs.push({
             id: crypto.randomUUID(), studentId: shift.studentId, supervisorId: shift.supervisorId,
-            date: today(), clockIn: shift.clockIn, clockOut: shift.clockOut, breakMinutes: 0, hours: hours,
-            task: '', justification: '', gps: false, status: 'Awaiting_Student_Log', remarks: '', signature: ''
+            date: today(), clockIn: shift.clockIn, clockOut: shift.clockOut, breakMinutes: totalBreakMinutes, hours: hours,
+            task: '', justification: '', gps: false, status: 'Pending', remarks: '', signature: ''
         });
         
         db.activeShifts.splice(idx, 1);
-        audit('Supervisor clocked out student ' + id);
-        save(); toast('Intern clocked out. Awaiting their logbook summary.'); tkTerminal(id); render(); return;
+        audit('Supervisor clocked out student ' + id + ' with ' + totalBreakMinutes + 'm breaks');
+        save(); toast('Intern clocked out successfully.'); render(); return;
     }
 
     case 'ref-approve': {

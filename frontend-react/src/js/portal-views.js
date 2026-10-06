@@ -328,7 +328,11 @@ export function createPortalViews(c){
                 const statusBg = active ? '#166534' : 'var(--slate)';
                 const statusDot = active ? 'background:#16a34a;animation:tk-pulse 2s infinite' : 'background:var(--slate)';
                 const statusText = active ? 'Active On-Site' : 'Clocked Out';
-                const actionBtn = b('Open Terminal', 'tk-terminal', s.id, 'primary small');
+                
+                const isOnBreak = active && active.onBreak;
+                const actionBtn = active 
+                    ? '<div style="display:flex; gap:8px;">' + b('Clock-Out Intern', 'sup-clock-out', s.id, 'primary small') + b(isOnBreak ? 'End Break' : 'Start Break', 'sup-toggle-break', s.id, 'secondary small') + '</div>'
+                    : b('Clock-In Intern', 'sup-clock-in', s.id, 'primary small');
                 return '<tr>' +
                     '<td>' + person(s) + '</td>' +
                     '<td><div style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:' + statusBg + '"><span style="width:8px;height:8px;border-radius:50%;' + statusDot + '"></span>' + statusText + '</div></td>' +
@@ -353,8 +357,21 @@ export function createPortalViews(c){
       const shift=db().shift?.studentId===u().id?db().shift:null,hrs=approvedHours(db(),u().id),list=logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter),drafts=(db().taskDrafts||[]).filter(d=>d.studentId===u().id);
     if(sub==='drafts') return back('dtr') + heading('Saved Drafts History', 'Review all your previously saved task summary drafts.') + panel('', drafts.length?table(['Date','Task Summary','Action'],drafts.map(d=>`<tr><td>${date(d.date)}</td><td><span class="task-excerpt">${e(d.task)}</span></td><td>${b('View Draft','ref-draft-view',d.id,'secondary small')}</td></tr>`)):empty('No saved drafts','Save a task summary to continue it later.'));
     
-    const shiftStr = shift ? 'Clocked in at ' + time(shift.clockIn) : 'Not clocked in';
-    const shiftBadgeHtml = shift ? '<div class="badge" style="background:var(--burgundy);color:white;font-size:11px;font-weight:600;padding:2px 8px;">Active</div>' : '<div class="badge" style="background:#f1f5f9;color:#334155;font-size:11px;font-weight:600;padding:2px 8px;">Inactive</div>';
+    
+    const isBreak = shift && shift.onBreak;
+    const shiftBadgeHtml = shift ? (isBreak ? '<div class="badge" style="background:#fefce8;color:#854d0e;font-size:11px;font-weight:600;padding:2px 8px;">On Lunch Break</div>' : '<div class="badge" style="background:#dcfce7;color:#166534;font-size:11px;font-weight:600;padding:2px 8px;"><span style="display:inline-block;width:6px;height:6px;background:#16a34a;border-radius:50%;margin-right:4px;animation:tk-pulse 2s infinite;"></span>Active On-Site</div>') : '<div class="badge" style="background:#f1f5f9;color:#334155;font-size:11px;font-weight:600;padding:2px 8px;">Clocked Out</div>';
+    
+    // Calculate today's rendered hours
+    let shiftHrsRendered = 0;
+    if (shift) {
+       const rawTotal = Math.max(0, (Date.now() - new Date(shift.clockIn).getTime()) / 3600000);
+       let breakHrs = (shift.breakMinutes || 0) / 60;
+       if (isBreak) breakHrs += Math.max(0, (Date.now() - new Date(shift.onBreak).getTime()) / 3600000);
+       shiftHrsRendered = Math.max(0, rawTotal - breakHrs);
+    }
+    const remainingHrs = Math.max(0, 8 - shiftHrsRendered);
+    const hrsRem = Math.floor(remainingHrs);
+    const minsRem = Math.floor((remainingHrs - hrsRem) * 60);
 
     const now = new Date();
     const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())).toISOString().split('T')[0];
@@ -362,7 +379,7 @@ export function createPortalViews(c){
     const weeklyHours = weeklyLogs.reduce((sum, l) => sum + l.hours, 0);
     const weeklyPct = Math.min(100, Math.round((weeklyHours / 40) * 100)) || 0;
 
-    const totalPct = Math.min(100, Math.round((hrs / u().requiredHours) * 100)) || 0;
+    const totalPct = Math.min(100, Math.round(((hrs + shiftHrsRendered) / u().requiredHours) * 100)) || 0;
 
     const customStatsHtml = `<div class="ref-stats">
       <div>
@@ -370,23 +387,29 @@ export function createPortalViews(c){
           <span>Current Shift Status</span>
           ${shiftBadgeHtml}
         </div>
-        <strong>${shiftStr}</strong>
+        <strong>${shift ? 'Clocked in at ' + time(shift.clockIn) : 'Not clocked in'}</strong>
+        ${shift ? `<div style="margin-top:8px; font-size:12px; color:var(--slate);">${hrsRem}h ${minsRem}m remaining until 8hr completion</div><div style="background:#e2e8f0; height:4px; width:100%; border-radius:2px; margin-top:4px;"><div style="background:var(--burgundy); height:100%; width:${Math.min(100, (shiftHrsRendered/8)*100)}%;"></div></div>` : ''}
       </div>
       <div>
         <div class="row between align-start mb0" style="width: 100%; margin-bottom: 4px;">
-          <span>Hours Rendered This Week</span>
-          <div class="badge" style="background:#f1f5f9;color:#334155;font-size:11px;font-weight:600;padding:2px 8px;">${weeklyPct}% Done</div>
+          <span>${isBreak ? 'Lunch / Break Timer' : 'Hours Rendered This Week'}</span>
+          <div class="badge" style="background:#f1f5f9;color:#334155;font-size:11px;font-weight:600;padding:2px 8px;">${isBreak ? 'PAUSED' : weeklyPct+'% Done'}</div>
         </div>
-        <strong>${weeklyHours.toFixed(1)} / 40.0 Hours</strong>
+        <strong>${isBreak ? '<span class="tk-timer" style="color:#854d0e;" data-start="' + shift.onBreak + '">00:00:00</span>' : weeklyHours.toFixed(1) + ' / 40.0 Hours'}</strong>
+        ${isBreak ? '<div style="margin-top:8px; font-size:12px; color:#854d0e;">Session time is currently paused</div>' : ''}
       </div>
       <div>
         <div class="row between align-start mb0" style="width: 100%; margin-bottom: 4px;">
-          <span>Total Internship Progress</span>
+          <span>Total OJT Progress Meter</span>
           <div class="badge" style="background:#FCE7F3;color:#9F1239;font-size:11px;font-weight:600;padding:2px 8px;">${totalPct}% Completed</div>
         </div>
-        <strong>${hrs.toFixed(1)} / ${u().requiredHours} Hours</strong>
+        <strong>${(hrs + shiftHrsRendered).toFixed(1)} / ${u().requiredHours} Hours</strong>
+        <div style="background:#e2e8f0; height:6px; width:100%; border-radius:3px; margin-top:12px; position:relative;">
+           <div style="background:#9F1239; height:100%; width:${totalPct}%; border-radius:3px;"></div>
+        </div>
       </div>
     </div>`;
+
 
     return heading('Daily Time Record Hub','Log your attendance, submit daily accomplishments, and review your time records.',b('Export Log Summary','ref-export-modal','','secondary','download')) + customStatsHtml + `<div class="reference-dtr ref-student-dtr"><div>
 
@@ -405,7 +428,7 @@ ${panel('', `
         <p class="muted" style="margin-bottom:24px;">Your supervisor manages your time-in and time-out.</p>
         ${shift ? (shift.clockOut 
             ? '<div style="background:#fefce8; color:#854d0e; padding:16px; border-radius:8px; margin-bottom:16px;"><strong>Shift Completed</strong><br>Your supervisor clocked you out. Please submit your daily logbook.</div>' + b('Submit Daily Summary Logbook', 'ref-submit-log', '', 'primary full', 'file') 
-            : '<div style="background:#dcfce7; color:#166534; padding:16px; border-radius:8px; margin-bottom:16px; display:inline-block; width:100%;"><strong><span style="display:inline-block;width:10px;height:10px;background:#16a34a;border-radius:50%;margin-right:8px;animation:tk-pulse 2s infinite;"></span> Active On-Site</strong><br>Your supervisor clocked you in.</div>') 
+            : ${isBreak ? '<div style="background:#fefce8; color:#854d0e; padding:16px; border-radius:8px; margin-bottom:16px; display:inline-block; width:100%;"><strong>On Lunch / Break</strong><br>Session timer is paused.</div>' : '<div style="background:#dcfce7; color:#166534; padding:16px; border-radius:8px; margin-bottom:16px; display:inline-block; width:100%;"><strong><span style="display:inline-block;width:10px;height:10px;background:#16a34a;border-radius:50%;margin-right:8px;animation:tk-pulse 2s infinite;"></span> Active On-Site</strong><br>Your supervisor clocked you in.</div>'}) 
             : '<div style="background:#f1f5f9; color:#475569; padding:16px; border-radius:8px; margin-bottom:16px;"><strong>Clocked Out</strong><br>Awaiting supervisor clock-in.</div>'}
     </div>
 
