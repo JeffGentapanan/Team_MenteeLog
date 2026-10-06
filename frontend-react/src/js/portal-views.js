@@ -318,14 +318,14 @@ export function createPortalViews(c){
         let active = (db().activeShifts || []).find(sh => sh.studentId === s.id);
         
         // Put a fake active shift on the first student for demonstration purposes if none exist
-        const isDemoActive = !active && index === 0 && (db().activeShifts || []).length === 0;
+        const isDemoActive = false;
         
         const statusColor = (active || isDemoActive) ? '#166534' : 'var(--slate)';
         const statusBg = (active || isDemoActive) ? '#dcfce7' : '#f1f5f9';
         const statusText = (active || isDemoActive) ? 'Active On-Site' : 'Clocked Out';
         const pulse = (active || isDemoActive) ? `<span style="display:inline-block;width:8px;height:8px;background:#16a34a;border-radius:50%;margin-right:6px;animation:tk-pulse 2s infinite;"></span>` : `<span style="display:inline-block;width:8px;height:8px;background:var(--slate);border-radius:50%;margin-right:6px;"></span>`;
         
-        const timerHtml = (active || isDemoActive) ? `<div style="font-size: 32px; font-weight: 800; color: var(--ink); margin: 16px 0; font-variant-numeric: tabular-nums; line-height: 1;">02:14:05</div>` : `<div style="font-size: 32px; font-weight: 800; color: var(--slate); margin: 16px 0; opacity: 0.3; font-variant-numeric: tabular-nums; line-height: 1;">00:00:00</div>`;
+        const timerHtml = (active || isDemoActive) ? `<div style="font-size: 32px; font-weight: 800; color: var(--ink); margin: 16px 0; font-variant-numeric: tabular-nums; line-height: 1;" class="tk-timer" data-start="${active?.clockIn || ''}">${active ? elapsed(active.clockIn) : '00:00:00'}</div>` : `<div style="font-size: 32px; font-weight: 800; color: var(--slate); margin: 16px 0; opacity: 0.3; font-variant-numeric: tabular-nums; line-height: 1;">00:00:00</div>`;
         
         const actionBtn = (active || isDemoActive)
             ? b('Clock Out Intern', 'sup-clock-out', s.id, 'secondary full') 

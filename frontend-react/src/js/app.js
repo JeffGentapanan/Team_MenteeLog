@@ -19,7 +19,21 @@ const $=s=>document.querySelector(s), app=$('#app'), modal=$('#modal');
 const STORAGE='menteelog.demo.v1', SESSION='menteelog.demo.session';
 let storageIssue=false,filesDB=null;
 function load(){try{const saved=JSON.parse(localStorage.getItem(STORAGE));return saved?.version===1&&Array.isArray(saved.users)&&Array.isArray(saved.logs)?saved:seedData();}catch{return seedData();}}
-let db=ensureCreatorAccounts(load()),session=null,view={search:'',filter:'All',course:'All',mode:'All'},authRole='Student',modalSubmit=null,modalOpener=null,modalUserId=null,toastTimer;
+let db=ensureCreatorAccounts(load());
+
+// --- DEMO SEED FOR ACTIVE SHIFT ---
+db.activeShifts = db.activeShifts || [];
+if(db.activeShifts.length === 0) {
+    const aStudent = db.users.find(u => u.role === 'Student' && u.name.includes('Demo'));
+    if(aStudent) {
+        // Start shift 2 hours and 14 mins ago
+        const startTime = new Date(Date.now() - (2 * 3600000 + 14 * 60000)).toISOString();
+        db.activeShifts.push({ studentId: aStudent.id, supervisorId: aStudent.supervisorId, clockIn: startTime, clockOut: null });
+    }
+}
+// -----------------------------------
+
+,session=null,view={search:'',filter:'All',course:'All',mode:'All'},authRole='Student',modalSubmit=null,modalOpener=null,modalUserId=null,toastTimer;
 try {
   if (!sessionStorage.getItem('dtr_reset_guaranteed')) {
     sessionStorage.setItem('dtr_reset_guaranteed', '1');
@@ -554,7 +568,7 @@ window.addEventListener('hashchange', async () => {
   $('#main')?.focus({preventScroll:true});
 });
 window.addEventListener('storage',event=>{if(event.key===STORAGE){const keep=session?db.users.find(u=>u.id===session.id):null;db=ensureCreatorAccounts(load());if(keep&&!db.users.some(u=>u.id===keep.id))db.users.push(keep);render();}});
-setInterval(()=>{const timer=$('#shift-timer');if(timer&&currentUser()?.role==='Student'){ const active = (db.activeShifts||[]).find(sh=>sh.studentId===currentUser().id); if(active) timer.textContent=elapsed(active.clockIn); }if(session&&!currentUser()){logout();location.hash='/login';toast('Your demo session ended. Sign in to continue.');}},1000);
+setInterval(()=>{ const timer=$('#shift-timer'); if(timer&&currentUser()?.role==='Student'){ const active = (db.activeShifts||[]).find(sh=>sh.studentId===currentUser().id); if(active) timer.textContent=elapsed(active.clockIn); } document.querySelectorAll('.tk-timer').forEach(el => { const start = el.getAttribute('data-start'); if(start) el.textContent = elapsed(start); }); if(session&&!currentUser()){logout();location.hash='/login';toast('Your demo session ended. Sign in to continue.');} }, 1000);
 setInterval(async () => { if (session && await syncRemote(supabase, db) && !modal.open) render(); }, 20000);
 async function submitApplication(jobId, note) { const {error} = await supabase.from('applications').insert({ job_id: jobId, student_id: currentUser().id, status: 'Pending', applied_date: today(), notes: note || '' }); if (error) throw new Error(error.message); await syncRemote(supabase, db); }
 portals=createPortalViews({get db(){return db;},get view(){return view;},get user(){return currentUser();},route,e,icon,button,link,heading,field,textarea,select,badge,person,table,empty,progress,date,time,today,student,job,save,notify,audit,toast,render,showModal,download,fileOp,putFile,dtrTable,visibleIncidents,submitApplication,legacy:{applicationDetail,editJob,studentDetail,incidentNew,incidentDetail,evaluate,logDetail,editHTE,userNew,importUsers,documentUpload},capture(fn){capturingForm=true;capturedForm=null;try{fn();return capturedForm;}finally{capturingForm=false;}}});
