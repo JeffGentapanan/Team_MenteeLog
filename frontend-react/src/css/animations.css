@@ -1058,3 +1058,50 @@ html {
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
 }
+
+/* =========================================
+   DEFINITIVE MOBILE AUTHENTICATION FIX
+   ========================================= */
+@media (max-width: 650px) {
+    /* Center the auth card correctly without cutting off the top */
+    .auth-reference-main, .auth-main {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        min-height: 100vh !important;
+        padding: 24px 16px !important;
+    }
+    
+    .auth-reference-card, .auth-card {
+        width: 100% !important;
+        max-width: 440px !important;
+        margin: auto !important; 
+    }
+
+    /* Force tabs onto one single row cleanly */
+    .auth-tabs {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 2px !important;
+        overflow-x: hidden !important;
+    }
+
+    .auth-tabs button {
+        flex: 1 !important;
+        font-size: 11px !important;
+        padding: 10px 2px !important;
+        white-space: nowrap !important;
+        letter-spacing: -0.2px !important;
+        min-width: 0 !important; 
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+
+    @media (max-width: 360px) {
+        .auth-tabs .icon { display: none !important; }
+        .auth-tabs button { font-size: 10px !important; }
+    }
+}
