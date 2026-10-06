@@ -297,8 +297,8 @@ function tkTerminal(id) {
         </div>
         
         ${active 
-            ? b('Clock Out Intern', isDummy ? 'dummy-action' : 'sup-clock-out', s.id, 'secondary full')
-            : b('Clock In Intern', isDummy ? 'dummy-action' : 'sup-clock-in', s.id, 'primary full', 'clock')
+            ? button('Clock Out Intern', isDummy ? 'dummy-action' : 'sup-clock-out', s.id, 'secondary full')
+            : button('Clock In Intern', isDummy ? 'dummy-action' : 'sup-clock-in', s.id, 'primary full', 'clock')
         }
     </div>`;
     
