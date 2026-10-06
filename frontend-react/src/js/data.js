@@ -3,7 +3,7 @@ export const rubric = ['Work quality & accuracy', 'Attendance & punctuality', 'I
 export const navigation = {
   Student: [['dashboard','Dashboard','grid'],['jobs','OJT Placement','briefcase'],['applications','My Applications','file'],['appraisals','Performance appraisal','star'],['dtr','DTR Hub','clock'],['documents','Documents','folder'],['incidents','Incident Reports','alert']],
   Supervisor: [['dashboard','Dashboard','grid'],['candidates','Candidate Review','users'],['applications','Application Review','file'],['dtr','Attendance & DTR','clock'],['appraisals','Performance Appraisal','file'],['jobs','Slot Management','briefcase'],['incidents','Incident Reports','alert']],
-  Coordinator: [['dashboard','Dashboard','grid'],['jobs','Job Management','briefcase'],['hte','HTE Accreditation','building'],['candidates','Student Placement','users'],['dtr','DTR Compliance','file'],['reports','Report Generation','chart'],['users','User Management','users'],['incidents','Incident Reports','alert']]
+  Coordinator: [['dashboard','Dashboard','grid'],['jobs','Job Management','briefcase'],['applications','Application Review','file'],['hte','HTE Accreditation','building'],['candidates','Student Placement','users'],['dtr','DTR Compliance','file'],['reports','Report Generation','chart'],['users','User Management','users'],['incidents','Incident Reports','alert']]
 };
 export function seedData() {
   return {

@@ -241,7 +241,13 @@ export function createPortalViews(c){
           <label>Cover Note (optional)</label>
           <textarea name="note" class="textarea" style="height:120px; resize:none;" placeholder="Introduce yourself and share why you are interested in this position..."></textarea>
         </div>`,
-        async(v,form)=>{const a=applyToJob(db(),u(),id);a.note=v.note;if(j.supervisorId)c.notify(j.supervisorId,'Application_Status','New internship application',u().name+' applied for '+j.title);finish('Application submitted successfully.','jobs');},'Confirm Application');
+        async(v,form)=>{
+          if(!j||j.status!=='Active'||j.slots<1)throw new Error('This position is no longer open.');
+          if(db().applications.some(a=>a.studentId===u().id&&a.jobId===id&&a.status!=='Rejected'))throw new Error('You already have an application for this position.');
+          await c.submitApplication(id, v.note);
+          if(j.supervisorId)c.notify(j.supervisorId,'Application_Status','New internship application',u().name+' applied for '+j.title);
+          finish('Application submitted successfully.','jobs');
+        },'Confirm Application');
         return true;}
 
 

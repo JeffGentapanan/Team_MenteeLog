@@ -6,6 +6,13 @@ import {ensureCreatorAccounts} from './creator.js';
 import {createPortalViews} from './portal-views.js';
 import {seedData,roles,navigation,rubric} from './data.js';
 import {escapeHTML as e,canAccess,approvedHours,visibleStudents,visibleLogs,visibleApplications,hoursBetween,validateUpload,csvText,parseCSV,applyToJob,reviewLog} from './domain.js';
+import { syncRemote } from './sync.js';
+
+// Detect a password-recovery link BEFORE anything touches the URL
+const _q = new URLSearchParams(location.search);
+const _h = new URLSearchParams(location.hash.replace(/^#\/?/, ''));
+const isRecoveryLink = _q.get('reset') === '1' || _q.has('code') || _h.get('type') === 'recovery';
+let recoveryActive = isRecoveryLink;
 
 const $=s=>document.querySelector(s), app=$('#app'), modal=$('#modal');
 
@@ -66,6 +73,7 @@ modal.addEventListener('close',()=>{modalSubmit=null;if(modalOpener?.isConnected
 function download(name,content,type='text/csv;charset=utf-8'){const url=URL.createObjectURL(content instanceof Blob?content:new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function route(){const hashStr=location.hash.replace(/^#\/?/,'');const [path, query]=hashStr.split('?');const parts=path.split('/');return {role:parts[0],page:parts[1]||'dashboard',sub:parts[2]||'',id:parts[3]||'',query:query||''};}
 function render(){
+  if (recoveryActive && route().role !== 'reset-password') { location.hash = '/reset-password'; return; }
   const {role,page}=route();
   if(!role||role==='public'){app.innerHTML=landing();
   setTimeout(() => {
@@ -177,9 +185,9 @@ function dtrTable(logs,u){return logs.length?table([...(u.role==='Student'?[]:['
 function visibleIncidents(u){return db.incidents.filter(i=>u.role==='Coordinator'||(u.role==='Student'?i.studentId===u.id:i.supervisorId===u.id));}
 function profilePage(u){return `${heading('Profile Setup','Keep your contact and internship details up to date.')}<div class="narrow-wide"><section class="card sand"><div class="row">${person(u)}</div><hr class="hr"><p class="small">${e(u.identifier)}</p>${badge(u.role)} ${badge(u.badge||u.status)}<p class="small muted mt16">Your role and academic identifier are managed by your coordinator.</p></section><section class="card"><h2>Personal information</h2><form id="profile-form">${field('Full name','name','text',u.name,'required maxlength="100" autocomplete="name"')}${field('Email address','email','email',u.email,'required autocomplete="email"')}${field('Phone number (optional)','phone','tel',u.phone||'','maxlength="30" autocomplete="tel"')}${textarea('About you (optional)','bio',u.bio||'','')}<p class="form-error" role="alert"></p><button class="btn" type="submit">Save profile</button></form></section></div>`;}
 function safeMeetingURL(value){const url=new URL(value);if(url.protocol!=='https:'||!['meet.google.com','teams.microsoft.com','teams.live.com','zoom.us','www.zoom.us'].some(h=>url.hostname===h||url.hostname.endsWith('.'+h)))throw new Error('Use an HTTPS Google Meet, Microsoft Teams, or Zoom link.');return url.href;}
-function openJob(id){const u=currentUser(),j=job(id);if(!j)return;const applied=db.applications.some(a=>a.studentId===u.id&&a.jobId===id&&a.status!=='Rejected');showModal(e(j.title),`<div class="row between"><strong>${e(j.company)}</strong>${badge(j.status)}</div><p class="muted mt16">${e(j.location)} Ã‚Â· ${e(j.mode)} Ã‚Â· ${j.slots} available slots</p><h3>About this opportunity</h3><p>${e(j.description)}</p><h3>Skills youÃ¢â‚¬â„¢ll use</h3><p>${e(j.skills)}</p><h3>Host training establishment specifications</h3><p>${e(j.specs)}</p><h3>Eligible programs</h3><p>${e(j.courses.join(' Ã‚Â· '))}</p>${u.role==='Student'?`<div class="note">${applied?'You already applied to this position.':'Your current profile will be included with your application.'}</div>${applied?'':`<div class="field mt16"><label class="row"><input type="checkbox" name="consent" required> I confirm my profile details are ready for review.</label></div>`}`:''}${u.role!=='Student'?button('Edit position','job-edit',id,'secondary'):''}`,u.role==='Student'&&!applied&&j.status==='Active'&&j.slots>0?(data)=>{const a=applyToJob(db,u,id);if(j.supervisorId)notify(j.supervisorId,'Application_Status','New internship application',u.name+' applied for '+j.title+'.');audit('Submitted application for '+j.title);save();toast('Application submitted in the demo.');}:null,'Submit application');}
-function editJob(id){const u=currentUser();if(!['Coordinator','Supervisor'].includes(u.role))throw new Error('This role cannot manage positions.');const j=job(id);if(j&&u.role==='Supervisor'&&j.supervisorId!==u.id)throw new Error('This position is outside your scope.');showModal(j?'Edit position':'Post a new position',field('Position title','title','text',j?.title||'','required maxlength="120"')+field('Company','company','text',j?.company||u.company||'','required maxlength="120" '+(u.role==='Supervisor'?'readonly':''))+`<div class="grid-2">${field('Location','location','text',j?.location||'','required maxlength="100"')}${select('Work arrangement','mode',['On-site','Hybrid','Remote'],j?.mode||'On-site')}</div><div class="grid-2">${field('Available slots','slots','number',j?.slots??1,'required min="0" max="1000"')}${select('Status','status',['Draft','Active','Closed'],j?.status||'Draft')}</div>`+select('Eligible program','course',['All IT programs','BS Computer Science','BS Information Technology','BS Computer Engineering'],j?.courses?.length===1?j.courses[0]:'All IT programs')+textarea('Position description','description',j?.description||'')+field('Skills','skills','text',j?.skills||'','required maxlength="200"')+textarea('HTE specifications & requirements','specs',j?.specs||'')+(u.role==='Coordinator'?select('Assigned supervisor','supervisorId',[['','Unassigned'],...db.users.filter(s=>s.role==='Supervisor').map(s=>[s.id,s.name])],j?.supervisorId||''):''),data=>{const values={...data,slots:Number(data.slots),courses:data.course==='All IT programs'?['BS Computer Science','BS Information Technology','BS Computer Engineering']:[data.course],supervisorId:u.role==='Supervisor'?u.id:data.supervisorId||null};delete values.course;if(j)Object.assign(j,values);else db.jobs.unshift({id:crypto.randomUUID(),...values});audit((j?'Updated':'Created')+' position '+values.title);save();toast('Position saved.');},'Save position');}
-function applicationDetail(id){const u=currentUser(),a=visibleApplications(db,u).find(a=>a.id===id);if(!a)throw new Error('Application unavailable.');const j=job(a.jobId),s=student(a.studentId);showModal('Application details',`<h3>${e(j.title)}</h3><p>${e(j.company)} Ã‚Â· ${e(s.name)}</p>${badge(a.status)}<div class="timeline"><div class="timeline-item"><strong>Application submitted</strong><p>${date(a.date)}</p></div><div class="timeline-item"><strong>Supervisor review</strong><p>${a.status==='Pending'?'Awaiting review':e(a.status.replaceAll('_',' '))}</p></div><div class="timeline-item"><strong>Placement & endorsement</strong><p>${a.status==='Accepted'?e(a.note||'Application accepted. Coordinator endorsement is next.'):'Follows an accepted application.'}</p></div></div>${u.role==='Supervisor'?select('Review decision','status',['Pending','Under_Review','Accepted','Rejected'],a.status)+textarea('Review note','note',a.note||''):''}`,u.role==='Supervisor'?data=>{if(data.status==='Accepted'&&a.status!=='Accepted'){if(j.slots<1)throw new Error('No slots remain in this position.');if(db.applications.some(other=>other.studentId===s.id&&other.id!==a.id&&other.status==='Accepted'))throw new Error('This student already has an accepted placement.');j.slots--;s.company=j.company;s.supervisorId=u.id;s.badge='Enrolled';}if(a.status==='Accepted'&&data.status!=='Accepted')throw new Error('An accepted placement must be reassigned by the coordinator.');Object.assign(a,data);notify(s.id,'Application_Status','Application status updated',j.title+': '+data.status.replaceAll('_',' '));audit('Reviewed application for '+s.name);save();toast('Application updated.');}:null,'Save review');}
+function openJob(id){const u=currentUser(),j=job(id);if(!j)return;const applied=db.applications.some(a=>a.studentId===u.id&&a.jobId===id&&a.status!=='Rejected');showModal(e(j.title),`<div class="row between"><strong>${e(j.company)}</strong>${badge(j.status)}</div><p class="muted mt16">${e(j.location)} • ${e(j.mode)} • ${j.slots} available slots</p><h3>About this opportunity</h3><p>${e(j.description)}</p><h3>Skills you’ll use</h3><p>${e(j.skills)}</p><h3>Host training establishment specifications</h3><p>${e(j.specs)}</p><h3>Eligible programs</h3><p>${e(j.courses.join(' • '))}</p>${u.role==='Student'?`<div class="note">${applied?'You already applied to this position.':'Your current profile will be included with your application.'}</div>${applied?'':`<div class="field mt16"><label class="row"><input type="checkbox" name="consent" required> I confirm my profile details are ready for review.</label></div>`}`:''}${u.role!=='Student'?button('Edit position','job-edit',id,'secondary'):''}`,u.role==='Student'&&!applied&&j.status==='Active'&&j.slots>0?async(data)=>{const {error}=await supabase.from('applications').insert({job_id:id,student_id:u.id,status:'Pending',applied_date:today()});if(error)throw new Error(error.message);await syncRemote(supabase,db);if(j.supervisorId)notify(j.supervisorId,'Application_Status','New internship application',u.name+' applied for '+j.title+'.');audit('Submitted application for '+j.title);save();toast('Application submitted in the demo.');}:null,'Submit application');}
+function editJob(id){const u=currentUser();if(!['Coordinator','Supervisor'].includes(u.role))throw new Error('This role cannot manage positions.');const j=job(id);if(j&&u.role==='Supervisor'&&j.supervisorId!==u.id)throw new Error('This position is outside your scope.');showModal(j?'Edit position':'Post a new position',field('Position title','title','text',j?.title||'','required maxlength="120"')+field('Company','company','text',j?.company||u.company||'','required maxlength="120" '+(u.role==='Supervisor'?'readonly':''))+`<div class="grid-2">${field('Location','location','text',j?.location||'','required maxlength="100"')}${select('Work arrangement','mode',['On-site','Hybrid','Remote'],j?.mode||'On-site')}</div><div class="grid-2">${field('Available slots','slots','number',j?.slots??1,'required min="0" max="1000"')}${select('Status','status',['Draft','Active','Closed'],j?.status||'Draft')}</div>`+select('Eligible program','course',['All IT programs','BS Computer Science','BS Information Technology','BS Computer Engineering'],j?.courses?.length===1?j.courses[0]:'All IT programs')+textarea('Position description','description',j?.description||'')+field('Skills','skills','text',j?.skills||'','required maxlength="200"')+textarea('HTE specifications & requirements','specs',j?.specs||'')+(u.role==='Coordinator'?select('Assigned supervisor','supervisorId',[['','Unassigned'],...db.users.filter(s=>s.role==='Supervisor').map(s=>[s.id,s.name])],j?.supervisorId||''):''),async(data)=>{const values={...data,slots:Number(data.slots),courses:data.course==='All IT programs'?['BS Computer Science','BS Information Technology','BS Computer Engineering']:[data.course],supervisor_id:u.role==='Supervisor'?u.id:data.supervisorId||null};delete values.course;delete values.supervisorId;const {error}=j?await supabase.from('listings_jobs').update(values).eq('id',id):await supabase.from('listings_jobs').insert(values);if(error)throw new Error(error.message);await syncRemote(supabase,db);audit((j?'Updated':'Created')+' position '+values.title);save();toast('Position saved.');},'Save position');}
+function applicationDetail(id){const u=currentUser(),a=visibleApplications(db,u).find(a=>a.id===id);if(!a)throw new Error('Application unavailable.');const j=job(a.jobId),s=student(a.studentId);showModal('Application details',`<h3>${e(j.title)}</h3><p>${e(j.company)} • ${e(s.name)}</p>${badge(a.status)}<div class="timeline"><div class="timeline-item"><strong>Application submitted</strong><p>${date(a.date)}</p></div><div class="timeline-item"><strong>Supervisor review</strong><p>${a.status==='Pending'?'Awaiting review':e(a.status.replaceAll('_',' '))}</p></div><div class="timeline-item"><strong>Placement & endorsement</strong><p>${a.status==='Accepted'?e(a.note||'Application accepted. Coordinator endorsement is next.'):'Follows an accepted application.'}</p></div></div>${u.role==='Supervisor'?select('Review decision','status',['Pending','Under_Review','Accepted','Rejected'],a.status)+textarea('Review note','note',a.note||''):''}`,u.role==='Supervisor'?async(data)=>{if(data.status==='Accepted'&&a.status!=='Accepted'){if(j.slots<1)throw new Error('No slots remain in this position.');if(db.applications.some(other=>other.studentId===s.id&&other.id!==a.id&&other.status==='Accepted'))throw new Error('This student already has an accepted placement.');}if(a.status==='Accepted'&&data.status!=='Accepted')throw new Error('An accepted placement must be reassigned by the coordinator.');const {error}=await supabase.rpc('review_application',{p_id:a.id,p_status:data.status,p_note:data.note||''});if(error)throw new Error(error.message);await syncRemote(supabase,db);notify(s.id,'Application_Status','Application status updated',j.title+': '+data.status.replaceAll('_',' '));audit('Reviewed application for '+s.name);save();toast('Application updated.');}:null,'Save review');}
 async function clockAction(){const u=currentUser();if(u.role!=='Student')throw new Error('Only students can clock in.');if(!u.supervisorId)throw new Error('You need an assigned supervisor before logging attendance.');if(db.shift&&db.shift.studentId!==u.id)throw new Error('Another demo student has an active shift. Finish that shift first.');if(!db.shift){const pending=$('[data-action="clock"]');pending.disabled=true;pending.textContent='Requesting locationÃ¢â‚¬Â¦';let gps=null;try{const pos=await new Promise((resolve,reject)=>{if(!navigator.geolocation)return reject(new Error());navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:8000,maximumAge:0});});gps={lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy};}catch{ gps={lat:14.55472, lng:121.02441, accuracy:4.8}; }if(currentUser()?.id!==u.id)return;db.shift={studentId:u.id,clockIn:new Date().toISOString(),gps};save();render();toast(gps?'Clocked in. Location captured, pending server verification.':'Clocked in without location. Add a justification when submitting.');return;}
   const shift=db.shift;showModal('Complete your daily time record',`<p>Shift started ${date(shift.clockIn)} at ${time(shift.clockIn)}.</p>${field('Unpaid break (minutes)','breakMinutes','number',0,'required min="0" max="720"')}${textarea('Task summary & learning reflection','task',db.draft)}${textarea('Location or attendance justification'+(shift.gps?' (optional)':''),'justification','',shift.gps?'':'required minlength="10"')}<p class="note">Location capture alone does not verify attendance. Your supervisor will review the entry and supporting context.</p>`,data=>{const end=shift.clockOut||new Date().toISOString(),hours=hoursBetween(shift.clockIn,end,Number(data.breakMinutes));/* removed 20s limit */db.logs.push({id:crypto.randomUUID(),studentId:u.id,supervisorId:u.supervisorId,date:today(),clockIn:shift.clockIn,clockOut:end,breakMinutes:Number(data.breakMinutes),hours,task:data.task,justification:data.justification,gps:shift.gps,status:'Pending',remarks:'',signature:''});db.shift=null;db.draft='';notify(u.supervisorId,'DTR_Event','Daily time record submitted',u.name+' submitted '+hours.toFixed(2)+' hours for review.');audit('Submitted a daily time record');save();toast('Shift completed and submitted for review.');},shift.clockOut?'Submit Daily Log':'Clock out & submit');}
 function logDetail(id){const u=currentUser(),l=visibleLogs(db,u).find(l=>l.id===id);if(!l)throw new Error('Attendance entry unavailable.');const review=u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status),justify=u.role==='Student'&&['Flagged','Rejected'].includes(l.status);showModal('Daily time record',`<div class="row between"><strong>${e(student(l.studentId)?.name)}</strong>${badge(l.status)}</div><p class="muted mt16">${date(l.date)} Ã‚Â· ${time(l.clockIn)} Ã¢â‚¬â€œ ${time(l.clockOut)} Ã‚Â· ${l.hours} hours</p><h3>Task summary</h3><p>${e(l.task)}</p><p class="small"><strong>Location:</strong> ${l.gps?'Captured on device; not server-verified':'Not captured'}</p>${l.justification?`<h3>Justification</h3><p>${e(l.justification)}</p>`:''}${l.remarks?`<h3>Supervisor remarks</h3><p>${e(l.remarks)}</p>`:''}${l.signature?`<p class="small muted">Demo typed signature: ${e(l.signature)}</p>`:''}${review?select('Review decision','status',['Approved','Flagged','Rejected'])+textarea('Review remarks','remarks',l.remarks||'')+field('Typed signature (demo)','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I reviewed this attendance record.</label>':justify?textarea('Justification for re-review','justification',l.justification||'','required minlength="10"'):''}`,review?data=>{reviewLog(db,u,id,data.status,data.remarks,data.signature);notify(l.studentId,'DTR_Event','DTR entry '+data.status.toLowerCase(),date(l.date)+': '+data.remarks);audit('Marked '+student(l.studentId).name+' DTR '+data.status);save();toast('DTR review saved.');}:justify?data=>{l.justification=data.justification;l.status='Pending';notify(l.supervisorId,'DTR_Event','Justification submitted',u.name+' resubmitted an attendance entry for review.');audit('Submitted attendance justification');save();toast('Justification sent for re-review.');}:null,'Submit review');}
@@ -230,7 +238,7 @@ async function action(name,id,el){
     case 'close':modal.close();return;
     case 'demo':{const role=roles.includes(id)?id:'Student',user=db.users.find(u=>u.role===role&&u.status==='Active');if(!user)throw new Error('This demo role has no active account. Reset demo data from an active coordinator account.');storeSession(user);modal.close();view={search:'',filter:'All',course:'All',mode:'All'};location.hash='/'+role.toLowerCase()+'/dashboard';render();return;}
     case 'auth-role':authRole=id;render();return;
-    case 'toggle-password':{const input=$('#password');input.type=input.type==='password'?'text':'password';el.setAttribute('aria-label',input.type==='password'?'Show password':'Hide password');return;}
+    case 'toggle-password':{const byId=el.dataset.id?document.getElementById(el.dataset.id):null;const input=(byId instanceof HTMLInputElement?byId:null)||el.parentElement?.querySelector('input')||$('#password');if(!input)return;input.type=input.type==='password'?'text':'password';el.setAttribute('aria-label',input.type==='password'?'Show password':'Hide password');return;}
     case 'forgot': location.hash = '/forgot'; return;
     case 'logout':logout();return;
     case 'switch-role':showModal('Explore another portal',`<p>Use the sample accounts to see how the three roles work together.</p><div class="stack">${roles.map(r=>button('Open '+r+' demo','demo',r,'secondary full')).join('')}</div>`);return;
@@ -335,13 +343,15 @@ document.addEventListener('submit',async event=>{
            throw new Error('Too many attempts. Try again in ' + Math.ceil((loginCooldownUntil - Date.now())/1000) + 's.');
         }
         
+        const invalidCredsMsg = authRole === 'Supervisor' ? 'Invalid email or password.' : authRole === 'Coordinator' ? 'Invalid Faculty ID or password.' : 'Invalid SR code or password.';
+        
         let targetEmail = values.identifier.trim();
         if (!targetEmail.includes('@')) {
           const { data: emailData, error: rpcError } = await supabase.rpc('get_login_email', { p_identifier: targetEmail });
           if (rpcError || !emailData) {
              failedLoginAttempts++;
              if (failedLoginAttempts >= 5) loginCooldownUntil = Date.now() + 60000;
-             throw new Error('Invalid SR code or password.');
+             throw new Error(invalidCredsMsg);
           }
           targetEmail = emailData;
         }
@@ -352,9 +362,13 @@ document.addEventListener('submit',async event=>{
         });
         
         if (error) {
+           console.error('Auth Error Details:', { message: error.message, status: error.status, code: error.code, fullError: error });
            failedLoginAttempts++;
            if (failedLoginAttempts >= 5) loginCooldownUntil = Date.now() + 60000;
-           throw new Error('Invalid SR code or password.');
+           if (error.message.toLowerCase().includes('not confirmed')) {
+             throw new Error('Email not confirmed. Please activate your account.');
+           }
+           throw new Error(invalidCredsMsg);
         }
 
         const { data: profile, error: profileError } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
@@ -397,6 +411,7 @@ document.addEventListener('submit',async event=>{
         }
 
         storeSession(localUser);
+        if (await syncRemote(supabase, db) && !modal.open) render();
         location.hash='/' + role.toLowerCase() + '/dashboard';
         return;
       }
@@ -432,7 +447,7 @@ document.addEventListener('submit',async event=>{
       }
       if (form.id === 'forgot-form') {
         const id = values.identifier?.trim();
-        if (!id) throw new Error('Please enter your email or SR code first.');
+        if (!id) throw new Error('Please enter your SR code, email, or Faculty ID first.');
         let targetEmail = id;
         if (!targetEmail.includes('@')) {
           const { data: emailData, error: rpcError } = await supabase.rpc('get_login_email', { p_identifier: targetEmail });
@@ -447,12 +462,18 @@ document.addEventListener('submit',async event=>{
         return;
       }
       if (form.id === 'reset-password-form') {
-        if (values.password !== values.confirm) throw new Error('Passwords do not match.');
-        if (values.password.length < 8) throw new Error('Password must be at least 8 characters.');
+        const password = form.elements.password?.value ?? '';
+        const confirm = form.elements.confirm?.value ?? '';
+        if (!password || !confirm) throw new Error('Please fill in both password fields.');
+        if (password !== confirm) throw new Error('Passwords do not match.');
+        if (password.length < 8) throw new Error('Password must be at least 8 characters.');
         submit.textContent = 'Saving...';
-        const { error } = await supabase.auth.updateUser({ password: values.password });
+        const { error } = await supabase.auth.updateUser({ password });
         if (error) throw new Error(error.message);
         await supabase.auth.signOut();
+        recoveryActive = false;
+        session = null;
+        try { sessionStorage.removeItem(SESSION); } catch(e) {}
         form.reset();
         toast('Password updated. Please log in.');
         location.hash = '/login';
@@ -466,10 +487,11 @@ document.addEventListener('submit',async event=>{
     save();render();toast('Saved in the demonstration.');
   }catch(error){if(errorBox)errorBox.textContent=error.message;else toast(error.message);}finally{if(submit)submit.disabled=false;}
 });
-window.addEventListener('hashchange', () => {
+window.addEventListener('hashchange', async () => {
   view = {search: '', filter: 'All', course: 'All', mode: 'All'};
   modal.close();
   render();
+  if (session && await syncRemote(supabase, db) && !modal.open) render();
   const {query} = route();
   if (query && query.includes('scrollTo=')) {
     const targetId = query.split('scrollTo=')[1].split('&')[0];
@@ -483,9 +505,11 @@ window.addEventListener('hashchange', () => {
   }
   $('#main')?.focus({preventScroll:true});
 });
-window.addEventListener('storage',event=>{if(event.key===STORAGE){db=ensureCreatorAccounts(load());render();}});
+window.addEventListener('storage',event=>{if(event.key===STORAGE){const keep=session?db.users.find(u=>u.id===session.id):null;db=ensureCreatorAccounts(load());if(keep&&!db.users.some(u=>u.id===keep.id))db.users.push(keep);render();}});
 setInterval(()=>{const timer=$('#shift-timer');if(timer&&db.shift&&!db.shift.clockOut)timer.textContent=elapsed(db.shift.clockIn);if(session&&!currentUser()){logout();location.hash='/login';toast('Your demo session ended. Sign in to continue.');}},1000);
-portals=createPortalViews({get db(){return db;},get view(){return view;},get user(){return currentUser();},route,e,icon,button,link,heading,field,textarea,select,badge,person,table,empty,progress,date,time,today,student,job,save,notify,audit,toast,render,showModal,download,fileOp,putFile,dtrTable,visibleIncidents,legacy:{applicationDetail,editJob,studentDetail,incidentNew,incidentDetail,evaluate,logDetail,editHTE,userNew,importUsers,documentUpload},capture(fn){capturingForm=true;capturedForm=null;try{fn();return capturedForm;}finally{capturingForm=false;}}});
+setInterval(async () => { if (session && await syncRemote(supabase, db) && !modal.open) render(); }, 20000);
+async function submitApplication(jobId, note) { const {error} = await supabase.from('applications').insert({ job_id: jobId, student_id: currentUser().id, status: 'Pending', applied_date: today(), notes: note || '' }); if (error) throw new Error(error.message); await syncRemote(supabase, db); }
+portals=createPortalViews({get db(){return db;},get view(){return view;},get user(){return currentUser();},route,e,icon,button,link,heading,field,textarea,select,badge,person,table,empty,progress,date,time,today,student,job,save,notify,audit,toast,render,showModal,download,fileOp,putFile,dtrTable,visibleIncidents,submitApplication,legacy:{applicationDetail,editJob,studentDetail,incidentNew,incidentDetail,evaluate,logDetail,editHTE,userNew,importUsers,documentUpload},capture(fn){capturingForm=true;capturedForm=null;try{fn();return capturedForm;}finally{capturingForm=false;}}});
 
 document.addEventListener('change',event=>{if(!['public-course','public-location'].includes(event.target.id))return;const course=$('#public-course').value,place=$('#public-location').value;let count=0;document.querySelectorAll('.home-job').forEach(card=>{card.hidden=!((course==='All'||card.dataset.courses.includes(course))&&(place==='All'||card.dataset.location.includes(place)));if(!card.hidden)count++;});$('#public-empty').hidden=count>0;});
 
@@ -501,50 +525,55 @@ document.addEventListener('click',event=>{const drawer=$('#notice-drawer');if(dr
 
 
 // MAIN APP GATE
-let recoverySessionDetected = false;
+function showResetPage() {
+  if (location.hash === '#/reset-password') return;
+  history.replaceState(null, '', location.pathname);
+  location.hash = '/reset-password';
+}
 
-supabase.auth.onAuthStateChange(async (event, sessionObj) => {
-  if (event === 'SIGNED_OUT') return;
-  if (event === 'PASSWORD_RECOVERY') {
-    recoverySessionDetected = true;
-    history.replaceState(null, '', location.pathname);
-    location.hash = '/reset-password';
-    return;
-  }
+supabase.auth.onAuthStateChange((event, sessionObj) => {
+  if (event === 'PASSWORD_RECOVERY') { recoveryActive = true; showResetPage(); return; }
+  if (event === 'SIGNED_OUT' || recoveryActive) return;
   if (sessionObj?.user) {
-    const { data: profile, error } = await supabase.from('profiles').select('status').eq('id', sessionObj.user.id).single();
-    if (error || !profile || profile.status !== 'Active') {
-      await supabase.auth.signOut();
-      if (location.hash !== '#/login') {
-        location.hash = '/login';
+    setTimeout(async () => {
+      const { data: profile, error } = await supabase.from('profiles').select('status').eq('id', sessionObj.user.id).single();
+      if (error || !profile || profile.status !== 'Active') {
+        await supabase.auth.signOut();
+        if (location.hash !== '#/login') location.hash = '/login';
       }
-    }
+    }, 0);
   }
 });
 
 (async () => {
   const urlParams = new URLSearchParams(location.search);
-  const hashStr = location.hash.replace(/^#\/?/, '');
-  const hashParams = new URLSearchParams(hashStr);
-
+  const hashParams = new URLSearchParams(location.hash.replace(/^#\/?/, ''));
   const isAuthError = urlParams.has('error') || urlParams.has('error_code') || hashParams.has('error') || hashParams.has('error_code');
 
-  if (urlParams.has('code')) {
-    const { error } = await supabase.auth.exchangeCodeForSession(urlParams.get('code'));
-    history.replaceState(null, '', location.pathname);
-    if (!error) {
-      location.hash = '/reset-password';
-      return; // hashchange handles render
-    }
-  } else if (hashParams.get('type') === 'recovery' && hashParams.has('access_token')) {
-    // Wait for Supabase to handle the session
-    await new Promise(r => setTimeout(r, 500));
-    history.replaceState(null, '', location.pathname);
-  } else if (isAuthError) {
+  if (isAuthError) {
     history.replaceState(null, '', location.pathname);
     app.innerHTML = authPage('auth-error');
     document.title = 'MenteeLog | Error';
-    return; // Stop initialization, show error
+    return;
+  }
+
+  if (isRecoveryLink) {
+    let { data: { session: s } } = await supabase.auth.getSession();
+    if (!s && urlParams.has('code')) {
+      const { error } = await supabase.auth.exchangeCodeForSession(urlParams.get('code'));
+      if (!error) ({ data: { session: s } } = await supabase.auth.getSession());
+    }
+    if (s) {
+      recoveryActive = true;
+      showResetPage();
+    } else {
+      recoveryActive = false;
+      history.replaceState(null, '', location.pathname);
+      location.hash = '/login';
+      toast('This reset link is invalid or expired. Please request a new one.');
+    }
+    render();
+    return;
   }
 
   const { data: { session: initSession } } = await supabase.auth.getSession();
@@ -553,6 +582,10 @@ supabase.auth.onAuthStateChange(async (event, sessionObj) => {
     if (error || !profile || profile.status !== 'Active') {
       await supabase.auth.signOut();
       if (location.hash !== '#/login') location.hash = '/login';
+    } else {
+      setTimeout(async () => {
+        if (await syncRemote(supabase, db) && !modal.open) render();
+      }, 0);
     }
   }
   render();
