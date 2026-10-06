@@ -337,7 +337,7 @@ function tkTerminal(id) {
     const statusBg = active ? '#dcfce7' : '#f1f5f9';
     
     let body = `<div style="text-align: center; padding: 10px 0;">
-        <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--maroon); color: white; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; margin: 0 auto 16px auto;">${s.name.charAt(0)}</div>
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--burgundy); color: white; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; margin: 0 auto 16px auto;">${s.name.charAt(0)}</div>
         <h2 style="margin: 0 0 4px 0; font-size: 20px;">${e(s.name)}</h2>
         <p class="muted" style="margin-bottom: 24px; font-size: 14px;">${e(s.identifier)} &bull; ${e(s.course)}</p>
         
