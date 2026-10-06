@@ -21,22 +21,30 @@ let storageIssue=false,filesDB=null;
 function load(){try{const saved=JSON.parse(localStorage.getItem(STORAGE));return saved?.version===1&&Array.isArray(saved.users)&&Array.isArray(saved.logs)?saved:seedData();}catch{return seedData();}}
 let db=ensureCreatorAccounts(load());
 let session=null,view={search:'',filter:'All',course:'All',mode:'All'},authRole='Student',modalSubmit=null,modalOpener=null,modalUserId=null,toastTimer;
+
 try {
-  if (!sessionStorage.getItem('dtr_reset_guaranteed')) {
-    sessionStorage.setItem('dtr_reset_guaranteed', '1');
-    if (db && db.shift) { delete db.shift; save(); }
+  if (!sessionStorage.getItem('dtr_reset_guaranteed_v3')) {
+    sessionStorage.setItem('dtr_reset_guaranteed_v3', '1');
+    localStorage.removeItem(STORAGE);
+    db=ensureCreatorAccounts(seedData());
   }
 } catch(e) {}
+
 
 
 // --- DEMO SEED FOR ACTIVE SHIFT ---
 db.activeShifts = db.activeShifts || [];
 if(db.activeShifts.length === 0) {
-    const aStudent = db.users.find(u => u.role === 'Student' && u.name.includes('Demo'));
-    if(aStudent) {
+    // Find ALL students and assign them a supervisor if they don't have one, and start a shift for them!
+    const defaultSup = db.users.find(u => u.role === 'Supervisor');
+    db.users.filter(u => u.role === 'Student').forEach(stu => {
+        if (!stu.supervisorId && defaultSup) {
+            stu.supervisorId = defaultSup.id;
+            stu.company = defaultSup.company;
+        }
         const startTime = new Date(Date.now() - (2 * 3600000 + 14 * 60000)).toISOString();
-        db.activeShifts.push({ studentId: aStudent.id, supervisorId: aStudent.supervisorId, clockIn: startTime, clockOut: null });
-    }
+        db.activeShifts.push({ studentId: stu.id, supervisorId: stu.supervisorId, clockIn: startTime, clockOut: null });
+    });
 }
 // -----------------------------------
 
