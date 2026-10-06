@@ -882,7 +882,7 @@ html, body {
 
     .public-site .reference-header nav a { font-size: 10px; }
 
-    .team-grid { grid-template-columns: 1fr !important; }
+    /* .team-grid 1fr override removed */
 
     .role-feature-grid { grid-template-columns: 1fr !important; }
 

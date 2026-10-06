@@ -93,3 +93,9 @@ body{font-size:14px;line-height:1.4}h1{font-size:24px;letter-spacing:-.5px;margi
 @media(max-width: 950px) {
     .flowchart-grid { grid-template-columns: 1fr; }
 }
+
+@media(max-width: 650px) {
+    .team-grid .reference-photo {
+        height: 180px !important;
+    }
+}
