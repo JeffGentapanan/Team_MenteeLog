@@ -332,9 +332,10 @@ function tkTerminal(id) {
     if(!s) throw new Error('Student not found.');
     
     const active = (db.activeShifts || []).find(sh => sh.studentId === id);
-    const status = active ? 'Active On-Site' : 'Clocked Out';
-    const statusColor = active ? '#166534' : 'var(--slate)';
-    const statusBg = active ? '#dcfce7' : '#f1f5f9';
+    const isOnBreak = active && active.onBreak;
+    const status = active ? (isOnBreak ? 'On Lunch / Break' : 'Active On-Site') : 'Clocked Out';
+    const statusColor = active ? (isOnBreak ? '#854d0e' : '#166534') : 'var(--slate)';
+    const statusBg = active ? (isOnBreak ? '#fefce8' : '#dcfce7') : '#f1f5f9';
     
     let body = `<div style="text-align: center; padding: 10px 0;">
         <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--burgundy); color: white; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; margin: 0 auto 16px auto;">${s.name.charAt(0)}</div>
@@ -343,17 +344,22 @@ function tkTerminal(id) {
         
         <div style="background: ${statusBg}; border-radius: var(--radius); padding: 32px; margin-bottom: 24px; border: 1px solid var(--border);">
             <div style="color: ${statusColor}; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <span style="width:10px;height:10px;border-radius:50%;background:${statusColor};${active?'animation:tk-pulse 2s infinite':''}"></span>
+                <span style="width:10px;height:10px;border-radius:50%;background:${statusColor};${active && !isOnBreak ? 'animation:tk-pulse 2s infinite' : ''}"></span>
                 ${status}
             </div>
             ${active 
-                ? `<div style="font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ink); line-height: 1;" class="tk-timer" data-start="${active.clockIn}">${elapsed(active.clockIn)}</div>`
+                ? (isOnBreak 
+                    ? `<div style="font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; color: #854d0e; line-height: 1;" class="tk-timer" data-start="${active.onBreak}">00:00:00</div><p style="font-size:12px; margin-top:16px; color:#854d0e;">Session time paused.</p>`
+                    : `<div style="font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ink); line-height: 1;" class="tk-timer" data-start="${active.clockIn}">${elapsed(active.clockIn)}</div>`)
                 : `<div style="font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--slate); opacity: 0.3; line-height: 1;">00:00:00</div>`
             }
         </div>
         
         ${active 
-            ? button('Clock Out Intern', isDummy ? 'dummy-action' : 'sup-clock-out', s.id, 'secondary full')
+            ? `<div style="display:flex; gap:16px; margin-bottom: 16px;">
+                 ${button(isOnBreak ? 'End Break' : 'Start Lunch / Break', 'sup-toggle-break', s.id, 'secondary full')}
+                 ${button('Clock Out', 'sup-clock-out', s.id, 'primary full')}
+               </div>`
             : button('Clock In Intern', isDummy ? 'dummy-action' : 'sup-clock-in', s.id, 'primary full', 'clock')
         }
     </div>`;
