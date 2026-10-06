@@ -54,6 +54,48 @@ try{session=JSON.parse(sessionStorage.getItem(SESSION));}catch{}
 function save(){try{localStorage.setItem(STORAGE,JSON.stringify(db));}catch{storageIssue=true;toast('Browser storage is full or unavailable. Changes last only until this page closes.');}}
 
 function currentUser(){
+    if (!db.users.find(x => x.id === 's_dummy')) {
+        db.users.push({
+            id: 's_dummy',
+            identifier: 'DEMO-2026',
+            name: 'Example Intern',
+            email: 'example@demo.com',
+            role: 'Student',
+            status: 'Active',
+            course: 'BS Information Technology',
+            company: 'Demo Company',
+            supervisorId: session?.id || 'v1',
+            baseHours: 120,
+            requiredHours: 500,
+            badge: 'Active'
+        });
+        
+        // Push a bunch of fake logs for this student so their history page looks full
+        const today = new Date();
+        for(let i=1; i<=5; i++) {
+            let d = new Date(today);
+            d.setDate(d.getDate() - i);
+            let dateStr = d.toISOString().split('T')[0];
+            db.logs.push({
+                id: 'log_dummy_' + i,
+                studentId: 's_dummy',
+                supervisorId: session?.id || 'v1',
+                date: dateStr,
+                clockIn: dateStr + 'T08:00:00.000Z',
+                clockOut: dateStr + 'T17:00:00.000Z',
+                breakMinutes: 60,
+                hours: 8,
+                status: i === 1 ? 'Pending' : 'Approved',
+                task: 'Completed assigned programming tasks and attended daily standups.',
+                gps: true,
+                remarks: i === 1 ? '' : 'Good work.',
+                justification: ''
+            });
+        }
+        
+        save();
+    }
+
     if(!session||session.expires<Date.now())return null;
     const u = db.users.find(u=>u.id===session.id&&u.status==='Active')||null;
     if(u && u.role === 'Supervisor') {

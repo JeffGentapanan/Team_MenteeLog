@@ -330,31 +330,10 @@ export function createPortalViews(c){
         </tr>`;
     });
 
-    if (rosterRows.length === 0) {
-        rosterRows = [`<tr>
-            <td><div class="person-ui"><div class="avatar" style="background:var(--maroon);color:white;">E</div><div><strong>Example Intern</strong><small>DEMO-2026</small></div></div></td>
-            <td><div style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--slate);"><span style="width:8px;height:8px;border-radius:50%;background:var(--slate);"></span>Clocked Out</div></td>
-            <td>--</td>
-            <td>${b('Open Terminal', 'tk-terminal', 'dummy', 'primary small')}</td>
-        </tr>`];
-    }
-    
     return panel('Timekeeper: Intern Roster', `<p class="small muted" style="margin-bottom:16px;">Select an intern to manage their current shift.</p>` + table(['Intern', 'Current Status', 'Today\'s Session', 'Action'], rosterRows) + `<style>@keyframes tk-pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }</style>`);
 })() + panel('DTR History', (() => {
         let historyRows = list.map(l=>`<tr><td><strong>${e(c.student(l.studentId)?.name)}</strong><br><small>${e(c.student(l.studentId)?.course)}</small></td><td>${date(l.date)}</td><td>${time(l.clockIn)}</td><td>${time(l.clockOut)}</td><td><span class="task-excerpt">${e(l.task)}</span></td><td>${badge(l.gps?'Captured':'Unavailable')}</td><td>${badge(l.status)}</td><td><div class="row">${['Pending','Flagged'].includes(l.status)?b('Verify On-Site','ref-verify',l.id,'primary small', 'pin') + b('Approve','ref-approve',l.id,'small')+b('Reject','ref-reject',l.id,'secondary small'):''}${nav('View','dtr','profile',l.studentId,'secondary small')}</div></td></tr>`);
         
-        if (historyRows.length === 0) {
-            historyRows = [`<tr>
-                <td><strong>Example Intern</strong><br><small>BS Information Technology</small></td>
-                <td>${date(new Date().toISOString())}</td>
-                <td>08:00 AM</td>
-                <td>05:00 PM</td>
-                <td><span class="task-excerpt">Completed daily tasks, reviewed codebase, and submitted UI updates.</span></td>
-                <td>${badge('Unavailable')}</td>
-                <td>${badge('Pending')}</td>
-                <td><div class="row" style="gap: 4px;">${b('Verify On-Site', 'dummy-verify', 'dummy', 'primary small', 'pin')} ${b('Approve', 'dummy-approve', 'dummy', 'small')} ${b('View', 'dummy-view', 'dummy', 'secondary small')}</div></td>
-            </tr>`];
-        }
         return table(['Intern','Date','Clock In','Clock Out','Task Summary','GPS','Status','Actions'], historyRows);
     })());}
     // Student: clock and task draft at left, history and saved drafts at right.
