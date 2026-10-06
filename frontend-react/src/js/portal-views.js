@@ -330,9 +330,9 @@ export function createPortalViews(c){
                 const statusText = active ? 'Active On-Site' : 'Clocked Out';
                 
                 const isOnBreak = active && active.onBreak;
-                const actionBtn = active 
-                    ? '<div style="display:flex; gap:8px;">' + b('Clock-Out', 'sup-clock-out', s.id, 'primary small') + b(isOnBreak ? 'End Break' : 'Start Break', 'sup-toggle-break', s.id, 'secondary small') + b('Live View', 'tk-terminal', s.id, 'secondary small', 'eye') + '</div>'
-                    : '<div style="display:flex; gap:8px;">' + b('Clock-In', 'sup-clock-in', s.id, 'primary small') + b('Open Terminal', 'tk-terminal', s.id, 'secondary small', 'monitor') + '</div>';
+                const actionBtn = active
+                    ? b('Live View', 'tk-terminal', s.id, 'primary small', 'eye')
+                    : b('Open Terminal', 'tk-terminal', s.id, 'secondary small', 'monitor');
                 return '<tr>' +
                     '<td>' + person(s) + '</td>' +
                     '<td><div style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:' + statusBg + '"><span style="width:8px;height:8px;border-radius:50%;' + statusDot + '"></span>' + statusText + '</div></td>' +
