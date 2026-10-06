@@ -40,14 +40,16 @@
 
 /* 3. Button Hover Effects */
 .btn {
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, box-shadow 0.2s ease !important;
+    transition: transform 0.18s ease-out, background-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease !important;
+    will-change: transform;
 }
 .btn:not(.text-btn):hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(88, 17, 26, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(88, 17, 26, 0.12);
 }
 .btn:not(.text-btn):active {
-    transform: translateY(1px);
+    transform: translateY(0) scale(0.97);
+    transition-duration: 0.08s !important;
 }
 
 /* 4. Smooth Stats Loading */
@@ -60,10 +62,9 @@
 .public-stats > div:nth-child(3) { animation-delay: 0.6s; }
 .public-stats > div:nth-child(4) { animation-delay: 0.8s; }
 
-/* 5. Dashboard / Portal Cards Fade in */
+/* 5. Dashboard / Portal Cards � instant visible, gentle entry */
 .student-dash-grid .card, .dashboard-quick, .reference-table-panel {
-    opacity: 0;
-    animation: fadeInUp 0.6s ease-out forwards;
+    animation: fadeInUp 0.4s ease-out both;
 }
 
 /* 6. Gentle Sticky Shadow & Alignment */
@@ -202,14 +203,14 @@ html, body {
 
 /* The Buttery Smooth Lift Effect */
 .benefit-card:hover, .how-card:hover, .company-values .reference-photo:hover {
-    transform: translateY(-10px) !important; 
-    box-shadow: 0 15px 35px rgba(88, 17, 26, 0.35), 0 0 45px rgba(166, 92, 81, 0.2) !important;
+    transform: translateY(-5px) !important;
+    box-shadow: 0 12px 28px rgba(88, 17, 26, 0.2), 0 0 30px rgba(166, 92, 81, 0.1) !important;
 }
 
 /* Team Grid Hover Lift & Glow (Lighter glow for Maroon background) */
 .team-grid article:hover {
-    transform: translateY(-10px) !important;
-    box-shadow: 0 15px 35px rgba(250, 244, 232, 0.3), 0 0 45px rgba(239, 223, 187, 0.2) !important;
+    transform: translateY(-5px) !important;
+    box-shadow: 0 12px 28px rgba(250, 244, 232, 0.2), 0 0 30px rgba(239, 223, 187, 0.1) !important;
 }
 
 
@@ -882,6 +883,7 @@ html, body {
     .public-site .reference-header nav a { font-size: 10px; }
 
     .team-grid { grid-template-columns: 1fr !important; }
+    .team-grid article:last-child { width: 100% !important; justify-self: stretch !important; }
 
     .role-feature-grid { grid-template-columns: 1fr !important; }
 
@@ -945,5 +947,162 @@ html, body {
     }
     body.menu-open .public-site .reference-header .mobile-menu-btn {
         color: #58111A !important;
+    }
+}
+
+/* =========================================
+   GLOBAL SMOOTHNESS LAYER
+   ========================================= */
+
+/* Smooth page content transitions on route change */
+@keyframes pageIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.content {
+    animation: pageIn 0.25s ease-out both;
+}
+
+/* Smooth modal open/close */
+dialog {
+    transition: opacity 0.2s ease, transform 0.2s ease !important;
+    opacity: 0;
+    transform: scale(0.97);
+}
+dialog[open] {
+    opacity: 1;
+    transform: scale(1);
+}
+dialog::backdrop {
+    transition: opacity 0.2s ease !important;
+}
+
+/* Smooth sidebar nav link transitions */
+.nav-link {
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+/* Smooth tab switch */
+.tab, .auth-tabs button {
+    transition: border-color 0.15s ease, color 0.15s ease, font-weight 0.1s ease, background-color 0.15s ease !important;
+}
+
+/* Smooth card background & shadow on hover */
+.card {
+    transition: box-shadow 0.25s ease, transform 0.25s ease !important;
+}
+
+/* Smooth badge color changes */
+.badge {
+    transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+/* Smooth form focus states */
+input, select, textarea {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+}
+
+/* Smooth toast notification entrance */
+.toast {
+    transition: opacity 0.3s ease, transform 0.3s ease !important;
+}
+
+/* Smooth notification drawer slide */
+.notice-drawer {
+    animation: fadeInDown 0.2s ease-out both;
+}
+
+/* Smooth profile popover */
+.profile-popover {
+    animation: fadeInDown 0.15s ease-out both;
+}
+
+/* Smooth sidebar mobile slide */
+.portal-sidebar {
+    transition: transform 0.25s ease !important;
+}
+.portal-scrim {
+    transition: opacity 0.25s ease !important;
+}
+
+/* Smooth table row hover */
+tbody tr {
+    transition: background-color 0.12s ease !important;
+}
+
+/* Smooth stat card loading � no blank flash */
+.stat {
+    animation: fadeIn 0.3s ease-out both;
+}
+
+/* Prevent layout shift on icon buttons */
+.icon-btn {
+    transition: background-color 0.15s ease, transform 0.12s ease !important;
+}
+.icon-btn:active {
+    transform: scale(0.92);
+}
+
+/* Smooth text-btn underline */
+.text-btn {
+    transition: color 0.15s ease !important;
+}
+
+/* Prevent scroll anchoring jank */
+html {
+    scroll-behavior: smooth;
+    overflow-anchor: auto;
+}
+
+/* GPU-accelerate common transform targets */
+.btn, .card, .stat, .nav-link, .badge, dialog, .notice-drawer, .profile-popover, .portal-sidebar {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* =========================================
+   DEFINITIVE MOBILE AUTHENTICATION FIX
+   ========================================= */
+@media (max-width: 650px) {
+    /* Center the auth card correctly without cutting off the top */
+    .auth-reference-main, .auth-main {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        min-height: 100vh !important;
+        padding: 24px 16px !important;
+    }
+    
+    .auth-reference-card, .auth-card {
+        width: 100% !important;
+        max-width: 440px !important;
+        margin: auto !important; 
+    }
+
+    /* Force tabs onto one single row cleanly */
+    .auth-tabs {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 2px !important;
+        overflow-x: hidden !important;
+    }
+
+    .auth-tabs button {
+        flex: 1 !important;
+        font-size: 11px !important;
+        padding: 10px 2px !important;
+        white-space: nowrap !important;
+        letter-spacing: -0.2px !important;
+        min-width: 0 !important; 
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+
+    @media (max-width: 360px) {
+        .auth-tabs .icon { display: none !important; }
+        .auth-tabs button { font-size: 10px !important; }
     }
 }
