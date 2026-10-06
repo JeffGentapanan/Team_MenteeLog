@@ -52,7 +52,45 @@ let capturedForm=null,capturingForm=false;
 let portals;
 try{session=JSON.parse(sessionStorage.getItem(SESSION));}catch{}
 function save(){try{localStorage.setItem(STORAGE,JSON.stringify(db));}catch{storageIssue=true;toast('Browser storage is full or unavailable. Changes last only until this page closes.');}}
-function currentUser(){if(!session||session.expires<Date.now())return null;return db.users.find(u=>u.id===session.id&&u.status==='Active')||null;}
+
+function currentUser(){
+    if(!session||session.expires<Date.now())return null;
+    const u = db.users.find(u=>u.id===session.id&&u.status==='Active')||null;
+    if(u && u.role === 'Supervisor') {
+        let assigned = db.users.filter(s => s.role === 'Student' && s.supervisorId === u.id);
+        if(assigned.length === 0) {
+            db.users.filter(s => s.role === 'Student' && (s.name.includes('Demo') || s.id.startsWith('s'))).forEach(s => {
+                s.supervisorId = u.id;
+                s.company = u.company || 'Demo Company';
+            });
+            db.activeShifts = db.activeShifts || [];
+            if(db.activeShifts.length === 0) {
+                const s1 = db.users.find(s => s.role === 'Student' && s.supervisorId === u.id);
+                if(s1) {
+                    const startTime = new Date(Date.now() - (2 * 3600000 + 14 * 60000)).toISOString();
+                    db.activeShifts.push({ studentId: s1.id, supervisorId: u.id, clockIn: startTime, clockOut: null });
+                }
+            }
+            save();
+        }
+    }
+    // DEMO FIX: If a new student logs in, give them a dummy active shift so they aren't confused
+    if(u && u.role === 'Student') {
+        db.activeShifts = db.activeShifts || [];
+        const myActive = db.activeShifts.find(sh => sh.studentId === u.id);
+        const myAwaiting = db.logs.find(l => l.studentId === u.id && l.status === 'Awaiting_Student_Log');
+        if(!myActive && !myAwaiting && db.activeShifts.length === 0) {
+            // Force an active shift for them
+            const defSup = db.users.find(x => x.role === 'Supervisor') || u;
+            u.supervisorId = defSup.id;
+            const startTime = new Date(Date.now() - (1 * 3600000 + 10 * 60000)).toISOString();
+            db.activeShifts.push({ studentId: u.id, supervisorId: defSup.id, clockIn: startTime, clockOut: null });
+            save();
+        }
+    }
+    return u;
+}
+
 function storeSession(user){session={id:user.id,expires:Date.now()+30*60*1000};try{sessionStorage.setItem(SESSION,JSON.stringify(session));}catch{toast('Session storage unavailable; this demo session will end when you reload.');}}
 function logout(){session=null;try{sessionStorage.removeItem(SESSION);}catch{}modal.close();location.hash='/';render();}
 function notify(userId,type,title,message){db.notifications.unshift({id:crypto.randomUUID(),userId,type,title,message,date:new Date().toISOString(),read:false});}
