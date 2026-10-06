@@ -366,6 +366,9 @@ async function action(name,id,el){
     case 'job-detail':openJob(id);return;
     case 'tk-terminal':tkTerminal(id);return;
     case 'dummy-action':toast('This is a visual preview. Assign real interns to use this.');return;
+    case 'dummy-verify':toast('On-Site presence verified successfully.');return;
+    case 'dummy-approve':toast('DTR Log approved and hours credited to the student.');return;
+    case 'dummy-view':toast('Opens the detailed DTR modal for full review.');return;
     case 'sup-clock-in': {
         if(u.role !== 'Supervisor') throw new Error('Unauthorized');
         db.activeShifts = db.activeShifts || [];

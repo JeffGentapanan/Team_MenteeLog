@@ -352,7 +352,7 @@ export function createPortalViews(c){
                 <td><span class="task-excerpt">Completed daily tasks, reviewed codebase, and submitted UI updates.</span></td>
                 <td>${badge('Unavailable')}</td>
                 <td>${badge('Pending')}</td>
-                <td><div class="row" style="gap: 4px;">${b('Verify On-Site', 'dummy-action', 'dummy', 'primary small', 'pin')} ${b('Approve', 'dummy-action', 'dummy', 'small')} ${b('View', 'dummy-action', 'dummy', 'secondary small')}</div></td>
+                <td><div class="row" style="gap: 4px;">${b('Verify On-Site', 'dummy-verify', 'dummy', 'primary small', 'pin')} ${b('Approve', 'dummy-approve', 'dummy', 'small')} ${b('View', 'dummy-view', 'dummy', 'secondary small')}</div></td>
             </tr>`];
         }
         return table(['Intern','Date','Clock In','Clock Out','Task Summary','GPS','Status','Actions'], historyRows);
