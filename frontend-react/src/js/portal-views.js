@@ -314,47 +314,33 @@ export function createPortalViews(c){
       if(sub==='flagged')return back('dtr')+heading('Flagged DTR Entries','Review attendance anomalies and supporting justifications.')+`<div class="ref-alert">${flagged.length} entries require compliance review. Supervisor approval remains required.</div>`+panel('',table(['Student','Date','Flag Reason','Original Entry','Status','Action'],flagged.map(l=>`<tr><td>${e(c.student(l.studentId)?.name)}</td><td>${date(l.date)}</td><td>${e(l.remarks||'Attendance review required')}</td><td>${time(l.clockIn)} – ${time(l.clockOut)}</td><td>${badge(l.status)}</td><td>${nav('Review Details','dtr','review',l.id,'secondary small')}</td></tr>`)));
       return heading('DTR Compliance Monitor','Monitor daily time records, compliance risks, and training completion.',b('Compliance Settings','ref-compliance-settings','','secondary'))+`<div class="ref-compliance-stats">${stats([['Total Deployed Students',students.filter(s=>s.company).length,'users'],['Compliance Rate',Math.round(approved.length/Math.max(1,logs.length)*100)+'%','check'],['Non-compliant',flagged.length,'alert'],['Pending Review',pending.length,'clock']])}</div>`+panel('',search('Search student, SR code or company'))+panel('Student Compliance Overview',table(['Student Name','Program','HTE Company','Hours Progress','Status','Action'],students.filter(s=>match(s.name,s.identifier,s.company)).map(s=>`<tr><td><strong>${e(s.name)}</strong></td><td>${e(s.course)}</td><td>${e(s.company||'Unassigned')}</td><td>${progress(approvedHours(db(),s.id),s.requiredHours)}</td><td>${badge(flagged.some(l=>l.studentId===s.id)?'Flagged':'Active')}</td><td>${nav('View Details','dtr','profile',s.id,'secondary small')}</td></tr>`)))+panel('',`<div class="row between" style="margin-bottom: 20px;"><h2>Flagged Entries</h2>${b('Run Auto Verification','ref-scan','','secondary small')}</div>`+table(['Student','Date','Reason','Status','Action'],flagged.slice(0,5).map(l=>`<tr><td>${e(c.student(l.studentId)?.name)}</td><td>${date(l.date)}</td><td>${e(l.remarks||'Review needed')}</td><td>${badge(l.status)}</td><td>${nav('Review Details','dtr','review',l.id,'secondary small')}</td></tr>`))+nav('View All Flagged Entries','dtr','flagged','','secondary small'))+panel('Department Hours Log',`<div class="ref-department-chart">${[...new Set(students.map(s=>s.course))].map(course=>{const cohort=students.filter(s=>s.course===course),hrs=cohort.reduce((n,s)=>n+approvedHours(db(),s.id),0),total=cohort.reduce((n,s)=>n+s.requiredHours,0);return `<div><svg viewBox="0 0 100 150" role="img" aria-label="${e(course)}: ${hrs} hours"><rect x="25" y="${150-Math.min(150,hrs/Math.max(1,total)*150)}" width="50" height="${Math.min(150,hrs/Math.max(1,total)*150)}" rx="4"/></svg><strong>${hrs}h</strong><small>${e(course)}</small></div>`;}).join('')}</div>`);
     }
-    if(role==='Supervisor'){const list=logs.filter(l=>match(c.student(l.studentId)?.name,l.date,l.task)&&(c.view.filter==='All'||l.status===c.view.filter)),pending=logs.filter(l=>l.status==='Pending');return heading('Intern Attendance & DTR Management','Review, approve, and sign off on daily time records.') + `<div class="row between" style="background: var(--cream); padding: 16px; border-radius: var(--radius); margin-bottom: 24px;"><div class="row"><strong>On-Site Time-In Verification</strong><p class="small muted mb0">You are the designated timekeeper. Clock interns in when they arrive.</p></div></div><div class="row" style="margin-bottom: 16px;">` + b('Export DTR as PDF','ref-export-dtr','pdf','secondary small','download') + b('Export DTR as CSV','ref-export-dtr','csv','secondary small','download') + `</div>`+`<div class="ref-attendance-toolbar">${search('Search intern name or date…')}${filter([['All','All Status'],['Pending','Pending'],['Approved','Approved'],['Flagged','Flagged']])}${b('Approve All Pending ('+pending.length+')','ref-approve-all','','small')}</div>`+panel('Timekeeper Terminal', `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;">` + (() => {
-        let students = visibleStudents(db(), u());
-        let html = '';
-        
-        // If absolutely no students exist for this supervisor, inject a purely visual mock card!
-        if (students.length === 0) {
-            html += `<div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center; position: relative;">
-                <div style="position:absolute; top:8px; right:8px; background:var(--cream); color:var(--burgundy); font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">EXAMPLE PREVIEW</div>
-                <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--maroon); color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; margin-bottom: 16px;">E</div>
-                <h3 style="margin: 0 0 4px 0; font-size: 16px;">Example Intern</h3>
-                <span style="font-size: 13px; color: var(--slate); margin-bottom: 16px;">DEMO-2026-001</span>
-                <div style="background: #dcfce7; color: #166534; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 12px; display: flex; align-items: center;">
-                    <span style="display:inline-block;width:8px;height:8px;background:#16a34a;border-radius:50%;margin-right:6px;animation:tk-pulse 2s infinite;"></span>Active On-Site
-                </div>
-                <div style="font-size: 32px; font-weight: 800; color: var(--ink); margin: 16px 0; font-variant-numeric: tabular-nums; line-height: 1;">02:14:05</div>
-                <div style="width: 100%;"><button class="btn secondary full" onclick="toast('This is a visual example. When real interns are assigned, you can click this to clock them out.')">Clock Out Intern</button></div>
-            </div>`;
-        } else {
-            html += students.map((s, index) => {
-                let active = (db().activeShifts || []).find(sh => sh.studentId === s.id);
-                const isDemoActive = !active && index === 0 && (db().activeShifts || []).length === 0;
-                const statusColor = (active || isDemoActive) ? '#166534' : 'var(--slate)';
-                const statusBg = (active || isDemoActive) ? '#dcfce7' : '#f1f5f9';
-                const statusText = (active || isDemoActive) ? 'Active On-Site' : 'Clocked Out';
-                const pulse = (active || isDemoActive) ? `<span style="display:inline-block;width:8px;height:8px;background:#16a34a;border-radius:50%;margin-right:6px;animation:tk-pulse 2s infinite;"></span>` : `<span style="display:inline-block;width:8px;height:8px;background:var(--slate);border-radius:50%;margin-right:6px;"></span>`;
-                const timerHtml = (active || isDemoActive) ? `<div style="font-size: 32px; font-weight: 800; color: var(--ink); margin: 16px 0; font-variant-numeric: tabular-nums; line-height: 1;" class="tk-timer" data-start="${active?.clockIn || ''}">${active ? elapsed(active.clockIn) : '00:00:00'}</div>` : `<div style="font-size: 32px; font-weight: 800; color: var(--slate); margin: 16px 0; opacity: 0.3; font-variant-numeric: tabular-nums; line-height: 1;">00:00:00</div>`;
-                const actionBtn = (active || isDemoActive)
-                    ? b('Clock Out Intern', 'sup-clock-out', s.id, 'secondary full') 
-                    : b('Clock In Intern', 'sup-clock-in', s.id, 'primary full', 'clock');
-                return `<div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center;">
-                    <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--maroon); color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; margin-bottom: 16px;">${s.name.charAt(0)}</div>
-                    <h3 style="margin: 0 0 4px 0; font-size: 16px;">${e(s.name)}</h3>
-                    <span style="font-size: 13px; color: var(--slate); margin-bottom: 16px;">${e(s.identifier)}</span>
-                    <div style="background: ${statusBg}; color: ${statusColor}; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 12px; display: flex; align-items: center;">${pulse}${statusText}</div>
-                    ${timerHtml}
-                    <div style="width: 100%;">${actionBtn}</div>
-                </div>`;
-            }).join('');
-        }
-        return html;
-    })() + `</div><style>@keyframes tk-pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }</style>`) + panel('DTR History',table(['Intern','Date','Clock In','Clock Out','Task Summary','GPS','Status','Actions'],list.map(l=>`<tr><td><strong>${e(c.student(l.studentId)?.name)}</strong><small>${e(c.student(l.studentId)?.course)}</small></td><td>${date(l.date)}</td><td>${time(l.clockIn)}</td><td>${time(l.clockOut)}</td><td><span class="task-excerpt">${e(l.task)}</span></td><td>${badge(l.gps?'Captured':'Unavailable')}</td><td>${badge(l.status)}</td><td><div class="row">${['Pending','Flagged'].includes(l.status)?b('Verify On-Site','ref-verify',l.id,'primary small', 'pin') + b('Approve','ref-approve',l.id,'small')+b('Reject','ref-reject',l.id,'secondary small'):''}${nav('View','dtr','profile',l.studentId,'secondary small')}</div></td></tr>`)));}
+    if(role==='Supervisor'){const list=logs.filter(l=>match(c.student(l.studentId)?.name,l.date,l.task)&&(c.view.filter==='All'||l.status===c.view.filter)),pending=logs.filter(l=>l.status==='Pending');return heading('Intern Attendance & DTR Management','Review, approve, and sign off on daily time records.') + `<div class="row between" style="background: var(--cream); padding: 16px; border-radius: var(--radius); margin-bottom: 24px;"><div class="row"><strong>On-Site Time-In Verification</strong><p class="small muted mb0">You are the designated timekeeper. Clock interns in when they arrive.</p></div></div><div class="row" style="margin-bottom: 16px;">` + b('Export DTR as PDF','ref-export-dtr','pdf','secondary small','download') + b('Export DTR as CSV','ref-export-dtr','csv','secondary small','download') + `</div>`+`<div class="ref-attendance-toolbar">${search('Search intern name or date…')}${filter([['All','All Status'],['Pending','Pending'],['Approved','Approved'],['Flagged','Flagged']])}${b('Approve All Pending ('+pending.length+')','ref-approve-all','','small')}</div>`+(() => {
+    let students = visibleStudents(db(), u());
+    let rosterRows = students.map(s => {
+        let active = (db().activeShifts || []).find(sh => sh.studentId === s.id);
+        const statusBg = active ? '#166534' : 'var(--slate)';
+        const statusDot = active ? 'background:#16a34a;animation:tk-pulse 2s infinite' : 'background:var(--slate)';
+        const statusText = active ? 'Active On-Site' : 'Clocked Out';
+        const actionBtn = b('Open Terminal', 'tk-terminal', s.id, 'primary small');
+        return `<tr>
+            <td>${person(s)}</td>
+            <td><div style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:${statusBg};"><span style="width:8px;height:8px;border-radius:50%;${statusDot}"></span>${statusText}</div></td>
+            <td>${active ? 'In Progress' : '--'}</td>
+            <td>${actionBtn}</td>
+        </tr>`;
+    });
+
+    if (rosterRows.length === 0) {
+        rosterRows = [`<tr>
+            <td><div class="person-ui"><div class="avatar" style="background:var(--maroon);color:white;">E</div><div><strong>Example Intern</strong><small>DEMO-2026</small></div></div></td>
+            <td><div style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--slate);"><span style="width:8px;height:8px;border-radius:50%;background:var(--slate);"></span>Clocked Out</div></td>
+            <td>--</td>
+            <td>${b('Open Terminal', 'tk-terminal', 'dummy', 'primary small')}</td>
+        </tr>`];
+    }
+    
+    return panel('Timekeeper: Intern Roster', `<p class="small muted" style="margin-bottom:16px;">Select an intern to manage their current shift.</p>` + table(['Intern', 'Current Status', 'Today\'s Session', 'Action'], rosterRows) + `<style>@keyframes tk-pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }</style>`);
+})()@keyframes tk-pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }</style>`) + panel('DTR History',table(['Intern','Date','Clock In','Clock Out','Task Summary','GPS','Status','Actions'],list.map(l=>`<tr><td><strong>${e(c.student(l.studentId)?.name)}</strong><small>${e(c.student(l.studentId)?.course)}</small></td><td>${date(l.date)}</td><td>${time(l.clockIn)}</td><td>${time(l.clockOut)}</td><td><span class="task-excerpt">${e(l.task)}</span></td><td>${badge(l.gps?'Captured':'Unavailable')}</td><td>${badge(l.status)}</td><td><div class="row">${['Pending','Flagged'].includes(l.status)?b('Verify On-Site','ref-verify',l.id,'primary small', 'pin') + b('Approve','ref-approve',l.id,'small')+b('Reject','ref-reject',l.id,'secondary small'):''}${nav('View','dtr','profile',l.studentId,'secondary small')}</div></td></tr>`)));}
     // Student: clock and task draft at left, history and saved drafts at right.
     if(sub==='history') return back('dtr') + heading('DTR History', 'Complete attendance and task records.') + `<div class="ref-alert" style="margin-bottom: 16px;"><strong>🔒 Lock Enabled:</strong> All past and submitted DTR entries are strictly READ-ONLY. Modification of timestamps is permanently restricted.</div>` + filter([['All','All'],['Approved','Approved'],['Pending','Pending'],['Flagged','Flagged'],['Rejected','Rejected']]) + panel('', c.dtrTable(logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter), u()));
       const shift=db().shift?.studentId===u().id?db().shift:null,hrs=approvedHours(db(),u().id),list=logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter),drafts=(db().taskDrafts||[]).filter(d=>d.studentId===u().id);
