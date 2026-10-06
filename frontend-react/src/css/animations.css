@@ -40,12 +40,17 @@
 
 /* 3. Button Hover Effects */
 .btn {
-    transition: transform 0.18s ease-out, background-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease !important;`n    will-change: transform;
+    transition: transform 0.18s ease-out, background-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease !important;
+    will-change: transform;
 }
 .btn:not(.text-btn):hover {
-    transform: translateY(-1px);`n    box-shadow: 0 4px 12px rgba(88, 17, 26, 0.12);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(88, 17, 26, 0.12);
 }
-.btn:not(.text-btn):active {`n    transform: translateY(0) scale(0.97);`n    transition-duration: 0.08s !important;`n}
+.btn:not(.text-btn):active {
+    transform: translateY(0) scale(0.97);
+    transition-duration: 0.08s !important;
+}
 
 /* 4. Smooth Stats Loading */
 .public-stats > div {
@@ -57,7 +62,7 @@
 .public-stats > div:nth-child(3) { animation-delay: 0.6s; }
 .public-stats > div:nth-child(4) { animation-delay: 0.8s; }
 
-/* 5. Dashboard / Portal Cards — instant visible, gentle entry */
+/* 5. Dashboard / Portal Cards ï¿½ instant visible, gentle entry */
 .student-dash-grid .card, .dashboard-quick, .reference-table-panel {
     animation: fadeInUp 0.4s ease-out both;
 }
@@ -198,12 +203,14 @@ html, body {
 
 /* The Buttery Smooth Lift Effect */
 .benefit-card:hover, .how-card:hover, .company-values .reference-photo:hover {
-    transform: translateY(-5px) !important;`n    box-shadow: 0 12px 28px rgba(88, 17, 26, 0.2), 0 0 30px rgba(166, 92, 81, 0.1) !important;
+    transform: translateY(-5px) !important;
+    box-shadow: 0 12px 28px rgba(88, 17, 26, 0.2), 0 0 30px rgba(166, 92, 81, 0.1) !important;
 }
 
 /* Team Grid Hover Lift & Glow (Lighter glow for Maroon background) */
 .team-grid article:hover {
-    transform: translateY(-5px) !important;`n    box-shadow: 0 12px 28px rgba(250, 244, 232, 0.2), 0 0 30px rgba(239, 223, 187, 0.1) !important;
+    transform: translateY(-5px) !important;
+    box-shadow: 0 12px 28px rgba(250, 244, 232, 0.2), 0 0 30px rgba(239, 223, 187, 0.1) !important;
 }
 
 
@@ -1022,7 +1029,7 @@ tbody tr {
     transition: background-color 0.12s ease !important;
 }
 
-/* Smooth stat card loading — no blank flash */
+/* Smooth stat card loading ï¿½ no blank flash */
 .stat {
     animation: fadeIn 0.3s ease-out both;
 }
