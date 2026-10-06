@@ -20,26 +20,25 @@ const STORAGE='menteelog.demo.v1', SESSION='menteelog.demo.session';
 let storageIssue=false,filesDB=null;
 function load(){try{const saved=JSON.parse(localStorage.getItem(STORAGE));return saved?.version===1&&Array.isArray(saved.users)&&Array.isArray(saved.logs)?saved:seedData();}catch{return seedData();}}
 let db=ensureCreatorAccounts(load());
-
-// --- DEMO SEED FOR ACTIVE SHIFT ---
-db.activeShifts = db.activeShifts || [];
-if(db.activeShifts.length === 0) {
-    const aStudent = db.users.find(u => u.role === 'Student' && u.name.includes('Demo'));
-    if(aStudent) {
-        // Start shift 2 hours and 14 mins ago
-        const startTime = new Date(Date.now() - (2 * 3600000 + 14 * 60000)).toISOString();
-        db.activeShifts.push({ studentId: aStudent.id, supervisorId: aStudent.supervisorId, clockIn: startTime, clockOut: null });
-    }
-}
-// -----------------------------------
-
-,session=null,view={search:'',filter:'All',course:'All',mode:'All'},authRole='Student',modalSubmit=null,modalOpener=null,modalUserId=null,toastTimer;
+let session=null,view={search:'',filter:'All',course:'All',mode:'All'},authRole='Student',modalSubmit=null,modalOpener=null,modalUserId=null,toastTimer;
 try {
   if (!sessionStorage.getItem('dtr_reset_guaranteed')) {
     sessionStorage.setItem('dtr_reset_guaranteed', '1');
     if (db && db.shift) { delete db.shift; save(); }
   }
 } catch(e) {}
+
+
+// --- DEMO SEED FOR ACTIVE SHIFT ---
+db.activeShifts = db.activeShifts || [];
+if(db.activeShifts.length === 0) {
+    const aStudent = db.users.find(u => u.role === 'Student' && u.name.includes('Demo'));
+    if(aStudent) {
+        const startTime = new Date(Date.now() - (2 * 3600000 + 14 * 60000)).toISOString();
+        db.activeShifts.push({ studentId: aStudent.id, supervisorId: aStudent.supervisorId, clockIn: startTime, clockOut: null });
+    }
+}
+// -----------------------------------
 
 let capturedForm=null,capturingForm=false;
 let portals;
