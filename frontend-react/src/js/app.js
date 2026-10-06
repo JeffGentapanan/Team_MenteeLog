@@ -191,9 +191,9 @@ function render(){
     }
   }, 100);
 document.title='MenteeLog | Your OJT journey, connected';return;}
-  if(role==='activate'){window.location.replace('/activate.html');return;}
+  // Removed broken redirect to missing activate.html
 
-  if(['login','reset','forgot','reset-password'].includes(role)){app.innerHTML=authPage(role);document.title='MenteeLog | Authentication';return;}
+  if(['login','activate','reset','forgot','reset-password'].includes(role)){app.innerHTML=authPage(role);document.title='MenteeLog | Authentication';return;}
   const user=currentUser();
   if(!user){location.hash='/login';return;}
   if(role!==user.role.toLowerCase()||!canAccess(user.role,page)){location.hash=`/${user.role.toLowerCase()}/dashboard`;toast('This page is not available in your portal.');return;}
