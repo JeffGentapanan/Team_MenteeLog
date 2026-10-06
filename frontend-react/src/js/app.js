@@ -452,6 +452,15 @@ async function action(name,id,el){
         save(); toast('Intern clocked out. Awaiting their logbook summary.'); tkTerminal(id); render(); return;
     }
 
+    case 'ref-approve': {
+        const l = db.logs.find(log => log.id === id);
+        if (!l) throw new Error('Log not found.');
+        l.status = 'Approved';
+        save();
+        toast('DTR Log approved. Hours successfully credited.');
+        render();
+        return;
+    }
     case 'ref-export-dtr':toast(`Exporting official verified DTR records as ${id.toUpperCase()}...`);return;
     case 'ref-verify':toast('On-Site presence verified for this DTR log.');return;
     case 'ref-verify-mode':toast('On-Site Verification Mode Enabled. Awaiting intern QR/GPS ping.');return;
