@@ -54,6 +54,9 @@ try{session=JSON.parse(sessionStorage.getItem(SESSION));}catch{}
 function save(){try{localStorage.setItem(STORAGE,JSON.stringify(db));}catch{storageIssue=true;toast('Browser storage is full or unavailable. Changes last only until this page closes.');}}
 
 function currentUser(){
+    if(!session||session.expires<Date.now())return null;
+    const u = db.users.find(u=>u.id===session.id&&u.status==='Active')||null;
+    
     // DEMO FIX: Ensure exactly ONE dummy user and ONE dummy log exists
     if (u && u.role === 'Supervisor') {
         let hasDummy = db.users.find(x => x.id === 's_dummy');
@@ -101,9 +104,6 @@ function currentUser(){
             save();
         }
     }
-
-    if(!session||session.expires<Date.now())return null;
-    const u = db.users.find(u=>u.id===session.id&&u.status==='Active')||null;
     if(u && u.role === 'Supervisor') {
         let assigned = db.users.filter(s => s.role === 'Student' && s.supervisorId === u.id);
         if(assigned.length === 0) {
