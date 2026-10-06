@@ -484,7 +484,7 @@ async function action(name,id,el){
         db.logs.push({
             id: crypto.randomUUID(), studentId: shift.studentId, supervisorId: shift.supervisorId,
             date: today(), clockIn: shift.clockIn, clockOut: shift.clockOut, breakMinutes: totalBreakMinutes, hours: hours,
-            task: '', justification: '', gps: false, status: 'Pending', remarks: '', signature: ''
+            task: '', justification: '', gps: false, status: 'Awaiting_Student_Log', remarks: '', signature: ''
         });
         
         db.activeShifts.splice(idx, 1);
