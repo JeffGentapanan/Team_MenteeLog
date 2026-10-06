@@ -130,20 +130,7 @@ function currentUser(){
             save();
         }
     }
-    // DEMO FIX: If a new student logs in, give them a dummy active shift so they aren't confused
-    if(u && u.role === 'Student') {
-        db.activeShifts = db.activeShifts || [];
-        const myActive = db.activeShifts.find(sh => sh.studentId === u.id);
-        const myAwaiting = db.logs.find(l => l.studentId === u.id && l.status === 'Awaiting_Student_Log');
-        if(!myActive && !myAwaiting && db.activeShifts.length === 0) {
-            // Force an active shift for them
-            const defSup = db.users.find(x => x.role === 'Supervisor') || u;
-            u.supervisorId = defSup.id;
-            const startTime = new Date(Date.now() - (1 * 3600000 + 10 * 60000)).toISOString();
-            db.activeShifts.push({ studentId: u.id, supervisorId: defSup.id, clockIn: startTime, clockOut: null });
-            save();
-        }
-    }
+
     return u;
 }
 
@@ -506,6 +493,31 @@ async function action(name,id,el){
     case 'ref-verify-mode':toast('On-Site Verification Mode Enabled. Awaiting intern QR/GPS ping.');return;
     case 'job-edit':editJob(id);return;
     case 'application-detail':applicationDetail(id);return;
+    
+    case 'demo-sup-clock-in': {
+        db.activeShifts = db.activeShifts || [];
+        if(db.activeShifts.find(sh => sh.studentId === u.id)) throw new Error('Intern is already clocked in.');
+        const defSup = db.users.find(x => x.role === 'Supervisor') || u;
+        db.activeShifts.push({ studentId: u.id, supervisorId: defSup.id, clockIn: new Date(Date.now() - 3600000).toISOString(), clockOut: null });
+        save(); render(); toast('Simulated Supervisor Clock In (Started 1 hour ago)'); return;
+    }
+    case 'demo-sup-clock-out': {
+        db.activeShifts = db.activeShifts || [];
+        const idx = db.activeShifts.findIndex(sh => sh.studentId === u.id);
+        if(idx === -1) throw new Error('Intern is not active.');
+        const shift = db.activeShifts[idx];
+        shift.clockOut = new Date().toISOString();
+        const totalBreakMinutes = shift.breakMinutes || 0;
+        const hours = hoursBetween(shift.clockIn, shift.clockOut, totalBreakMinutes);
+        db.logs.push({
+            id: crypto.randomUUID(), studentId: shift.studentId, supervisorId: shift.supervisorId,
+            date: today(), clockIn: shift.clockIn, clockOut: shift.clockOut, breakMinutes: totalBreakMinutes, hours: hours,
+            task: '', justification: '', gps: false, status: 'Awaiting_Student_Log', remarks: '', signature: ''
+        });
+        db.activeShifts.splice(idx, 1);
+        save(); render(); toast('Simulated Supervisor Clock Out'); return;
+    }
+
     case 'clock':await clockAction();return;
     case 'ref-submit-log':await clockAction();return;
     case 'log-detail':logDetail(id);return;
