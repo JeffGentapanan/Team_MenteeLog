@@ -54,46 +54,52 @@ try{session=JSON.parse(sessionStorage.getItem(SESSION));}catch{}
 function save(){try{localStorage.setItem(STORAGE,JSON.stringify(db));}catch{storageIssue=true;toast('Browser storage is full or unavailable. Changes last only until this page closes.');}}
 
 function currentUser(){
-    if (!db.users.find(x => x.id === 's_dummy')) {
-        db.users.push({
-            id: 's_dummy',
-            identifier: 'DEMO-2026',
-            name: 'Example Intern',
-            email: 'example@demo.com',
-            role: 'Student',
-            status: 'Active',
-            course: 'BS Information Technology',
-            company: 'Demo Company',
-            supervisorId: session?.id || 'v1',
-            baseHours: 120,
-            requiredHours: 500,
-            badge: 'Active'
-        });
-        
-        // Push a bunch of fake logs for this student so their history page looks full
-        const today = new Date();
-        for(let i=1; i<=5; i++) {
-            let d = new Date(today);
-            d.setDate(d.getDate() - i);
-            let dateStr = d.toISOString().split('T')[0];
+    // DEMO FIX: Ensure exactly ONE dummy user and ONE dummy log exists
+    if (u && u.role === 'Supervisor') {
+        let hasDummy = db.users.find(x => x.id === 's_dummy');
+        if (!hasDummy) {
+            db.users.push({
+                id: 's_dummy',
+                identifier: 'DEMO-2026',
+                name: 'Example Intern',
+                email: 'example@demo.com',
+                role: 'Student',
+                status: 'Active',
+                course: 'BS Information Technology',
+                company: u.company || 'Demo Company',
+                supervisorId: u.id,
+                baseHours: 120,
+                requiredHours: 500,
+                badge: 'Active'
+            });
+        } else if (hasDummy.supervisorId !== u.id) {
+            hasDummy.supervisorId = u.id; // ensure they belong to current supervisor
+        }
+
+        // Clean up any duplicate logs. Keep EXACTLY one.
+        const dummyLogs = db.logs.filter(l => l.studentId === 's_dummy');
+        if (dummyLogs.length !== 1) {
+            // Remove all existing dummy logs
+            db.logs = db.logs.filter(l => l.studentId !== 's_dummy');
+            // Inject exactly one pending log for today
+            const dateStr = new Date().toISOString().split('T')[0];
             db.logs.push({
-                id: 'log_dummy_' + i,
+                id: 'log_dummy_single',
                 studentId: 's_dummy',
-                supervisorId: session?.id || 'v1',
+                supervisorId: u.id,
                 date: dateStr,
                 clockIn: dateStr + 'T08:00:00.000Z',
                 clockOut: dateStr + 'T17:00:00.000Z',
                 breakMinutes: 60,
                 hours: 8,
-                status: i === 1 ? 'Pending' : 'Approved',
+                status: 'Pending',
                 task: 'Completed assigned programming tasks and attended daily standups.',
                 gps: true,
-                remarks: i === 1 ? '' : 'Good work.',
+                remarks: '',
                 justification: ''
             });
+            save();
         }
-        
-        save();
     }
 
     if(!session||session.expires<Date.now())return null;
