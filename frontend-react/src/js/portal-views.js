@@ -331,7 +331,7 @@ export function createPortalViews(c){
     });
 
     return panel('Timekeeper: Intern Roster', `<p class="small muted" style="margin-bottom:16px;">Select an intern to manage their current shift.</p>` + table(['Intern', 'Current Status', 'Today\'s Session', 'Action'], rosterRows) + `<style>@keyframes tk-pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }</style>`);
-})() + panel('Pending DTR Approvals', (() => {
+})() + panel('Recent DTR Logs & Approvals', (() => {
         let historyRows = list.map(l=>`<tr><td><strong>${e(c.student(l.studentId)?.name)}</strong><br><small>${e(c.student(l.studentId)?.course)}</small></td><td>${date(l.date)}</td><td>${time(l.clockIn)}</td><td>${time(l.clockOut)}</td><td><span class="task-excerpt">${e(l.task)}</span></td><td>${badge(l.gps?'Captured':'Unavailable')}</td><td>${badge(l.status)}</td><td><div class="row">${['Pending','Flagged'].includes(l.status)?b('Verify On-Site','ref-verify',l.id,'primary small', 'pin') + b('Approve','ref-approve',l.id,'small')+b('Reject','ref-reject',l.id,'secondary small'):''}${nav('View','dtr','profile',l.studentId,'secondary small')}</div></td></tr>`);
         
         return table(['Intern','Date','Clock In','Clock Out','Task Summary','GPS','Status','Actions'], historyRows);
