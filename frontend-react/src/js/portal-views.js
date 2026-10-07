@@ -39,7 +39,7 @@ export function createPortalViews(c){
           <section class="card premium-card ojt-detail-main">
              <div class="row between align-start mb24">
                <div class="row align-start gap-16">
-                 <div class="ojt-detail-avatar">${e((j.company || j.title || '').slice(0,2))}</div>
+                 <div class="ojt-detail-avatar">${e((j.company||j.title||' ').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase())}</div>
                  <div>
                    <h1 class="ojt-detail-title">${e(j.company)}</h1>
                    <p class="muted">${icon('pin')} ${e(j.location)}</p>
@@ -141,7 +141,7 @@ export function createPortalViews(c){
         <div class="ojt-job-card-inner">
           <div class="row between align-start">
             <div class="row align-center gap-16">
-              <div class="ojt-job-avatar">${e((j.company || j.title || '').slice(0,2))}</div>
+              <div class="ojt-job-avatar">${e((j.company||j.title||' ').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase())}</div>
               <div>
                 <h2 class="ojt-job-title">${e(j.title)}</h2>
                 <p class="ojt-job-company">${e(j.company)}</p>
