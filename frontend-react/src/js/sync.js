@@ -7,14 +7,15 @@ export async function syncRemote(supabase, db) {
   const currentRun = ++syncRunCounter;
 
   try {
-    const [jobsRes, appsRes, profilesRes, badgesRes, logsRes, incidentsRes, appraisalsRes] = await Promise.all([
+    const [jobsRes, appsRes, profilesRes, badgesRes, logsRes, incidentsRes, appraisalsRes, docsRes] = await Promise.all([
       supabase.from('listings_jobs').select('*'),
       supabase.from('applications').select('*'),
       supabase.from('profiles').select('*'),
       supabase.from('badges_status').select('*'),
       supabase.from('logs').select('*'),
       supabase.from('incidents').select('*'),
-      supabase.from('appraisals').select('*')
+      supabase.from('appraisals').select('*'),
+      supabase.from('documents').select('*')
     ]);
 
     if (currentRun !== syncRunCounter) return false;
@@ -29,6 +30,7 @@ export async function syncRemote(supabase, db) {
     if (logsRes.error) { console.error('syncRemote: logs failed', logsRes.error); logsRes.data = []; }
     if (incidentsRes.error) { console.error('syncRemote: incidents failed', incidentsRes.error); incidentsRes.data = []; }
     if (appraisalsRes.error) { console.error('syncRemote: appraisals failed', appraisalsRes.error); appraisalsRes.data = []; }
+    if (docsRes.error) { console.error('syncRemote: documents failed', docsRes.error); docsRes.data = []; }
 
     const newJobs = jobsRes.data.map(j => ({
       id: j.id,
@@ -132,14 +134,26 @@ export async function syncRemote(supabase, db) {
       date: a.date
     }));
 
+    const newDocs = (docsRes.data || []).map(d => ({
+      id: d.id,
+      studentId: d.student_id,
+      category: d.category,
+      name: d.name,
+      size: d.file_size,
+      type: d.mime_type,
+      date: d.doc_date,
+      status: d.status,
+      filePath: d.file_path
+    }));
+
     // Always keep the signed-in user in db.users
     const signedInUser = db.users.find(u => u.id === session.user.id);
     if (signedInUser && !newUsers.some(u => u.id === signedInUser.id)) {
       newUsers.push(signedInUser);
     }
 
-    const before = JSON.stringify({ jobs: db.jobs, apps: db.applications, users: db.users, logs: db.logs, incidents: db.incidents, appraisals: db.appraisals });
-    const after = JSON.stringify({ jobs: newJobs, apps: newApps, users: newUsers, logs: newLogs, incidents: newIncidents, appraisals: newAppraisals });
+    const before = JSON.stringify({ jobs: db.jobs, apps: db.applications, users: db.users, logs: db.logs, incidents: db.incidents, appraisals: db.appraisals, docs: db.documents });
+    const after = JSON.stringify({ jobs: newJobs, apps: newApps, users: newUsers, logs: newLogs, incidents: newIncidents, appraisals: newAppraisals, docs: newDocs });
 
     if (before !== after) {
       db.jobs = newJobs;
@@ -148,6 +162,7 @@ export async function syncRemote(supabase, db) {
       db.logs = newLogs;
       db.incidents = newIncidents;
       db.appraisals = newAppraisals;
+      db.documents = newDocs;
       return true;
     }
     return false;
