@@ -29,7 +29,7 @@ export function assignPlacement(db,user,ids,jobId,requiredHours){
   if(!students.length||students.some(s=>!s||s.company||db.applications.some(a=>a.studentId===s.id&&a.status==='Accepted')))throw new Error('Select unassigned students only.');
   if(students.length>j.slots)throw new Error('There are not enough available slots for this batch.');
   const hours=Number(requiredHours);if(!Number.isInteger(hours)||hours<1||hours>2000)throw new Error('Required hours must be between 1 and 2,000.');
-  students.forEach(s=>{Object.assign(s,{company:j.company,supervisorId:supervisor.id,requiredHours:hours,badge:'Enrolled'});const a=db.applications.find(a=>a.studentId===s.id&&a.jobId===j.id);if(a) a.status='Accepted';else db.applications.push({id:crypto.randomUUID(),studentId:s.id,jobId:j.id,status:'Accepted',date:new Date().toISOString().slice(0,10),note:'Assigned by faculty coordinator.'});});
+  students.forEach(s=>{Object.assign(s,{company:j.company,supervisorId:supervisor.id,requiredHours:hours,badge:'Enrolled'});const a=db.applications.find(a=>a.studentId===s.id&&a.jobId===j.id);if(a) a.status='Accepted';});
   j.slots-=students.length;return students;
 }
 

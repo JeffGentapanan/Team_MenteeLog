@@ -436,6 +436,34 @@ async function importUsers() {
 }
 function announcement(){const u=currentUser();showModal('Post a demo announcement',field('Title','title','text','','required maxlength="120"')+textarea('Announcement','message','','required minlength="10"')+'<p class="note">This creates local demo notifications. No emails or external messages are sent.</p>',data=>{const recipients=u.role==='Coordinator'?db.users.filter(v=>v.id!==u.id):visibleStudents(db,u);recipients.forEach(v=>notify(v.id,'System',data.title,data.message));audit('Posted announcement: '+data.title);save();toast('Announcement saved for '+recipients.length+' demo recipients.');},'Post announcement');}
 
+async function assignPlacementRemote(students, jobObj, requiredHours) {
+    if (!uuidRegex.test(jobObj.id) || students.some(s => !uuidRegex.test(s.id))) {
+        toast('Demo records cannot be saved to the live database.');
+        return;
+    }
+    const promises = students.flatMap(s => {
+        const p1 = supabase.from('profiles').update({ company: jobObj.company, supervisor_id: jobObj.supervisorId, required_hours: Number(requiredHours) }).eq('id', s.id).select().then(({error, data}) => {
+            if (error) throw new Error(error.message);
+            if (!data || data.length === 0) throw new Error('Update failed or rejected by security rules.');
+        });
+        const a = db.applications.find(app => app.studentId === s.id && app.jobId === jobObj.id);
+        if (a && uuidRegex.test(a.id)) {
+            const p2 = supabase.from('applications').update({ status: 'Accepted' }).eq('id', a.id).select().then(({error, data}) => {
+                if (error) throw new Error(error.message);
+                if (!data || data.length === 0) throw new Error('Update failed or rejected by security rules.');
+            });
+            return [p1, p2];
+        }
+        return [p1];
+    });
+    promises.push(supabase.from('listings_jobs').update({ slots: jobObj.slots }).eq('id', jobObj.id).select().then(({error, data}) => {
+        if (error) throw new Error(error.message);
+        if (!data || data.length === 0) throw new Error('Update failed or rejected by security rules.');
+    }));
+    await Promise.all(promises);
+    await syncRemote(supabase, db);
+}
+
 function openFiles(){return new Promise((resolve,reject)=>{if(filesDB)return resolve(filesDB);const request=indexedDB.open('menteelog-demo-files',1);request.onupgradeneeded=()=>request.result.createObjectStore('files');request.onsuccess=()=>{filesDB=request.result;resolve(filesDB);};request.onerror=()=>reject(new Error('Browser file storage is unavailable.'));});}
 async function fileOp(mode,key,value){const database=await openFiles();return new Promise((resolve,reject)=>{const tx=database.transaction('files',mode==='get'?'readonly':'readwrite'),store=tx.objectStore('files');const req=mode==='get'?store.get(key):mode==='put'?store.put(value,key):mode==='clear'?store.clear():store.delete(key);tx.oncomplete=()=>resolve(req.result);tx.onerror=()=>reject(new Error('File storage failed. Your browser storage may be full.'));tx.onabort=()=>reject(new Error('File storage operation was interrupted.'));});}
 const putFile=(id,file)=>fileOp('put',id,file);
@@ -859,7 +887,7 @@ function userIsMidInput() {
 }
 setInterval(async () => { if (session && await syncRemote(supabase, db)) { save(); if (!modal.open && !userIsMidInput()) render(); } }, 20000);
 async function submitApplication(jobId, note) { const {error} = await supabase.from('applications').insert({ job_id: jobId, student_id: currentUser().id, status: 'Pending', applied_date: today(), notes: note || '' }); if (error) throw new Error(error.message); await syncRemote(supabase, db); }
-portals=createPortalViews({get db(){return db;},get view(){return view;},get user(){return currentUser();},route,e,icon,button,link,heading,field,textarea,select,badge,person,table,empty,progress,date,time,today,student,job,save,notify,audit,toast,render,showModal,download,fileOp,putFile,dtrTable,visibleIncidents,submitApplication,legacy:{applicationDetail,editJob,studentDetail,incidentNew,incidentDetail,evaluate,logDetail,editHTE,userNew,importUsers,documentUpload},capture(fn){capturingForm=true;capturedForm=null;try{fn();return capturedForm;}finally{capturingForm=false;}}});
+portals=createPortalViews({get db(){return db;},get view(){return view;},get user(){return currentUser();},route,e,icon,button,link,heading,field,textarea,select,badge,person,table,empty,progress,date,time,today,student,job,save,notify,audit,toast,render,showModal,download,fileOp,putFile,dtrTable,visibleIncidents,submitApplication,legacy:{applicationDetail,editJob,studentDetail,incidentNew,incidentDetail,evaluate,logDetail,editHTE,userNew,importUsers,documentUpload,assignPlacementRemote},capture(fn){capturingForm=true;capturedForm=null;try{fn();return capturedForm;}finally{capturingForm=false;}}});
 
 document.addEventListener('change',event=>{if(!['public-course','public-location'].includes(event.target.id))return;const course=$('#public-course').value,place=$('#public-location').value;let count=0;document.querySelectorAll('.home-job').forEach(card=>{card.hidden=!((course==='All'||card.dataset.courses.includes(course))&&(place==='All'||card.dataset.location.includes(place)));if(!card.hidden)count++;});$('#public-empty').hidden=count>0;});
 
