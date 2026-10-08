@@ -436,6 +436,13 @@ async function importUsers() {
 }
 function announcement(){const u=currentUser();showModal('Post a demo announcement',field('Title','title','text','','required maxlength="120"')+textarea('Announcement','message','','required minlength="10"')+'<p class="note">This creates local demo notifications. No emails or external messages are sent.</p>',data=>{const recipients=u.role==='Coordinator'?db.users.filter(v=>v.id!==u.id):visibleStudents(db,u);recipients.forEach(v=>notify(v.id,'System',data.title,data.message));audit('Posted announcement: '+data.title);save();toast('Announcement saved for '+recipients.length+' demo recipients.');},'Post announcement');}
 
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+async function saveProfileRemote(u, values) {
+    if (!uuidRegex.test(u.id)) throw new Error('Demo records cannot be saved to the live database.');
+    const { error, data } = await supabase.from('profiles').update({ full_name: values.name.trim(), phone: values.phone.trim(), bio: values.bio }).eq('id', u.id).select();
+    if (error) throw new Error(error.message);
+    if (!data || data.length === 0) throw new Error('Update failed or rejected by security rules.');
+}
 async function assignPlacementRemote(students, jobObj, requiredHours) {
     if (!uuidRegex.test(jobObj.id) || students.some(s => !uuidRegex.test(s.id))) {
         toast('Demo records cannot be saved to the live database.');
@@ -843,7 +850,7 @@ document.addEventListener('submit',async event=>{
     const user=currentUser();if(form.id!=='modal-form'&&!user)throw new Error('Your session expired. Sign in again.');
     if(form.id==='portal-form'){await portals.submit(values,form);return;}
     if(form.id==='modal-form'&&modalSubmit){if(modalUserId&&currentUser()?.id!==modalUserId)throw new Error('Your session changed. Reopen the form after signing in.');const callback=modalSubmit;await callback(values,form);modal.close();render();return;}
-    if(form.id==='profile-form'){if(!values.name.trim())throw new Error('Enter your full name.');if(db.users.some(u=>u.id!==user.id&&u.email.toLowerCase()===values.email.toLowerCase()))throw new Error('That email is already used by another demo account.');Object.assign(user,{name:values.name.trim(),email:values.email.trim(),phone:values.phone,bio:values.bio});audit('Updated profile');}
+    if(form.id==='profile-form'){if(!values.name.trim())throw new Error('Enter your full name.');if(db.users.some(u=>u.id!==user.id&&u.email.toLowerCase()===values.email.toLowerCase()))throw new Error('That email is already used by another demo account.');if(values.email.trim().toLowerCase()!==String(user.email||'').toLowerCase())throw new Error('Email cannot be changed here. Contact your coordinator.');await saveProfileRemote(user,values);await syncRemote(supabase,db);audit('Updated profile');}
     save();render();toast('Saved in the demonstration.');
   }catch(error){if(errorBox)errorBox.textContent=error.message;else toast(error.message);}finally{if(submit)submit.disabled=false;}
 });
