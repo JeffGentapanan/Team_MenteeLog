@@ -48,7 +48,7 @@
     box-shadow: 0 4px 12px rgba(88, 17, 26, 0.12);
 }
 .btn:not(.text-btn):active {
-    transform: translateY(0) scale(0.97);
+    transform: translate3d(0, 0, 0) scale(0.97);
     transition-duration: 0.08s !important;
 }
 
@@ -959,9 +959,7 @@ html, body {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
 }
-.content {
-    animation: pageIn 0.25s ease-out both;
-}
+/* .content animation removed to prevent FOUC blinking */
 
 /* Smooth modal open/close */
 dialog {
@@ -1040,7 +1038,7 @@ tbody tr {
     transition: background-color 0.15s ease, transform 0.12s ease !important;
 }
 .icon-btn:active {
-    transform: scale(0.92);
+    transform: translate3d(0, 0, 0) scale(0.92);
 }
 
 /* Smooth text-btn underline */
@@ -1058,6 +1056,9 @@ html {
 .btn, .card, .stat, .nav-link, .badge, dialog, .notice-drawer, .profile-popover, .portal-sidebar {
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
+    transform: translate3d(0, 0, 0);
+    -webkit-font-smoothing: antialiased;
+    will-change: transform;
 }
 
 /* =========================================
@@ -1106,3 +1107,7 @@ html {
         .auth-tabs button { font-size: 10px !important; }
     }
 }
+
+/* Universal Fix for Button Click Glitches */
+.btn, button, .icon-btn, .nav-link { -webkit-font-smoothing: antialiased !important; -moz-osx-font-smoothing: grayscale !important; transform: translate3d(0, 0, 0); transform-style: preserve-3d; outline: none; }
+.btn:active, button:active, .icon-btn:active { transform: translate3d(0, 0, 0) scale(0.95) !important; }
