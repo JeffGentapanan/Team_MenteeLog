@@ -335,3 +335,16 @@ erDiagram
     
     USERS ||--o{ NOTIFICATIONS : "receives" 
 ```
+
+## System Architecture & Diagrams
+
+Below are the architectural diagrams outlining the database structure, information architecture, and core system flows.
+
+### Database Schema (ERD)
+![Entity-Relationship Diagram](docs/diagrams/erd_schema.png)
+
+### Platform Site Map
+![MenteeLog Site Map](docs/diagrams/sitemap.png)
+
+### System Process Flow
+![System Flowchart](docs/diagrams/system_flow.png)
