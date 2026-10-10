@@ -28,7 +28,7 @@ export async function syncRemote(supabase, db) {
       badgesRes.data = [];
     }
     if (logsRes.error) { console.error('syncRemote: logs failed', logsRes.error); logsRes.data = []; }
-    if (incidentsRes.error) { console.error('syncRemote: incidents failed', incidentsRes.error); incidentsRes.data = []; }
+    if (incidentsRes.error) { console.error('syncRemote: incidents failed', incidentsRes.error); incidentsRes.data = null; }
     if (appraisalsRes.error) { console.error('syncRemote: appraisals failed', appraisalsRes.error); appraisalsRes.data = []; }
     if (docsRes.error) { console.error('syncRemote: documents failed', docsRes.error); docsRes.data = []; }
 
@@ -96,7 +96,11 @@ export async function syncRemote(supabase, db) {
       coordinatorRemarks: l.coordinator_remarks
     }));
 
-    const newIncidents = (incidentsRes.data || []).map(i => {
+        let newIncidents = [];
+    if (incidentsRes.data === null) {
+      newIncidents = db.incidents; // untouched on error
+    } else {
+      const remoteIncidents = incidentsRes.data.map(i => {
       let evidence = null;
       if (i.evidence) {
         try {
@@ -121,6 +125,10 @@ export async function syncRemote(supabase, db) {
         notes: i.notes || []
       };
     });
+      const remoteIds = new Set(remoteIncidents.map(i => i.id));
+      const pendingLocals = (db.incidents || []).filter(i => i._pending && !remoteIds.has(i.id));
+      newIncidents = [...pendingLocals, ...remoteIncidents];
+    }
 
     const newAppraisals = (appraisalsRes.data || []).map(a => ({
       id: a.id,
@@ -152,8 +160,9 @@ export async function syncRemote(supabase, db) {
       newUsers.push(signedInUser);
     }
 
-    const before = JSON.stringify({ jobs: db.jobs, apps: db.applications, users: db.users, logs: db.logs, incidents: db.incidents, appraisals: db.appraisals, docs: db.documents });
-    const after = JSON.stringify({ jobs: newJobs, apps: newApps, users: newUsers, logs: newLogs, incidents: newIncidents, appraisals: newAppraisals, docs: newDocs });
+    const cleanIncidents = (list) => (list || []).map(i => { const copy = {...i}; delete copy._pending; return copy; });
+    const before = JSON.stringify({ jobs: db.jobs, apps: db.applications, users: db.users, logs: db.logs, incidents: cleanIncidents(db.incidents), appraisals: db.appraisals, docs: db.documents });
+    const after = JSON.stringify({ jobs: newJobs, apps: newApps, users: newUsers, logs: newLogs, incidents: cleanIncidents(newIncidents), appraisals: newAppraisals, docs: newDocs });
 
     if (before !== after) {
       db.jobs = newJobs;

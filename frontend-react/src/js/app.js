@@ -20,6 +20,7 @@ const STORAGE='menteelog.demo.v1', SESSION='menteelog.demo.session';
 let storageIssue=false,filesDB=null;
 function load(){try{const saved=JSON.parse(localStorage.getItem(STORAGE));return saved?.version===1&&Array.isArray(saved.users)&&Array.isArray(saved.logs)?saved:seedData();}catch{return seedData();}}
 let db=ensureCreatorAccounts(load());
+if(db.incidents) db.incidents = db.incidents.filter(i => !i._pending);
 let session=null,view={search:'',filter:'All',course:'All',mode:'All'},authRole='Student',modalSubmit=null,modalOpener=null,modalUserId=null,toastTimer;
 
 try {
@@ -473,6 +474,15 @@ async function assignPlacementRemote(students, jobObj, requiredHours) {
 
 function openFiles(){return new Promise((resolve,reject)=>{if(filesDB)return resolve(filesDB);const request=indexedDB.open('menteelog-demo-files',1);request.onupgradeneeded=()=>request.result.createObjectStore('files');request.onsuccess=()=>{filesDB=request.result;resolve(filesDB);};request.onerror=()=>reject(new Error('Browser file storage is unavailable.'));});}
 async function fileOp(mode,key,value){const database=await openFiles();return new Promise((resolve,reject)=>{const tx=database.transaction('files',mode==='get'?'readonly':'readwrite'),store=tx.objectStore('files');const req=mode==='get'?store.get(key):mode==='put'?store.put(value,key):mode==='clear'?store.clear():store.delete(key);tx.oncomplete=()=>resolve(req.result);tx.onerror=()=>reject(new Error('File storage failed. Your browser storage may be full.'));tx.onabort=()=>reject(new Error('File storage operation was interrupted.'));});}
+async function uploadEvidence(file, incCode) {
+  const u = currentUser();
+  let safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').replace(/^.+/, '').replace(/\.{2,}/g, '.').substring(0, 100);
+  if (!safeName) safeName = 'file';
+  const filePath = `${u.id}/${incCode}/${Date.now()}-${safeName}`;
+  const { error: uploadErr } = await supabase.storage.from('incident-evidence').upload(filePath, file, { upsert: false, contentType: file.type });
+  if (uploadErr) throw new Error('Evidence upload failed: ' + uploadErr.message);
+  return { id: crypto.randomUUID(), name: file.name, filePath, bucket: 'incident-evidence' };
+}
 const putFile=(id,file)=>fileOp('put',id,file);
 function documentUpload(){const u=currentUser();showModal('Upload a document',select('Document category','category',['Endorsement letter','Training agreement','Accomplishment report','Certificate','Other'])+field('Choose a file','file','file','','required accept="application/pdf,image/png,image/jpeg"')+'<p class="small muted">PDF, PNG, or JPEG Ã‚Â· Up to 10 MB. Stored only in this browser.</p>',async(data,form)=>{const file=form.elements.file.files[0];validateUpload(file);const id=crypto.randomUUID();if(!uuidRegex.test(u.id))throw new Error('Demo records cannot be saved to the live database.');const ext=file.name.split('.').pop()||'';const filePath=`${u.id}/${id}_${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;const {error:storageErr}=await supabase.storage.from('documents').upload(filePath,file);if(storageErr)throw new Error('Upload failed: '+storageErr.message);const {error:dbErr,data:rows}=await supabase.from('documents').insert({id,student_id:u.id,category:data.category,name:file.name,file_path:filePath,file_size:file.size,mime_type:file.type,doc_date:today(),status:'Pending'}).select();if(dbErr||!rows||!rows.length){await supabase.storage.from('documents').remove([filePath]);throw new Error(dbErr?dbErr.message:'Insert failed.');}await syncRemote(supabase,db);audit('Uploaded a document');save();toast('Document uploaded successfully.');},'Upload document');}
 function exportReport(type){let rows;const students=db.users.filter(s=>s.role==='Student');switch(type){case 'completion':rows=[['Student','SR code','Approved hours','Required hours','Completion percent'],...students.map(s=>[s.name,s.identifier,approvedHours(db,s.id),s.requiredHours,Math.round(approvedHours(db,s.id)/s.requiredHours*100)])];break;case 'compliance':rows=[['Student','Date','Hours','Status','Location captured','Justification','Reviewer remarks'],...db.logs.map(l=>[student(l.studentId)?.name,l.date,l.hours,l.status,l.gps?'Yes (unverified)':'No',l.justification||'',l.remarks])];break;case 'hte':rows=[['Company','Industry','Accreditation','MOA expiry','Placed students'],...db.htes.map(h=>[h.name,h.industry,h.status,h.expiry,students.filter(s=>s.company===h.name).length])];break;case 'incidents':rows=[['Case','Student','Category','Priority','Status','Reported'],...db.incidents.map(i=>[i.id,student(i.studentId)?.name,i.category,i.priority,i.status,i.date])];break;default:rows=[['Student','SR code','Course','Host company','Supervisor','Accreditation','Approved hours','Required hours'],...students.map(s=>[s.name,s.identifier,s.course,s.company,student(s.supervisorId)?.name||'',s.badge,approvedHours(db,s.id),s.requiredHours])];}download('MenteeLog-'+type+'-DEMO.csv',csvText(rows));toast('Sample data report downloaded.');}
@@ -632,7 +642,7 @@ async function action(name,id,el){
     
     case 'document-upload':documentUpload();return;
     case 'document-remove':{const doc=db.documents.find(d=>d.id===id&&d.studentId===u.id);if(!doc)throw new Error('Document unavailable.');showModal('Remove document?',`<p>Remove <strong>${e(doc.name)}</strong>?</p>`,async()=>{if(doc.filePath){if(!uuidRegex.test(u.id))throw new Error('Demo records cannot be saved to the live database.');const {error:sErr}=await supabase.storage.from('documents').remove([doc.filePath]);if(sErr)throw new Error(sErr.message);const {error:dbErr,data:del}=await supabase.from('documents').delete().eq('id',doc.id).select();if(dbErr||!del||!del.length)throw new Error(dbErr?dbErr.message:'Delete failed.');await syncRemote(supabase,db);}else{await fileOp('delete',id);db.documents=db.documents.filter(d=>d.id!==id);}save();toast('Document removed.');},'Remove document');return;}
-    case 'file-download':{const doc=db.documents.find(d=>d.id===id&&d.studentId===u.id)||visibleIncidents(u).find(i=>i.evidence?.id===id)?.evidence;if(!doc)throw new Error('File is outside your access scope.');if(doc.filePath){const {data,error}=await supabase.storage.from('documents').createSignedUrl(doc.filePath,60);if(error||!data)throw new Error('Download failed.');const a=document.createElement('a');a.href=data.signedUrl;a.download=doc.name;a.click();}else{const file=await fileOp('get',id);if(!file)throw new Error('This file is no longer in browser storage. Please upload it again.');download(doc.name,file);}return;}
+    case 'file-download':{const doc=db.documents.find(d=>d.id===id&&d.studentId===u.id)||visibleIncidents(u).find(i=>i.evidence?.id===id)?.evidence;if(!doc)throw new Error('File is outside your access scope.');if(doc.filePath){const bucket=(doc.bucket==='incident-evidence'?'incident-evidence':'documents');const {data,error}=await supabase.storage.from(bucket).createSignedUrl(doc.filePath,60);if(error||!data)throw new Error('Download failed.');const a=document.createElement('a');a.href=data.signedUrl;a.download=doc.name;a.click();}else{const file=await fileOp('get',id);if(!file)throw new Error('This file is no longer in browser storage. Please upload it again.');download(doc.name,file);}return;}
     case 'report-preview':{if(u.role!=='Coordinator')throw new Error('Coordinator role required.');showModal('Report Preview','<p>This report uses the current sample records. Download the CSV to review it in a spreadsheet, or print this portal page.</p><div class="row">'+button('Download CSV','report',id,'','download')+button('Print','print','','secondary')+'</div>');return;}
     case 'activation-help':showModal('Account activation','<p>Find an account in Registered users and select Activate. This affects only the local preview; email links and token verification require the authentication API.</p>');return;
     case 'report':exportReport(id);return;
@@ -645,7 +655,43 @@ async function action(name,id,el){
   }save();render();
 }
 document.addEventListener('click',event=>{if(event.target.closest('.skip-link')){event.preventDefault();const main=$('#main');main?.setAttribute('tabindex','-1');main?.focus();return;}const roleLink=event.target.closest('[data-role]');if(roleLink)authRole=roleLink.dataset.role;const target=event.target.closest('[data-action]');if(!target)return;event.preventDefault();action(target.dataset.action,target.dataset.id,target).catch(error=>toast(error.message));});
-document.addEventListener('input',event=>{if(event.target.id==='draft'){db.draft=event.target.value;save();}});
+let searchDebounce = null;
+let isComposingSearch = false;
+document.addEventListener('compositionstart', e => { if (e.target.form && e.target.form.id === 'search-form' && e.target.name === 'search') isComposingSearch = true; });
+document.addEventListener('compositionend', e => { if (e.target.form && e.target.form.id === 'search-form' && e.target.name === 'search') { isComposingSearch = false; e.target.dispatchEvent(new Event('input', { bubbles: true })); } });
+const SEARCH_DELAY = 300;
+document.addEventListener('input', event => {
+  if (event.target.id === 'draft') { db.draft = event.target.value; save(); }
+  if (event.target.form && event.target.form.id === 'search-form' && event.target.name === 'search') {
+    if (route().page === 'incidents') {
+      if (isComposingSearch || event.isComposing) return;
+      const val = event.target.value || '';
+      if (val === view.search) return;
+      if (val.trim() === (view.search||'').trim() && val !== '') { view.search = val; return; }
+      clearTimeout(searchDebounce);
+      const doSearch = () => {
+        if (route().page !== 'incidents') return;
+        const activeInput = document.querySelector('#search-form input[name="search"]');
+        if (!activeInput) return;
+        const wasFocused = document.activeElement === activeInput;
+        let sel = null;
+        if (wasFocused) sel = [activeInput.selectionStart, activeInput.selectionEnd];
+        view.search = val;
+        render();
+        if (wasFocused) {
+          const newInput = document.querySelector('#search-form input[name="search"]');
+          if (newInput) {
+            newInput.focus({ preventScroll: true });
+            if (sel && sel[0] !== null && sel[1] !== null && newInput.value.length >= sel[1]) {
+              newInput.setSelectionRange(sel[0], sel[1]);
+            }
+          }
+        }
+      };
+      if (val === '') doSearch(); else searchDebounce = setTimeout(doSearch, SEARCH_DELAY);
+    }
+  }
+});
 document.addEventListener('search',event=>{if(event.target.closest('#search-form')){event.target.form.requestSubmit();}});
 document.addEventListener('change',event=>{if(event.target.id==='partner'){view.partner=event.target.value;render();}if(event.target.closest('#search-form')&&event.target.tagName==='SELECT')event.target.form.requestSubmit();});
 document.addEventListener('keydown',event=>{if(event.key==='Escape')togglePortalMenu(false);if(event.target.id==='global-search'&&event.key==='Enter'){event.preventDefault();const q=event.target.value.toLowerCase().trim();const match=navigation[currentUser().role].find(n=>n[1].toLowerCase().includes(q));if(q&&match)location.hash='/'+currentUser().role.toLowerCase()+'/'+match[0];else toast('No matching page found. Try Ã¢â‚¬Å“DTRÃ¢â‚¬Â, Ã¢â‚¬Å“placementÃ¢â‚¬Â, or Ã¢â‚¬Å“reportsÃ¢â‚¬Â.');}});
@@ -846,7 +892,7 @@ document.addEventListener('submit',async event=>{
         location.hash = '/login';
         return;
       }
-    if(form.id==='search-form'){view.search=values.search||'';view.mode=values.mode||'All';view.course=values.course||'All';render();return;}
+    if(form.id==='search-form'){if(typeof searchDebounce!=='undefined')clearTimeout(searchDebounce);view.search=values.search||'';view.mode=values.mode||'All';view.course=values.course||'All';render();return;}
     const user=currentUser();if(form.id!=='modal-form'&&!user)throw new Error('Your session expired. Sign in again.');
     if(form.id==='portal-form'){await portals.submit(values,form);return;}
     if(form.id==='modal-form'&&modalSubmit){if(modalUserId&&currentUser()?.id!==modalUserId)throw new Error('Your session changed. Reopen the form after signing in.');const callback=modalSubmit;await callback(values,form);modal.close();render();return;}
@@ -854,7 +900,7 @@ document.addEventListener('submit',async event=>{
     save();render();toast('Saved in the demonstration.');
   }catch(error){if(errorBox)errorBox.textContent=error.message;else toast(error.message);}finally{if(submit)submit.disabled=false;}
 });
-window.addEventListener('hashchange', async () => {
+window.addEventListener('hashchange', async () => {if(typeof searchDebounce!=='undefined')clearTimeout(searchDebounce);
   view = {search: '', filter: 'All', course: 'All', mode: 'All'};
   modal.close();
   render();
@@ -894,7 +940,7 @@ function userIsMidInput() {
 }
 setInterval(async () => { if (session && await syncRemote(supabase, db)) { save(); if (!modal.open && !userIsMidInput()) render(); } }, 20000);
 async function submitApplication(jobId, note) { const {error} = await supabase.from('applications').insert({ job_id: jobId, student_id: currentUser().id, status: 'Pending', applied_date: today(), notes: note || '' }); if (error) throw new Error(error.message); await syncRemote(supabase, db); }
-portals=createPortalViews({get db(){return db;},get view(){return view;},get user(){return currentUser();},route,e,icon,button,link,heading,field,textarea,select,badge,person,table,empty,progress,date,time,today,student,job,save,notify,audit,toast,render,showModal,download,fileOp,putFile,dtrTable,visibleIncidents,submitApplication,legacy:{applicationDetail,editJob,studentDetail,incidentNew,incidentDetail,evaluate,logDetail,editHTE,userNew,importUsers,documentUpload,assignPlacementRemote,getSignedUrl:async(p)=>(await supabase.storage.from('documents').createSignedUrl(p,60)).data?.signedUrl},capture(fn){capturingForm=true;capturedForm=null;try{fn();return capturedForm;}finally{capturingForm=false;}}});
+portals=createPortalViews({get db(){return db;},get view(){return view;},get user(){return currentUser();},route,e,icon,button,link,heading,field,textarea,select,badge,person,table,empty,progress,date,time,today,student,job,save,notify,audit,toast,render,showModal,download,fileOp,putFile,dtrTable,visibleIncidents,submitApplication,legacy:{uploadEvidence,applicationDetail,editJob,studentDetail,incidentNew,incidentDetail,evaluate,logDetail,editHTE,userNew,importUsers,documentUpload,assignPlacementRemote,getSignedUrl:async(p, b='documents')=>(await supabase.storage.from(b==='incident-evidence'?'incident-evidence':'documents').createSignedUrl(p,60)).data?.signedUrl},capture(fn){capturingForm=true;capturedForm=null;try{fn();return capturedForm;}finally{capturingForm=false;}}});
 
 document.addEventListener('change',event=>{if(!['public-course','public-location'].includes(event.target.id))return;const course=$('#public-course').value,place=$('#public-location').value;let count=0;document.querySelectorAll('.home-job').forEach(card=>{card.hidden=!((course==='All'||card.dataset.courses.includes(course))&&(place==='All'||card.dataset.location.includes(place)));if(!card.hidden)count++;});$('#public-empty').hidden=count>0;});
 
