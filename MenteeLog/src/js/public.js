@@ -1,4 +1,4 @@
-// Rebuild of the supplied landing/authentication exports. Only photograph
+﻿// Rebuild of the supplied landing/authentication exports. Only photograph
 // regions are reused from PNGs; text, navigation, cards and buttons are HTML.
 const crops={group:['home',178,2398,500,268],employers:['home',711,2398,497,268],skills:['home',169,1548,318,177],connections:['home',520,1548,319,177],tomorrow:['home',869,1548,318,177],supervisor:['company',97,997,509,287],company:['company',791,997,510,287],career:['company',467,1529,509,286],portrait:['company',246,2427,279,267]};
 export function photo(name,cls='',label='MenteeLog students'){const overrides={group:'img1.jpg',employers:'img2.jpg',skills:'img3.jpg',connections:'img4.jpg',tomorrow:'img5.jpg',supervisor:'img6.jpg',company:'img7.jpg',career:'img8.jpg',portrait:'img9.jpg'};const [file,x,y,w,h]=crops[name]||crops.group;if(overrides[name]){return `<svg class="reference-photo ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${label}"><image href="./assets/team/${overrides[name]}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice" /></svg>`;}return `<svg class="reference-photo ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${label}"><image href="./assets/references/${file}.png" width="${file==='home'?1359:1400}" height="${file==='home'?4633:5211}"/></svg>`;}
@@ -61,7 +61,7 @@ function footer(){
     <!-- Logo & Contact -->
     <div class="footer-contact" style="text-align: left; flex: 1; min-width: 200px;">
       <a href="#/" aria-label="MenteeLog home" style="display: block; margin-bottom: 20px;">
-        <img class="footer-logo" src="./assets/MenteeLoo_Logo.svg" alt="MenteeLog" style="height: 45px; object-fit: contain; margin-left: -4px;">
+        <img class="footer-logo" src="./assets/MenteeLog_Logo.svg" alt="MenteeLog" style="height: 45px; object-fit: contain; margin-left: -4px;">
       </a>
       <p style="margin: 10px 0; display: flex; align-items: center; gap: 12px; font-size: 14px; color: #f2e3df;">
         <svg viewBox="0 0 24 24" fill="currentColor" style="width: 15px; height: 15px; flex-shrink:0;"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
@@ -400,7 +400,7 @@ function guideBody(icon) {
 export function authScreen(mode,role,{brand,icon,field}){
   const activate=mode==='activate',reset=mode==='reset-password',forgot=mode==='forgot',authError=mode==='auth-error';
   return `<div class="auth-reference">
-    <section class="auth-reference-photo">${photo('group','auth-photo')}<div class="auth-tint"></div><img class="auth-watermark" src="./assets/MenteeLoo_Logo.svg" alt=""><h1>Join the MenteeLog<br>Journey.<br>Step Forward into<br>Your Future.</h1><span class="auth-rule"></span><p>${icon('shield')} Official Student Mentorship Network</p></section>
+    <section class="auth-reference-photo">${photo('group','auth-photo')}<div class="auth-tint"></div><img class="auth-watermark" src="./assets/MenteeLog_Logo.svg" alt=""><h1>Join the MenteeLog<br>Journey.<br>Step Forward into<br>Your Future.</h1><span class="auth-rule"></span><p>${icon('shield')} Official Student Mentorship Network</p></section>
     <main class="auth-reference-main" id="main">
       <section class="auth-reference-card">
         <header>
@@ -440,6 +440,7 @@ export function authScreen(mode,role,{brand,icon,field}){
     </main>
   </div>`;
 }
+
 
 
 
