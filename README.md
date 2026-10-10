@@ -2,7 +2,7 @@
 
 MenteeLog is a centralized, multi-role web platform designed to streamline On-the-Job Training (OJT) tracking, Daily Time Record (DTR) logging, Host Training Establishment (HTE) accreditation, and compliance reporting across Philippine universities.
 
-## 🚀 Live Frontend Demonstration
+## Live Frontend Demonstration
 
 The working three-portal frontend is located in the **[frontend-react](./frontend-react/)** directory. 
 
@@ -26,7 +26,7 @@ npm run dev
 
 ---
 
-## ✨ Key Features & Recent Updates
+## Key Features & Recent Updates
 
 We have recently overhauled the system to ensure robust attendance integrity, flawless cross-device usability, and buttery-smooth interactions:
 
@@ -38,7 +38,7 @@ We have recently overhauled the system to ensure robust attendance integrity, fl
 
 ---
 
-## 👥 Team Roles & Contributions
+## Team Roles & Contributions
 
 * **Project Manager:** Jeff A. Gentapanan
 * **Software Generalist:** Kyle Renzo C. Alis
@@ -52,7 +52,7 @@ We have recently overhauled the system to ensure robust attendance integrity, fl
 
 ---
 
-## 🗺️ System Architecture Flowchart
+## System Architecture Flowchart
 
 ```mermaid
 ---
@@ -180,7 +180,7 @@ graph TD
 
 ---
 
-## 🗄️ Database Entity-Relationship Diagram (ERD)
+## Database Entity-Relationship Diagram (ERD)
 
 ```mermaid
 ---

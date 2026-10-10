@@ -20,6 +20,7 @@ const STORAGE='menteelog.demo.v1', SESSION='menteelog.demo.session';
 let storageIssue=false,filesDB=null;
 function load(){try{const saved=JSON.parse(localStorage.getItem(STORAGE));return saved?.version===1&&Array.isArray(saved.users)&&Array.isArray(saved.logs)?saved:seedData();}catch{return seedData();}}
 let db=ensureCreatorAccounts(load());
+if(db.incidents) db.incidents = db.incidents.filter(i => !i._pending);
 let session=null,view={search:'',filter:'All',course:'All',mode:'All'},authRole='Student',modalSubmit=null,modalOpener=null,modalUserId=null,toastTimer;
 
 try {
@@ -142,8 +143,8 @@ function toast(message){const el=$('#toast');el.textContent=message;el.hidden=fa
 const initials=name=>String(name||'ML').split(' ').filter(Boolean).map(n=>n[0]).slice(0,2).join('').toUpperCase();
 const student=id=>db.users.find(u=>u.id===id);
 const job=id=>db.jobs.find(j=>j.id===id);
-const date=value=>value?new Date(value.length===10?value+'T12:00:00':value).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'Ã¢â‚¬â€';
-const time=value=>value?new Date(value).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'}):'Ã¢â‚¬â€';
+const date=value=>value?new Date(value.length===10?value+'T12:00:00':value).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'-';
+const time=value=>value?new Date(value).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'}):'-';
 const today=()=>new Date().toLocaleDateString('en-CA');
 const iconPaths={grid:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',briefcase:'M8 6V3h8v3 M3 7h18v14H3z M8 7v14 M16 7v14',file:'M14 2H5v20h14V7z M14 2v6h5 M8 12h8 M8 16h6',folder:'M3 6h7l2 3h9v12H3z M3 6V3h7l2 3h8v3',clock:'M12 8v5l4 2 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',star:'m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z',alert:'m12 3 10 18H2z M12 9v5 M12 17v1',users:'M16 21v-3a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v3 M15 4a4 4 0 0 1 0 8 M22 21v-3a4 4 0 0 0-3-3.8 M13 6a4 4 0 1 1-8 0 4 4 0 0 1 8 0',building:'M5 22V2h14v20 M2 22h20 M9 6h1 M14 6h1 M9 10h1 M14 10h1 M9 14h1 M14 14h1 M10 22v-4h4v4',shield:'m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6z m-5 10 3 3 7-7',chart:'M3 3v18h19 M7 16V9 M12 16V5 M17 16v-5',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2',bell:'M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9 M10 21h4',search:'M20 20l-5-5 M17 9a7 7 0 1 1-14 0 7 7 0 0 1 14 0',arrow:'M4 12h16 m-6-6 6 6-6 6',check:'m5 12 4 4L20 5',plus:'M12 4v16 M4 12h16',close:'m6 6 12 12 M18 6 6 18',download:'M12 3v12 m-5-5 5 5 5-5 M4 16v5h16v-5',upload:'M12 16V3 m-5 5 5-5 5 5 M4 16v5h16v-5',pin:'M20 9c0 6-8 13-8 13S4 15 4 9a8 8 0 1 1 16 0 M15 9a3 3 0 1 1-6 0 3 3 0 0 1 6 0',calendar:'M3 5h18v17H3z M7 2v6 M17 2v6 M3 11h18',message:'M3 3h18v14H8l-5 5z M7 8h10 M7 12h7',target:'M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0 M17 12a5 5 0 1 1-10 0 5 5 0 0 1 10 0 M12 11v2',menu:'M3 6h18 M3 12h18 M3 18h18',eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12 M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0',logout:'M9 3H3v18h6 M9 12h12 m-5-5 5 5-5 5'};
 function icon(name){return `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${iconPaths[name]||iconPaths.file}"/></svg>`;}
@@ -209,15 +210,15 @@ document.title='MenteeLog | Your OJT journey, connected';return;}
           const lng = pos.coords.longitude;
           const acc = pos.coords.accuracy.toFixed(1);
           const f = document.getElementById('dtr-map-frame');
-          if(f) { f.innerHTML = '<p class="small"><strong>Live Coordinates Locked</strong><br>' + lat.toFixed(5) + 'Ã‚Â° N, ' + lng.toFixed(5) + 'Ã‚Â° E</p>'; f.style.background = '#e6f4ea'; f.style.color = '#137333'; }
+          if(f) { f.innerHTML = '<p class="small"><strong>Live Coordinates Locked</strong><br>' + lat.toFixed(5) + '° N, ' + lng.toFixed(5) + '° E</p>'; f.style.background = '#e6f4ea'; f.style.color = '#137333'; }
           const c = document.getElementById('dtr-coords');
-          if(c) c.innerText = 'Coordinates: ' + lat.toFixed(5) + 'Ã‚Â° N, ' + lng.toFixed(5) + 'Ã‚Â° E';
+          if(c) c.innerText = 'Coordinates: ' + lat.toFixed(5) + '° N, ' + lng.toFixed(5) + '° E';
           const b = document.getElementById('dtr-bldg');
           if(b) b.innerText = 'Current Location (GPS)';
           const a = document.getElementById('dtr-acc');
           if(a) a.innerText = 'Ã‚Â± ' + acc + ' meters';
           const s = document.getElementById('dtr-status');
-          if(s) s.innerText = 'Live GPS Lock Ã¢Å“â€œ';
+          if(s) s.innerText = 'Live GPS Lock ✅';
         }, function(err) {
           const s = document.getElementById('dtr-status');
           if(s) s.innerText = 'GPS Blocked or Unavailable';
@@ -281,7 +282,7 @@ function dashboard(u){
 function studentTableable(students,u){return students.length?table(['Intern','Hours rendered','Progress','Status','Action'],students.map(s=>`<tr><td>${person(s)}</td><td>${approvedHours(db,s.id)} / ${s.requiredHours} hrs</td><td>${progress(approvedHours(db,s.id),s.requiredHours)}</td><td>${badge(s.badge)}</td><td>${button('View profile','student-detail',s.id,'secondary small')}</td></tr>`)):empty('No students in this view','Assigned students will appear here.');}
 function searchToolbar(placeholder,extras=''){return `<form class="toolbar" id="search-form"><input type="search" name="search" aria-label="${placeholder}" placeholder="${placeholder}" value="${e(view.search)}"><button class="btn secondary" type="submit">${icon('search')} Search</button>${extras}</form>`;}
 function matches(...texts){return texts.join(' ').toLowerCase().includes(view.search.toLowerCase());}
-function applicationsPage(u){const apps=visibleApplications(db,u).filter(a=>(view.filter==='All'||a.status===view.filter)&&matches(student(a.studentId)?.name,job(a.jobId)?.title,job(a.jobId)?.company));return heading(u.role==='Student'?'My Applications Tracker':'Application Review',u.role==='Student'?'Track your internship applications and placement progress.':'Review and endorse your candidates.')+(u.role==='Student'?'':tabs(['All','Pending','Under_Review','Accepted','Rejected'])+searchToolbar('Search applications'))+(apps.length?apps.map(a=>{const j=job(a.jobId),level=a.status==='Accepted'?3:a.status==='Under_Review'?1:0;return '<section class="card application-card"><div class="row between"><div><h2>'+e(j?.company)+' Ã¢â‚¬â€ '+e(j?.title)+'</h2><small>Applied '+date(a.date)+(u.role==='Student'?'':' Ã‚Â· '+e(student(a.studentId)?.name))+'</small></div>'+badge(a.status)+'</div><div class="application-path">'+['Submitted','Under Review','Interview','Accepted'].map((label,i)=>(i?'<span class="application-line"></span>':'')+'<div class="application-step '+(i<=level?'done':'')+'"><i></i><span>'+label+'</span></div>').join('')+'</div><div class="mt16">'+button(u.role==='Student'?'View Details':'Review Application','application-detail',a.id,'secondary small')+'</div></section>';}).join(''):empty('No applications in this view','Your application progress will appear here.'));}
+function applicationsPage(u){const apps=visibleApplications(db,u).filter(a=>(view.filter==='All'||a.status===view.filter)&&matches(student(a.studentId)?.name,job(a.jobId)?.title,job(a.jobId)?.company));return heading(u.role==='Student'?'My Applications Tracker':'Application Review',u.role==='Student'?'Track your internship applications and placement progress.':'Review and endorse your candidates.')+(u.role==='Student'?'':tabs(['All','Pending','Under_Review','Accepted','Rejected'])+searchToolbar('Search applications'))+(apps.length?apps.map(a=>{const j=job(a.jobId),level=a.status==='Accepted'?3:a.status==='Under_Review'?1:0;return '<section class="card application-card"><div class="row between"><div><h2>'+e(j?.company)+' - '+e(j?.title)+'</h2><small>Applied '+date(a.date)+(u.role==='Student'?'':' · '+e(student(a.studentId)?.name))+'</small></div>'+badge(a.status)+'</div><div class="application-path">'+['Submitted','Under Review','Interview','Accepted'].map((label,i)=>(i?'<span class="application-line"></span>':'')+'<div class="application-step '+(i<=level?'done':'')+'"><i></i><span>'+label+'</span></div>').join('')+'</div><div class="mt16">'+button(u.role==='Student'?'View Details':'Review Application','application-detail',a.id,'secondary small')+'</div></section>';}).join(''):empty('No applications in this view','Your application progress will appear here.'));}
 function netElapsed(sh){if(!sh)return '00:00:00';const now=Date.now();let ms=now-new Date(sh.clockIn).getTime();ms-=(sh.breakMinutes||0)*60000;if(sh.onBreak)ms-=now-new Date(sh.onBreak).getTime();const s=Math.max(0,Math.floor(ms/1000));return [Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(v=>String(v).padStart(2,'0')).join(':');}
 function elapsed(start){const seconds=Math.max(0,Math.floor((Date.now()-new Date(start))/1000));return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(v=>String(v).padStart(2,'0')).join(':');}
 function dtrTable(logs,u){const breakCol=l=>l.breakMinutes?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#854d0e;"><span style="width:6px;height:6px;border-radius:50%;background:#854d0e;"></span>'+l.breakMinutes+'m</span>':'<span style="font-size:12px;color:var(--slate);">—</span>';return logs.length?table([...(u.role==='Student'?[]:['Intern']),'Date','Clock In','Clock Out','Break',...(u.role==='Student'?['Total']:['Task Summary']),'GPS','Status','Action'],logs.slice().reverse().map(l=>'<tr>'+(u.role==='Student'?'':'<td><strong>'+e(student(l.studentId)?.name)+'</strong></td>')+'<td>'+date(l.date)+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+breakCol(l)+'</td><td>'+(u.role==='Student'?l.hours.toFixed(2)+'h':'<span class="task-excerpt">'+e(l.task)+'</span>')+'</td><td>'+badge(l.gps?'Captured':'Unavailable')+'</td><td>'+badge(l.status)+'</td><td>'+button(u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status)?'Review':'View','log-detail',l.id,'secondary small')+'</td></tr>')):empty('No DTR entries here','Submitted attendance records will appear here.');}
@@ -289,10 +290,10 @@ function visibleIncidents(u){return db.incidents.filter(i=>u.role==='Coordinator
 function profilePage(u){return `${heading('Profile Setup','Keep your contact and internship details up to date.')}<div class="narrow-wide"><section class="card sand"><div class="row">${person(u)}</div><hr class="hr"><p class="small">${e(u.identifier)}</p>${badge(u.role)} ${badge(u.badge||u.status)}<p class="small muted mt16">Your role and academic identifier are managed by your coordinator.</p></section><section class="card"><h2>Personal information</h2><form id="profile-form">${field('Full name','name','text',u.name,'required maxlength="100" autocomplete="name"')}${field('Email address','email','email',u.email,'required autocomplete="email"')}${field('Phone number (optional)','phone','tel',u.phone||'','maxlength="30" autocomplete="tel"')}${textarea('About you (optional)','bio',u.bio||'','')}<p class="form-error" role="alert"></p><button class="btn" type="submit">Save profile</button></form></section></div>`;}
 function safeMeetingURL(value){const url=new URL(value);if(url.protocol!=='https:'||!['meet.google.com','teams.microsoft.com','teams.live.com','zoom.us','www.zoom.us'].some(h=>url.hostname===h||url.hostname.endsWith('.'+h)))throw new Error('Use an HTTPS Google Meet, Microsoft Teams, or Zoom link.');return url.href;}
 function openJob(id){const u=currentUser(),j=job(id);if(!j)return;const applied=db.applications.some(a=>a.studentId===u.id&&a.jobId===id&&a.status!=='Rejected');showModal(e(j.title),`<div class="row between"><strong>${e(j.company)}</strong>${badge(j.status)}</div><p class="muted mt16">${e(j.location)} • ${e(j.mode)} • ${j.slots} available slots</p><h3>About this opportunity</h3><p>${e(j.description)}</p><h3>Skills you’ll use</h3><p>${e(j.skills)}</p><h3>Host training establishment specifications</h3><p>${e(j.specs)}</p><h3>Eligible programs</h3><p>${e(j.courses.join(' • '))}</p>${u.role==='Student'?`<div class="note">${applied?'You already applied to this position.':'Your current profile will be included with your application.'}</div>${applied?'':`<div class="field mt16"><label class="row"><input type="checkbox" name="consent" required> I confirm my profile details are ready for review.</label></div>`}`:''}${u.role!=='Student'?button('Edit position','job-edit',id,'secondary'):''}`,u.role==='Student'&&!applied&&j.status==='Active'&&j.slots>0?async(data)=>{const {error}=await supabase.from('applications').insert({job_id:id,student_id:u.id,status:'Pending',applied_date:today()});if(error)throw new Error(error.message);await syncRemote(supabase,db);if(j.supervisorId)notify(j.supervisorId,'Application_Status','New internship application',u.name+' applied for '+j.title+'.');audit('Submitted application for '+j.title);save();toast('Application submitted in the demo.');}:null,'Submit application');}
-function editJob(id){const u=currentUser();if(!['Coordinator','Supervisor'].includes(u.role))throw new Error('This role cannot manage positions.');const j=job(id);if(j&&u.role==='Supervisor'&&j.supervisorId!==u.id)throw new Error('This position is outside your scope.');showModal(j?'Edit position':'Post a new position',field('Position title','title','text',j?.title||'','required maxlength="120"')+field('Company','company','text',j?.company||u.company||'','required maxlength="120" '+(u.role==='Supervisor'?'readonly':''))+`<div class="grid-2">${field('Location','location','text',j?.location||'','required maxlength="100"')}${select('Work arrangement','mode',['On-site','Hybrid','Remote'],j?.mode||'On-site')}</div><div class="grid-2">${field('Available slots','slots','number',j?.slots??1,'required min="0" max="1000"')}${select('Status','status',['Draft','Active','Closed'],j?.status||'Draft')}</div>`+select('Eligible program','course',['All IT programs','BS Computer Science','BS Information Technology','BS Computer Engineering'],j?.courses?.length===1?j.courses[0]:'All IT programs')+textarea('Position description','description',j?.description||'')+field('Skills','skills','text',j?.skills||'','required maxlength="200"')+textarea('HTE specifications & requirements','specs',j?.specs||'')+(u.role==='Coordinator'?select('Assigned supervisor','supervisorId',[['','Unassigned'],...db.users.filter(s=>s.role==='Supervisor').map(s=>[s.id,s.name])],j?.supervisorId||''):''),async(data)=>{const values={...data,slots:Number(data.slots),courses:data.course==='All IT programs'?['BS Computer Science','BS Information Technology','BS Computer Engineering']:[data.course],supervisor_id:u.role==='Supervisor'?u.id:data.supervisorId||null};delete values.course;delete values.supervisorId;const {error}=j?await supabase.from('listings_jobs').update(values).eq('id',id):await supabase.from('listings_jobs').insert(values);if(error)throw new Error(error.message);await syncRemote(supabase,db);audit((j?'Updated':'Created')+' position '+values.title);save();toast('Position saved.');},'Save position');}
+function editJob(id){const u=currentUser();if(!['Coordinator','Supervisor'].includes(u.role))throw new Error('This role cannot manage positions.');const j=job(id);if(j&&u.role==='Supervisor'&&j.supervisorId!==u.id)throw new Error('This position is outside your scope.');showModal(j?'Edit position':'Post a new position',field('Position title','title','text',j?.title||'','required maxlength="120"')+field('Company','company','text',j?.company||u.company||'','required maxlength="120" '+(u.role==='Supervisor'?'readonly':''))+`<div class="grid-2">${field('Location','location','text',j?.location||'','required maxlength="100"')}${select('Work arrangement','mode',['On-site','Hybrid','Remote'],j?.mode||'On-site')}</div><div class="grid-2">${field('Available slots','slots','number',j?.slots??1,'required min="0" max="1000"')}${select('Status','status',['Draft','Active','Closed'],j?.status||'Draft')}</div>`+select('Eligible program','course',['All IT programs','BS Computer Science','BS Information Technology','BS Computer Engineering'],j?.courses?.length===1?j.courses[0]:'All IT programs')+textarea('Position description','description',j?.description||'')+field('Skills','skills','text',j?.skills||'','required maxlength="200"')+textarea('HTE specifications & requirements','specs',j?.specs||'')+(u.role==='Coordinator'?select('Assigned supervisor','supervisorId',[['','Unassigned'],...db.users.filter(s=>s.role==='Supervisor').map(s=>[s.id,s.name])],j?.supervisorId||''):''),async(data)=>{const values={...data,slots:Number(data.slots),courses:data.course==='All IT programs'?['BS Computer Science','BS Information Technology','BS Computer Engineering']:[data.course],supervisor_id:u.role==='Supervisor'?u.id:data.supervisorId||null};delete values.course;delete values.supervisorId;const {error, data: result}=j?await supabase.from('listings_jobs').update(values).eq('id',id).select():await supabase.from('listings_jobs').insert(values).select();if(error)throw new Error(error.message);if(!result || result.length === 0)throw new Error('Write failed or rejected by security rules.');await syncRemote(supabase,db);audit((j?'Updated':'Created')+' position '+values.title);save();toast('Position saved.');},'Save position');}
 function applicationDetail(id){const u=currentUser(),a=visibleApplications(db,u).find(a=>a.id===id);if(!a)throw new Error('Application unavailable.');const j=job(a.jobId),s=student(a.studentId);showModal('Application details',`<h3>${e(j.title)}</h3><p>${e(j.company)} • ${e(s.name)}</p>${badge(a.status)}<div class="timeline"><div class="timeline-item"><strong>Application submitted</strong><p>${date(a.date)}</p></div><div class="timeline-item"><strong>Supervisor review</strong><p>${a.status==='Pending'?'Awaiting review':e(a.status.replaceAll('_',' '))}</p></div><div class="timeline-item"><strong>Placement & endorsement</strong><p>${a.status==='Accepted'?e(a.note||'Application accepted. Coordinator endorsement is next.'):'Follows an accepted application.'}</p></div></div>${u.role==='Supervisor'?select('Review decision','status',['Pending','Under_Review','Accepted','Rejected'],a.status)+textarea('Review note','note',a.note||''):''}`,u.role==='Supervisor'?async(data)=>{if(data.status==='Accepted'&&a.status!=='Accepted'){if(j.slots<1)throw new Error('No slots remain in this position.');if(db.applications.some(other=>other.studentId===s.id&&other.id!==a.id&&other.status==='Accepted'))throw new Error('This student already has an accepted placement.');}if(a.status==='Accepted'&&data.status!=='Accepted')throw new Error('An accepted placement must be reassigned by the coordinator.');const {error}=await supabase.rpc('review_application',{p_id:a.id,p_status:data.status,p_note:data.note||''});if(error)throw new Error(error.message);await syncRemote(supabase,db);notify(s.id,'Application_Status','Application status updated',j.title+': '+data.status.replaceAll('_',' '));audit('Reviewed application for '+s.name);save();toast('Application updated.');}:null,'Save review');}
 
-async function clockAction() {
+async function clockAction() { /* MODIFY_CLOCK_ACTION */
     const u = currentUser();
     if(u.role !== 'Student') throw new Error('Unauthorized');
     
@@ -300,9 +301,13 @@ async function clockAction() {
     const log = db.logs.find(l => l.studentId === u.id && l.status === 'Awaiting_Student_Log');
     if(!log) throw new Error('No active log awaiting your summary.');
     
-    showModal('Complete your daily time record', `<p>Shift was managed by your supervisor. Clocked in at ${time(log.clockIn)}, Clocked out at ${time(log.clockOut)}.</p>${textarea('Task summary & learning reflection','task','','required minlength="150"')}<p class="note">Describe the tasks you completed during this verified session (min 150 characters).</p>`, data => {
+    showModal('Complete your daily time record', `<p>Shift was managed by your supervisor. Clocked in at ${time(log.clockIn)}, Clocked out at ${time(log.clockOut)}.</p>${textarea('Task summary & learning reflection','task','','required minlength="150"')}<p class="note">Describe the tasks you completed during this verified session (min 150 characters).</p>`, async data => {
         log.task = data.task;
         log.status = 'Pending';
+        const { error, data: updated } = await supabase.from('logs').update({ task: log.task, status: log.status }).eq('id', log.id).select();
+        if (error) throw new Error(error.message);
+        if (!updated || updated.length === 0) throw new Error('Update failed or rejected by security rules.');
+        await syncRemote(supabase, db);
         notify(log.supervisorId, 'DTR_Event', 'Daily time record submitted', u.name + ' submitted their verified logbook summary.');
         audit('Submitted a daily time record summary');
         save(); toast('Logbook summary submitted for supervisor review.');
@@ -355,11 +360,59 @@ function tkTerminal(id) {
     showModal('Timekeeper Terminal', body); terminalFor = id;
 }
 
-function logDetail(id){const u=currentUser(),l=visibleLogs(db,u).find(l=>l.id===id);if(!l)throw new Error('Attendance entry unavailable.');const review=u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status);showModal(u.role==='Student'?'Daily time record [READ-ONLY]':'Daily time record',`<div class="row between"><strong>${e(student(l.studentId)?.name)}</strong>${badge(l.status)}</div><p class="muted mt16">${date(l.date)} Ã‚Â· ${time(l.clockIn)} Ã¢â‚¬â€œ ${time(l.clockOut)} Ã‚Â· ${l.hours} hours${l.breakMinutes?' Ã‚Â· <span style="color:#854d0e;">'+l.breakMinutes+'m break</span>':''}</p><h3>Task summary</h3><p>${e(l.task)}</p><p class="small"><strong>Location:</strong> ${l.gps?'Captured on device; not server-verified':'Not captured'}</p>${l.justification?`<h3>Justification</h3><p>${e(l.justification)}</p>`:''}${l.remarks?`<h3>Supervisor remarks</h3><p>${e(l.remarks)}</p>`:''}${l.signature?`<p class="small muted">Demo typed signature: ${e(l.signature)}</p>`:''}${review?select('Review decision','status',['Approved','Flagged','Rejected'])+textarea('Review remarks','remarks',l.remarks||'')+field('Typed signature (demo)','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I reviewed this attendance record.</label>':''}`,review?data=>{reviewLog(db,u,id,data.status,data.remarks,data.signature);notify(l.studentId,'DTR_Event','DTR entry '+data.status.toLowerCase(),date(l.date)+': '+data.remarks);audit('Marked '+student(l.studentId).name+' DTR '+data.status);save();toast('DTR review saved.');}:null,'Submit review');}
-function studentDetail(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id===id);if(!s)throw new Error('Student is outside your assigned scope.');showModal(e(s.name),`${person(s)}<hr class="hr"><div class="grid-2"><div><span class="small muted">SR code</span><p>${e(s.identifier)}</p><span class="small muted">Host company</span><p>${e(s.company||'Unplaced')}</p></div><div><span class="small muted">Approved hours</span><p>${approvedHours(db,s.id)} / ${s.requiredHours} hours</p><span class="small muted">Accreditation</span><p>${badge(s.badge)}</p></div></div>${progress(approvedHours(db,s.id),s.requiredHours)}<h3 class="mt16">Recent attendance</h3>${dtrTable(db.logs.filter(l=>l.studentId===s.id).slice(-3),{role:'Student'})}${u.role==='Coordinator'?`<hr class="hr">${select('Host company','company',[['','Unplaced'],...db.htes.filter(h=>h.status==='Accredited').map(h=>h.name)],s.company)}${select('Assigned supervisor','supervisorId',[['','Unassigned'],...db.users.filter(v=>v.role==='Supervisor'&&v.status==='Active').map(v=>[v.id,v.name])],s.supervisorId||'')}${select('Accreditation status','badge',['Pre_Seeded','Eligible','Enrolled','Cleared'],s.badge)}${field('Required OJT hours','requiredHours','number',s.requiredHours,'required min="1" max="2000"')}<p class="small muted">Clearance requires completed hours, an appraisal, and no unresolved incidents.</p>${button('Download endorsement','endorsement',s.id,'secondary small','download')}`:''}`,u.role==='Coordinator'?data=>{const supervisor=student(data.supervisorId);if(data.company&&(!supervisor||supervisor.company!==data.company))throw new Error('Select a supervisor from the chosen host company.');if(!data.company&&data.supervisorId)throw new Error('Assign a host company before a supervisor.');if(data.badge==='Cleared'&&(approvedHours(db,id)<Number(data.requiredHours)||!db.appraisals.some(a=>a.studentId===id)||db.incidents.some(i=>i.studentId===id&&!['Resolved','Dismissed'].includes(i.status))))throw new Error('This student has incomplete clearance requirements.');Object.assign(s,{...data,supervisorId:data.supervisorId||null,requiredHours:Number(data.requiredHours)});notify(s.id,'System','Placement profile updated','Your coordinator updated your placement or accreditation details.');audit('Updated placement for '+s.name);save();toast('Student placement updated.');}:null,'Save placement');}
-function incidentNew(){const u=currentUser(),students=visibleStudents(db,u);showModal(u.role==='Student'?'File an incident claim':'Create disciplinary log',`<p class="note">Document the situation clearly. This demo does not send emergency alerts or contact school staff.</p>${u.role==='Supervisor'?select('Student involved','studentId',students.map(s=>[s.id,s.name])):''}${field('Short title','title','text','','required maxlength="120"')}${select('Priority','priority',['Low','Medium','High'],'Medium')}${textarea('Description','description','','required minlength="20"')}${select('Related DTR (optional)','logId',[['','No linked entry'],...visibleLogs(db,u).map(l=>[l.id,student(l.studentId).name+' Ã‚Â· '+date(l.date)])])}${field('Evidence (optional, PDF / PNG / JPEG, up to 10 MB)','evidence','file','','accept="application/pdf,image/png,image/jpeg"')}`,async(data,form)=>{const sid=u.role==='Student'?u.id:data.studentId;if(u.role==='Supervisor'&&!students.some(s=>s.id===sid))throw new Error('Choose an assigned intern.');if(data.logId&&!db.logs.some(l=>l.id===data.logId&&l.studentId===sid))throw new Error('The linked DTR must belong to the selected student.');let evidence=null;const file=form.elements.evidence.files[0];if(file){validateUpload(file);evidence={id:crypto.randomUUID(),name:file.name};await putFile(evidence.id,file);}const incident={id:'IR-'+crypto.randomUUID().slice(0,8).toUpperCase(),studentId:sid,supervisorId:u.role==='Supervisor'?u.id:u.supervisorId,category:u.role==='Student'?'Student_Claim':'Disciplinary_Violation',title:data.title,description:data.description,priority:data.priority,status:'Pending',date:today(),logId:data.logId||null,evidence,notes:[],meeting:null};db.incidents.unshift(incident);db.users.filter(v=>v.role==='Coordinator').forEach(v=>notify(v.id,'Incident_Alert','New incident report',incident.id+': '+incident.title));audit('Filed incident '+incident.id);save();toast('Incident saved for coordinator review.');},'Submit report');}
-function incidentDetail(id){const u=currentUser(),i=visibleIncidents(u).find(i=>i.id===id);if(!i)throw new Error('Case unavailable.');showModal('Case '+e(i.id),`<div class="row between"><h3 class="mb0">${e(i.title)}</h3>${badge(i.priority)}</div><p class="small muted mt16">${e(student(i.studentId)?.name)} Ã‚Â· ${date(i.date)} Ã‚Â· ${e(i.category.replaceAll('_',' '))}</p>${badge(i.status)}<p class="mt16">${e(i.description)}</p>${i.logId?button('View linked DTR','log-detail',i.logId,'secondary small'):''}${i.evidence?button('Download evidence: '+e(i.evidence.name),'file-download',i.evidence.id,'secondary small','download'):''}${i.meeting?`<section class="note mt16"><strong>Mediation scheduled</strong><p class="mb0">${date(i.meeting.time)} Ã‚Â· ${time(i.meeting.time)} Ã‚Â· ${e(i.meeting.platform)}</p><a href="${e(safeMeetingURL(i.meeting.url))}" target="_blank" rel="noopener noreferrer" class="text-btn">Open meeting Ã¢â€ â€™</a></section>`:''}<h3 class="mt16">Case notes</h3>${i.notes.map(n=>`<div class="activity-item"><p>${e(n.text)}</p><small>${e(n.author)} Ã‚Â· ${date(n.date)}</small></div>`).join('')||'<p class="small muted">No case notes yet.</p>'}${u.role==='Coordinator'?`<hr class="hr">${select('Case status','status',['Pending','Scheduled','Resolved','Dismissed'],i.status)}${textarea('Investigation / resolution note','note','','required minlength="10"')}<details><summary class="small">Schedule a mediation meeting (optional)</summary><div class="mt16">${select('Meeting platform','platform',['Google Meet','MS Teams','Zoom'],i.meeting?.platform||'Google Meet')}${field('Meeting link','url','url',i.meeting?.url||'')}${field('Meeting date & time','meetingTime','datetime-local',i.meeting?.localTime||'')}</div></details>`:''}`,u.role==='Coordinator'?data=>{let meeting=i.meeting;if(data.url||data.meetingTime){if(!data.url||!data.meetingTime)throw new Error('Provide both the meeting link and time.');const url=safeMeetingURL(data.url);if(new Date(data.meetingTime)<=new Date())throw new Error('Schedule a meeting in the future.');meeting={platform:data.platform,url,time:new Date(data.meetingTime).toISOString(),localTime:data.meetingTime};}if(data.status==='Scheduled'&&!meeting)throw new Error('Add a meeting link and time before marking this case scheduled.');i.meeting=meeting;i.status=data.status;i.notes.push({text:data.note,author:u.name,date:new Date().toISOString()});notify(i.studentId,'Incident_Alert','Incident '+i.id+' updated',data.status+': '+data.note);if(i.supervisorId)notify(i.supervisorId,'Incident_Alert','Incident '+i.id+' updated',data.status+': '+data.note);audit('Updated incident '+i.id+' to '+i.status);save();toast('Case updated.');}:null,'Update case');}
-function evaluate(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id===id);if(u.role!=='Supervisor'||!s)throw new Error('Student outside your evaluation scope.');const a=db.appraisals.find(a=>a.studentId===id);const body=`${person(s)}<hr class="hr"><p class="small muted">1 Ã¢â‚¬â€ Needs improvement Ã‚Â· 3 Ã¢â‚¬â€ Meets expectations Ã‚Â· 5 Ã¢â‚¬â€ Excellent</p>${rubric.map((r,i)=>`<fieldset class="rubric-row"><legend><strong>${i+1}. ${r}</strong></legend><div class="rating">${[1,2,3,4,5].map(n=>`<label><input type="radio" name="rating${i}" value="${n}" required ${a?.ratings[i]===n?'checked':''} ${a?'disabled':''}>${n}</label>`).join('')}</div></fieldset>`).join('')}${a?`<h3 class="mt16">Overall score: ${a.score.toFixed(1)} / 5</h3><p>${e(a.comments)}</p><p class="small">Signature: ${e(a.signature)}</p>`:textarea('Supervisor comments & observations','comments','','required minlength="20"')+field('Typed signature (demo)','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I confirm this evaluation reflects my review of the student.</label>'}`;showModal(a?'Submitted appraisal':'Performance appraisal rubric',body,a?null:data=>{const application=db.applications.find(a=>a.studentId===id&&a.status==='Accepted');if(!application)throw new Error('An accepted application is required before evaluation.');const ratings=rubric.map((r,i)=>Number(data['rating'+i]));if(ratings.some(n=>!Number.isInteger(n)||n<1||n>5))throw new Error('Complete every rubric criterion.');db.appraisals.push({id:crypto.randomUUID(),applicationId:application.id,studentId:id,supervisorId:u.id,ratings,score:ratings.reduce((a,b)=>a+b)/ratings.length,comments:data.comments,signature:data.signature,date:new Date().toISOString()});notify(id,'System','Your performance appraisal is ready','View your supervisorÃ¢â‚¬â„¢s rubric scores and feedback.');audit('Submitted appraisal for '+s.name);save();toast('Evaluation submitted. The student can now view it.');},'Submit evaluation');}
+function logDetail(id){const u=currentUser(),l=visibleLogs(db,u).find(l=>l.id===id);if(!l)throw new Error('Attendance entry unavailable.');const review=u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status);showModal(u.role==='Student'?'Daily time record [READ-ONLY]':'Daily time record',`<div class="row between"><strong>${e(student(l.studentId)?.name)}</strong>${badge(l.status)}</div><p class="muted mt16">${date(l.date)} · ${time(l.clockIn)} - ${time(l.clockOut)} · ${l.hours} hours${l.breakMinutes?' · <span style="color:#854d0e;">'+l.breakMinutes+'m break</span>':''}</p><h3>Task summary</h3><p>${e(l.task)}</p><p class="small"><strong>Location:</strong> ${l.gps?'Captured on device; not server-verified':'Not captured'}</p>${l.justification?`<h3>Justification</h3><p>${e(l.justification)}</p>`:''}${l.remarks?`<h3>Supervisor remarks</h3><p>${e(l.remarks)}</p>`:''}${l.signature?`<p class="small muted">Demo typed signature: ${e(l.signature)}</p>`:''}${review?select('Review decision','status',['Approved','Flagged','Rejected'])+textarea('Review remarks','remarks',l.remarks||'')+field('Typed signature (demo)','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I reviewed this attendance record.</label>':''}`,review?async data=>{ const {error, data:updated} = await supabase.from('logs').update({status: data.status, remarks: data.remarks, signature: data.signature}).eq('id', id).select(); if(error) throw new Error(error.message); if(!updated || updated.length===0) throw new Error('Update failed.'); await syncRemote(supabase, db); notify(l.studentId,'DTR_Event','DTR entry '+data.status.toLowerCase(),date(l.date)+': '+data.remarks); audit('Marked '+student(l.studentId).name+' DTR '+data.status); save(); toast('DTR review saved.'); }:null,'Submit review');}
+function studentDetail(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id===id);if(!s)throw new Error('Student is outside your assigned scope.');showModal(e(s.name),`${person(s)}<hr class="hr"><div class="grid-2"><div><span class="small muted">SR code</span><p>${e(s.identifier)}</p><span class="small muted">Host company</span><p>${e(s.company||'Unplaced')}</p></div><div><span class="small muted">Approved hours</span><p>${approvedHours(db,s.id)} / ${s.requiredHours} hours</p><span class="small muted">Accreditation</span><p>${badge(s.badge)}</p></div></div>${progress(approvedHours(db,s.id),s.requiredHours)}<h3 class="mt16">Recent attendance</h3>${dtrTable(db.logs.filter(l=>l.studentId===s.id).slice(-3),{role:'Student'})}${u.role==='Coordinator'?`<hr class="hr">${select('Host company','company',[['','Unplaced'],...db.htes.filter(h=>h.status==='Accredited').map(h=>h.name)],s.company)}${select('Assigned supervisor','supervisorId',[['','Unassigned'],...db.users.filter(v=>v.role==='Supervisor'&&v.status==='Active').map(v=>[v.id,v.name])],s.supervisorId||'')}${select('Accreditation status','badge',['Pre_Seeded','Eligible','Enrolled','Cleared'],s.badge)}${field('Required OJT hours','requiredHours','number',s.requiredHours,'required min="1" max="2000"')}<p class="small muted">Clearance requires completed hours, an appraisal, and no unresolved incidents.</p>${button('Download endorsement','endorsement',s.id,'secondary small','download')}`:''}`,u.role==='Coordinator'?async data=>{const supervisor=student(data.supervisorId);if(data.company&&(!supervisor||supervisor.company!==data.company))throw new Error('Select a supervisor from the chosen host company.');if(!data.company&&data.supervisorId)throw new Error('Assign a host company before a supervisor.');if(data.badge==='Cleared'&&(approvedHours(db,id)<Number(data.requiredHours)||!db.appraisals.some(a=>a.studentId===id)||db.incidents.some(i=>i.studentId===id&&!['Resolved','Dismissed'].includes(i.status))))throw new Error('This student has incomplete clearance requirements.');const { data: updated, error } = await supabase.from('profiles').update({ company: data.company, supervisor_id: data.supervisorId || null, required_hours: Number(data.requiredHours) }).eq('id', id).select();if(error)throw new Error(error.message);if(!updated||updated.length===0)throw new Error('Update failed. You may not have permission.');await syncRemote(supabase, db);notify(s.id,'System','Placement profile updated','Your coordinator updated your placement or accreditation details.');audit('Updated placement for '+s.name);save();toast('Student placement updated.');}:null,'Save placement');}
+function incidentNew(){const u=currentUser(),students=visibleStudents(db,u);showModal(u.role==='Student'?'File an incident claim':'Create disciplinary log',`<p class="note">Document the situation clearly. This demo does not send emergency alerts or contact school staff.</p>${u.role==='Supervisor'?select('Student involved','studentId',students.map(s=>[s.id,s.name])):''}${field('Short title','title','text','','required maxlength="120"')}${select('Priority','priority',['Low','Medium','High'],'Medium')}${textarea('Description','description','','required minlength="20"')}${select('Related DTR (optional)','logId',[['','No linked entry'],...visibleLogs(db,u).map(l=>[l.id,student(l.studentId).name+' · '+date(l.date)])])}${field('Evidence (optional, PDF / PNG / JPEG, up to 10 MB)','evidence','file','','accept="application/pdf,image/png,image/jpeg"')}`,async(data,form)=>{const sid=u.role==='Student'?u.id:data.studentId;if(u.role==='Supervisor'&&!students.some(s=>s.id===sid))throw new Error('Choose an assigned intern.');if(data.logId&&!db.logs.some(l=>l.id===data.logId&&l.studentId===sid))throw new Error('The linked DTR must belong to the selected student.');let evidence=null;const file=form.elements.evidence.files[0];if(file){validateUpload(file);evidence={id:crypto.randomUUID(),name:file.name};await putFile(evidence.id,file);}const incident={id:'IR-'+crypto.randomUUID().slice(0,8).toUpperCase(),studentId:sid,supervisorId:u.role==='Supervisor'?u.id:u.supervisorId,category:u.role==='Student'?'Student_Claim':'Disciplinary_Violation',title:data.title,description:data.description,priority:data.priority,status:'Pending',date:today(),logId:data.logId||null,evidence,notes:[],meeting:null};const { error, data: inserted } = await supabase.from('incidents').insert({
+    student_id: incident.studentId,
+    supervisor_id: incident.supervisorId,
+    category: incident.category,
+    title: incident.title,
+    description: incident.description,
+    priority: incident.priority,
+    status: incident.status,
+    date: incident.date,
+    log_id: incident.logId,
+    evidence: incident.evidence ? JSON.stringify(incident.evidence) : null,
+    notes: incident.notes,
+    meeting: incident.meeting
+}).select();
+if (error) throw new Error(error.message);
+if (!inserted || inserted.length === 0) throw new Error('Insert failed or rejected by security rules.');
+await syncRemote(supabase, db);
+const code = inserted[0].code;
+db.users.filter(v=>v.role==='Coordinator').forEach(v=>notify(v.id,'Incident_Alert','New incident report',code+': '+incident.title));
+audit('Filed incident '+code);
+toast('Incident saved for coordinator review.');
+},'Submit report');}
+function incidentDetail(id){const u=currentUser(),i=visibleIncidents(u).find(i=>i.id===id);if(!i)throw new Error('Case unavailable.');showModal('Case '+e(i.id),`<div class="row between"><h3 class="mb0">${e(i.title)}</h3>${badge(i.priority)}</div><p class="small muted mt16">${e(student(i.studentId)?.name)} · ${date(i.date)} · ${e(i.category.replaceAll('_',' '))}</p>${badge(i.status)}<p class="mt16">${e(i.description)}</p>${i.logId?button('View linked DTR','log-detail',i.logId,'secondary small'):''}${i.evidence?button('Download evidence: '+e(i.evidence.name),'file-download',i.evidence.id,'secondary small','download'):''}${i.meeting?`<section class="note mt16"><strong>Mediation scheduled</strong><p class="mb0">${date(i.meeting.time)} · ${time(i.meeting.time)} · ${e(i.meeting.platform)}</p><a href="${e(safeMeetingURL(i.meeting.url))}" target="_blank" rel="noopener noreferrer" class="text-btn">Open meeting ↗</a></section>`:''}<h3 class="mt16">Case notes</h3>${i.notes.map(n=>`<div class="activity-item"><p>${e(n.text)}</p><small>${e(n.author)} · ${date(n.date)}</small></div>`).join('')||'<p class="small muted">No case notes yet.</p>'}${u.role==='Coordinator'?`<hr class="hr">${select('Case status','status',['Pending','Scheduled','Resolved','Dismissed'],i.status)}${textarea('Investigation / resolution note','note','','required minlength="10"')}<details><summary class="small">Schedule a mediation meeting (optional)</summary><div class="mt16">${select('Meeting platform','platform',['Google Meet','MS Teams','Zoom'],i.meeting?.platform||'Google Meet')}${field('Meeting link','url','url',i.meeting?.url||'')}${field('Meeting date & time','meetingTime','datetime-local',i.meeting?.localTime||'')}</div></details>`:''}`,u.role==='Coordinator'?async data=>{let meeting=i.meeting;if(data.url||data.meetingTime){if(!data.url||!data.meetingTime)throw new Error('Provide both the meeting link and time.');const url=safeMeetingURL(data.url);if(new Date(data.meetingTime)<=new Date())throw new Error('Schedule a meeting in the future.');meeting={platform:data.platform,url,time:new Date(data.meetingTime).toISOString(),localTime:data.meetingTime};}if(data.status==='Scheduled'&&!meeting)throw new Error('Add a meeting link and time before marking this case scheduled.');const newNotes = [...i.notes, {text:data.note,author:u.name,date:new Date().toISOString()}];
+const { error, data: updated } = await supabase.from('incidents').update({ status: data.status, meeting, notes: newNotes }).eq('code', i.id).select();
+if (error) throw new Error(error.message);
+if (!updated || updated.length === 0) throw new Error('Update failed or rejected by security rules.');
+await syncRemote(supabase, db);
+notify(i.studentId,'Incident_Alert','Incident '+i.id+' updated',data.status+': '+data.note);
+if(i.supervisorId)notify(i.supervisorId,'Incident_Alert','Incident '+i.id+' updated',data.status+': '+data.note);
+audit('Updated incident '+i.id+' to '+data.status);
+toast('Case updated.');
+}:null,'Update case');}
+function evaluate(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id===id);if(u.role!=='Supervisor'||!s)throw new Error('Student outside your evaluation scope.');const a=db.appraisals.find(a=>a.studentId===id);const body=`${person(s)}<hr class="hr"><p class="small muted">1 - Needs improvement - 3 - Meets expectations - 5 - Excellent</p>${rubric.map((r,i)=>`<fieldset class="rubric-row"><legend><strong>${i+1}. ${r}</strong></legend><div class="rating">${[1,2,3,4,5].map(n=>`<label><input type="radio" name="rating${i}" value="${n}" required ${a?.ratings[i]===n?'checked':''} ${a?'disabled':''}>${n}</label>`).join('')}</div></fieldset>`).join('')}${a?`<h3 class="mt16">Overall score: ${a.score.toFixed(1)} / 5</h3><p>${e(a.comments)}</p><p class="small">Signature: ${e(a.signature)}</p>`:textarea('Supervisor comments & observations','comments','','required minlength="20"')+field('Typed signature (demo)','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I confirm this evaluation reflects my review of the student.</label>'}`;showModal(a?'Submitted appraisal':'Performance appraisal rubric',body,a?null:async data=>{const application=db.applications.find(a=>a.studentId===id&&a.status==='Accepted');if(!application)throw new Error('An accepted application is required before evaluation.');const ratings=rubric.map((r,i)=>Number(data['rating'+i]));if(ratings.some(n=>!Number.isInteger(n)||n<1||n>5))throw new Error('Complete every rubric criterion.');
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const validAppId = uuidRegex.test(application.id) ? application.id : null;
+const { error, data: inserted } = await supabase.from('appraisals').insert({
+    application_id: validAppId,
+    student_id: id,
+    supervisor_id: u.id,
+    ratings,
+    score: ratings.reduce((a,b)=>a+b)/ratings.length,
+    comments: data.comments,
+    signature: data.signature
+}).select();
+if (error) throw new Error(error.message);
+if (!inserted || inserted.length === 0) throw new Error('Insert failed or rejected by security rules.');
+await syncRemote(supabase, db);
+notify(id,'System','Your performance appraisal is ready','View your supervisor\'s rubric scores and feedback.');
+audit('Submitted appraisal for '+s.name);
+toast('Evaluation submitted. The student can now view it.');
+},'Submit evaluation');}
 function editHTE(id){const h=db.htes.find(h=>h.id===id);showModal(h?'Host training establishment':'Add new HTE',field('Company name','name','text',h?.name||'','required maxlength="120"')+field('Industry','industry','text',h?.industry||'','required maxlength="100"')+field('Location','location','text',h?.location||'','required maxlength="100"')+field('Contact email','contact','email',h?.contact||'','required')+field('MOA expiry','expiry','date',h?.expiry||'','required')+select('Accreditation status','status',['Pending','Accredited','Expired'],h?.status||'Pending'),data=>{if(data.status==='Accredited'&&new Date(data.expiry+'T23:59:59')<new Date())throw new Error('An accredited HTE must have a valid MOA expiry date.');if(db.htes.some(other=>other.id!==id&&other.name.toLowerCase()===data.name.toLowerCase()))throw new Error('This HTE already exists.');if(h){const oldName=h.name;Object.assign(h,data);db.jobs.filter(j=>j.company===oldName).forEach(j=>j.company=data.name);db.users.filter(u=>u.company===oldName).forEach(u=>u.company=data.name);}else db.htes.push({id:crypto.randomUUID(),...data});audit('Updated HTE accreditation: '+data.name);save();toast('HTE details saved.');},'Save HTE');}
 function userNew(){showModal('Provision a user',select('Role','role',roles)+field('Full name','name','text','','required maxlength="100"')+field('SR code / faculty ID / corporate email','identifier','text','','required maxlength="100"')+field('Email address','email','email','','required')+select('Course (students)','course',['BS Computer Science','BS Information Technology','BS Computer Engineering'])+field('Company (supervisors)','company','text','','maxlength="120"')+'<p class="note">The demo creates a pending account. Production provisioning must send a server-generated activation link.</p>',data=>{if(db.users.some(u=>u.identifier.toLowerCase()===data.identifier.toLowerCase()||u.email.toLowerCase()===data.email.toLowerCase()))throw new Error('The identifier or email is already registered.');if(data.role==='Supervisor'&&!data.company.trim())throw new Error('A supervisor needs a company.');db.users.push({id:crypto.randomUUID(),...data,status:'Pending_Activation',badge:'Pre_Seeded',baseHours:0,requiredHours:db.program.requiredHours,supervisorId:null});audit('Provisioned '+data.role+' account for '+data.name);save();toast('Pending demo account created.');},'Create pending account');}
 async function importUsers() {
@@ -384,10 +437,54 @@ async function importUsers() {
 }
 function announcement(){const u=currentUser();showModal('Post a demo announcement',field('Title','title','text','','required maxlength="120"')+textarea('Announcement','message','','required minlength="10"')+'<p class="note">This creates local demo notifications. No emails or external messages are sent.</p>',data=>{const recipients=u.role==='Coordinator'?db.users.filter(v=>v.id!==u.id):visibleStudents(db,u);recipients.forEach(v=>notify(v.id,'System',data.title,data.message));audit('Posted announcement: '+data.title);save();toast('Announcement saved for '+recipients.length+' demo recipients.');},'Post announcement');}
 
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+async function saveProfileRemote(u, values) {
+    if (!uuidRegex.test(u.id)) throw new Error('Demo records cannot be saved to the live database.');
+    const { error, data } = await supabase.from('profiles').update({ full_name: values.name.trim(), phone: values.phone.trim(), bio: values.bio }).eq('id', u.id).select();
+    if (error) throw new Error(error.message);
+    if (!data || data.length === 0) throw new Error('Update failed or rejected by security rules.');
+}
+async function assignPlacementRemote(students, jobObj, requiredHours) {
+    if (!uuidRegex.test(jobObj.id) || students.some(s => !uuidRegex.test(s.id))) {
+        toast('Demo records cannot be saved to the live database.');
+        return;
+    }
+    const promises = students.flatMap(s => {
+        const p1 = supabase.from('profiles').update({ company: jobObj.company, supervisor_id: jobObj.supervisorId, required_hours: Number(requiredHours) }).eq('id', s.id).select().then(({error, data}) => {
+            if (error) throw new Error(error.message);
+            if (!data || data.length === 0) throw new Error('Update failed or rejected by security rules.');
+        });
+        const a = db.applications.find(app => app.studentId === s.id && app.jobId === jobObj.id);
+        if (a && uuidRegex.test(a.id)) {
+            const p2 = supabase.from('applications').update({ status: 'Accepted' }).eq('id', a.id).select().then(({error, data}) => {
+                if (error) throw new Error(error.message);
+                if (!data || data.length === 0) throw new Error('Update failed or rejected by security rules.');
+            });
+            return [p1, p2];
+        }
+        return [p1];
+    });
+    promises.push(supabase.from('listings_jobs').update({ slots: jobObj.slots }).eq('id', jobObj.id).select().then(({error, data}) => {
+        if (error) throw new Error(error.message);
+        if (!data || data.length === 0) throw new Error('Update failed or rejected by security rules.');
+    }));
+    await Promise.all(promises);
+    await syncRemote(supabase, db);
+}
+
 function openFiles(){return new Promise((resolve,reject)=>{if(filesDB)return resolve(filesDB);const request=indexedDB.open('menteelog-demo-files',1);request.onupgradeneeded=()=>request.result.createObjectStore('files');request.onsuccess=()=>{filesDB=request.result;resolve(filesDB);};request.onerror=()=>reject(new Error('Browser file storage is unavailable.'));});}
 async function fileOp(mode,key,value){const database=await openFiles();return new Promise((resolve,reject)=>{const tx=database.transaction('files',mode==='get'?'readonly':'readwrite'),store=tx.objectStore('files');const req=mode==='get'?store.get(key):mode==='put'?store.put(value,key):mode==='clear'?store.clear():store.delete(key);tx.oncomplete=()=>resolve(req.result);tx.onerror=()=>reject(new Error('File storage failed. Your browser storage may be full.'));tx.onabort=()=>reject(new Error('File storage operation was interrupted.'));});}
+async function uploadEvidence(file, incCode) {
+  const u = currentUser();
+  let safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').replace(/^.+/, '').replace(/\.{2,}/g, '.').substring(0, 100);
+  if (!safeName) safeName = 'file';
+  const filePath = `${u.id}/${incCode}/${Date.now()}-${safeName}`;
+  const { error: uploadErr } = await supabase.storage.from('incident-evidence').upload(filePath, file, { upsert: false, contentType: file.type });
+  if (uploadErr) throw new Error('Evidence upload failed: ' + uploadErr.message);
+  return { id: crypto.randomUUID(), name: file.name, filePath, bucket: 'incident-evidence' };
+}
 const putFile=(id,file)=>fileOp('put',id,file);
-function documentUpload(){const u=currentUser();showModal('Upload a document',select('Document category','category',['Endorsement letter','Training agreement','Accomplishment report','Certificate','Other'])+field('Choose a file','file','file','','required accept="application/pdf,image/png,image/jpeg"')+'<p class="small muted">PDF, PNG, or JPEG Ã‚Â· Up to 10 MB. Stored only in this browser.</p>',async(data,form)=>{const file=form.elements.file.files[0];validateUpload(file);const id=crypto.randomUUID();await putFile(id,file);db.documents.unshift({id,studentId:u.id,name:file.name,size:file.size,type:file.type,category:data.category,date:today()});audit('Uploaded a demo document');save();toast('Document saved locally.');},'Upload document');}
+function documentUpload(){const u=currentUser();showModal('Upload a document',select('Document category','category',['Endorsement letter','Training agreement','Accomplishment report','Certificate','Other'])+field('Choose a file','file','file','','required accept="application/pdf,image/png,image/jpeg"')+'<p class="small muted">PDF, PNG, or JPEG · Up to 10 MB. Stored only in this browser.</p>',async(data,form)=>{const file=form.elements.file.files[0];validateUpload(file);const id=crypto.randomUUID();if(!uuidRegex.test(u.id))throw new Error('Demo records cannot be saved to the live database.');const ext=file.name.split('.').pop()||'';const filePath=`${u.id}/${id}_${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;const {error:storageErr}=await supabase.storage.from('documents').upload(filePath,file);if(storageErr)throw new Error('Upload failed: '+storageErr.message);const {error:dbErr,data:rows}=await supabase.from('documents').insert({id,student_id:u.id,category:data.category,name:file.name,file_path:filePath,file_size:file.size,mime_type:file.type,doc_date:today(),status:'Pending'}).select();if(dbErr||!rows||!rows.length){await supabase.storage.from('documents').remove([filePath]);throw new Error(dbErr?dbErr.message:'Insert failed.');}await syncRemote(supabase,db);audit('Uploaded a document');save();toast('Document uploaded successfully.');},'Upload document');}
 function exportReport(type){let rows;const students=db.users.filter(s=>s.role==='Student');switch(type){case 'completion':rows=[['Student','SR code','Approved hours','Required hours','Completion percent'],...students.map(s=>[s.name,s.identifier,approvedHours(db,s.id),s.requiredHours,Math.round(approvedHours(db,s.id)/s.requiredHours*100)])];break;case 'compliance':rows=[['Student','Date','Hours','Status','Location captured','Justification','Reviewer remarks'],...db.logs.map(l=>[student(l.studentId)?.name,l.date,l.hours,l.status,l.gps?'Yes (unverified)':'No',l.justification||'',l.remarks])];break;case 'hte':rows=[['Company','Industry','Accreditation','MOA expiry','Placed students'],...db.htes.map(h=>[h.name,h.industry,h.status,h.expiry,students.filter(s=>s.company===h.name).length])];break;case 'incidents':rows=[['Case','Student','Category','Priority','Status','Reported'],...db.incidents.map(i=>[i.id,student(i.studentId)?.name,i.category,i.priority,i.status,i.date])];break;default:rows=[['Student','SR code','Course','Host company','Supervisor','Accreditation','Approved hours','Required hours'],...students.map(s=>[s.name,s.identifier,s.course,s.company,student(s.supervisorId)?.name||'',s.badge,approvedHours(db,s.id),s.requiredHours])];}download('MenteeLog-'+type+'-DEMO.csv',csvText(rows));toast('Sample data report downloaded.');}
 const actionRoles={ 'job-edit':['Supervisor','Coordinator'],'student-detail':['Supervisor','Coordinator'],'evaluate':['Supervisor'],'hte-edit':['Coordinator'],'user-new':['Coordinator'],'user-status':['Coordinator'],'import-users':['Coordinator'],'csv-template':['Coordinator'],'announcement':['Supervisor','Coordinator'],'document-upload':['Student'],'document-remove':['Student'],'clock':['Student'],'incident-new':['Student','Supervisor'],'report':['Coordinator'],'export-students':['Supervisor','Coordinator'],'endorsement':['Coordinator']};
 async function action(name,id,el){
@@ -468,11 +565,15 @@ async function action(name,id,el){
         const hours = hoursBetween(shift.clockIn, shift.clockOut, totalBreakMinutes);
         
         // Push a pending log that awaits the student's task summary
-        db.logs.push({
-            id: crypto.randomUUID(), studentId: shift.studentId, supervisorId: shift.supervisorId,
-            date: today(), clockIn: shift.clockIn, clockOut: shift.clockOut, breakMinutes: totalBreakMinutes, hours: hours,
-            task: '', justification: '', gps: false, status: 'Awaiting_Student_Log', remarks: '', signature: ''
-        });
+        const newLog = {
+            student_id: shift.studentId, supervisor_id: shift.supervisorId,
+            date: today(), clock_in: shift.clockIn, clock_out: shift.clockOut, break_minutes: totalBreakMinutes, hours: hours,
+            task: '', justification: '', status: 'Awaiting_Student_Log', remarks: '', signature: ''
+        };
+        const { error, data: inserted } = await supabase.from('logs').insert(newLog).select();
+        if (error) throw new Error(error.message);
+        if (!inserted || inserted.length === 0) throw new Error('Insert failed or rejected by security rules.');
+        await syncRemote(supabase, db);
         
         db.activeShifts.splice(idx, 1);
         audit('Supervisor clocked out student ' + id + ' with ' + totalBreakMinutes + 'm breaks');
@@ -482,8 +583,10 @@ async function action(name,id,el){
     case 'ref-approve': {
         const l = db.logs.find(log => log.id === id);
         if (!l) throw new Error('Log not found.');
-        l.status = 'Approved';
-        save();
+        const { error, data: updated } = await supabase.from('logs').update({ status: 'Approved' }).eq('id', l.id).select();
+        if (error) throw new Error(error.message);
+        if (!updated || updated.length === 0) throw new Error('Update failed or rejected by security rules.');
+        await syncRemote(supabase, db);
         toast('DTR Log approved. Hours successfully credited.');
         render();
         return;
@@ -509,11 +612,15 @@ async function action(name,id,el){
         shift.clockOut = new Date().toISOString();
         const totalBreakMinutes = shift.breakMinutes || 0;
         const hours = hoursBetween(shift.clockIn, shift.clockOut, totalBreakMinutes);
-        db.logs.push({
-            id: crypto.randomUUID(), studentId: shift.studentId, supervisorId: shift.supervisorId,
-            date: today(), clockIn: shift.clockIn, clockOut: shift.clockOut, breakMinutes: totalBreakMinutes, hours: hours,
-            task: '', justification: '', gps: false, status: 'Awaiting_Student_Log', remarks: '', signature: ''
-        });
+        const newLog = {
+            student_id: shift.studentId, supervisor_id: shift.supervisorId,
+            date: today(), clock_in: shift.clockIn, clock_out: shift.clockOut, break_minutes: totalBreakMinutes, hours: hours,
+            task: '', justification: '', status: 'Awaiting_Student_Log', remarks: '', signature: ''
+        };
+        const { error, data: inserted } = await supabase.from('logs').insert(newLog).select();
+        if (error) throw new Error(error.message);
+        if (!inserted || inserted.length === 0) throw new Error('Insert failed or rejected by security rules.');
+        await syncRemote(supabase, db);
         db.activeShifts.splice(idx, 1);
         save(); render(); toast('Simulated Supervisor Clock Out'); return;
     }
@@ -534,24 +641,60 @@ async function action(name,id,el){
     
     
     case 'document-upload':documentUpload();return;
-    case 'document-remove':{const doc=db.documents.find(d=>d.id===id&&d.studentId===u.id);if(!doc)throw new Error('Document unavailable.');showModal('Remove document?',`<p>Remove <strong>${e(doc.name)}</strong> from this browserÃ¢â‚¬â„¢s demo storage?</p>`,async()=>{await fileOp('delete',id);db.documents=db.documents.filter(d=>d.id!==id);save();toast('Document removed.');},'Remove document');return;}
-    case 'file-download':{const doc=db.documents.find(d=>d.id===id&&d.studentId===u.id)||visibleIncidents(u).find(i=>i.evidence?.id===id)?.evidence;if(!doc)throw new Error('File is outside your access scope.');const file=await fileOp('get',id);if(!file)throw new Error('This file is no longer in browser storage. Please upload it again.');download(doc.name,file);return;}
+    case 'document-remove':{const doc=db.documents.find(d=>d.id===id&&d.studentId===u.id);if(!doc)throw new Error('Document unavailable.');showModal('Remove document?',`<p>Remove <strong>${e(doc.name)}</strong>?</p>`,async()=>{if(doc.filePath){if(!uuidRegex.test(u.id))throw new Error('Demo records cannot be saved to the live database.');const {error:sErr}=await supabase.storage.from('documents').remove([doc.filePath]);if(sErr)throw new Error(sErr.message);const {error:dbErr,data:del}=await supabase.from('documents').delete().eq('id',doc.id).select();if(dbErr||!del||!del.length)throw new Error(dbErr?dbErr.message:'Delete failed.');await syncRemote(supabase,db);}else{await fileOp('delete',id);db.documents=db.documents.filter(d=>d.id!==id);}save();toast('Document removed.');},'Remove document');return;}
+    case 'file-download':{const doc=db.documents.find(d=>d.id===id&&d.studentId===u.id)||visibleIncidents(u).find(i=>i.evidence?.id===id)?.evidence;if(!doc)throw new Error('File is outside your access scope.');if(doc.filePath){const bucket=(doc.bucket==='incident-evidence'?'incident-evidence':'documents');const {data,error}=await supabase.storage.from(bucket).createSignedUrl(doc.filePath,60);if(error||!data)throw new Error('Download failed.');const a=document.createElement('a');a.href=data.signedUrl;a.download=doc.name;a.click();}else{const file=await fileOp('get',id);if(!file)throw new Error('This file is no longer in browser storage. Please upload it again.');download(doc.name,file);}return;}
     case 'report-preview':{if(u.role!=='Coordinator')throw new Error('Coordinator role required.');showModal('Report Preview','<p>This report uses the current sample records. Download the CSV to review it in a spreadsheet, or print this portal page.</p><div class="row">'+button('Download CSV','report',id,'','download')+button('Print','print','','secondary')+'</div>');return;}
     case 'activation-help':showModal('Account activation','<p>Find an account in Registered users and select Activate. This affects only the local preview; email links and token verification require the authentication API.</p>');return;
     case 'report':exportReport(id);return;
     case 'export-students':{const list=visibleStudents(db,u);download('MenteeLog-roster-DEMO.csv',csvText([['Name','SR code','Course','Company','Approved hours','Required hours','Badge'],...list.map(s=>[s.name,s.identifier,s.course,s.company,approvedHours(db,s.id),s.requiredHours,s.badge])]));return;}
     case 'export-dtr':download('MenteeLog-DTR-DEMO.csv',csvText([['Student','Date','Clock in','Clock out','Break minutes','Hours','Status','Task','Remarks'],...visibleLogs(db,u).map(l=>[student(l.studentId)?.name,l.date,l.clockIn,l.clockOut,l.breakMinutes,l.hours,l.status,l.task,l.remarks])]));return;
-    case 'endorsement':{const s=student(id);if(!s||!s.company)throw new Error('Assign a company before generating an endorsement.');download('MenteeLog-endorsement-DEMO.txt',`MENTEELOG Ã¢â‚¬â€ DRAFT ENDORSEMENT (DEMONSTRATION ONLY)\n\nDate: ${date(today())}\nStudent: ${s.name}\nSR Code: ${s.identifier}\nProgram: ${s.course}\nHost Training Establishment: ${s.company}\nSupervisor: ${student(s.supervisorId)?.name||'Not assigned'}\nRequired Hours: ${s.requiredHours}\n\nThis draft must be reviewed and signed by the authorized faculty coordinator before official use.\n\nPrepared by: ${u.name}\n`,'text/plain;charset=utf-8');return;}
+    case 'endorsement':{const s=student(id);if(!s||!s.company)throw new Error('Assign a company before generating an endorsement.');download('MenteeLog-endorsement-DEMO.txt',`MENTEELOG - DRAFT ENDORSEMENT (DEMONSTRATION ONLY)\n\nDate: ${date(today())}\nStudent: ${s.name}\nSR Code: ${s.identifier}\nProgram: ${s.course}\nHost Training Establishment: ${s.company}\nSupervisor: ${student(s.supervisorId)?.name||'Not assigned'}\nRequired Hours: ${s.requiredHours}\n\nThis draft must be reviewed and signed by the authorized faculty coordinator before official use.\n\nPrepared by: ${u.name}\n`,'text/plain;charset=utf-8');return;}
     case 'print':window.print();return;
     case 'reset-demo':showModal('Reset the demonstration?',`<p>This removes demo records and uploaded files from this browser and restores the sample cohort. Your source files and Figma references are not affected.</p>`,async()=>{await fileOp('clear');db=ensureCreatorAccounts(seedData());save();logout();toast('Sample data restored.');},'Reset demo');return;
     default:return;
   }save();render();
 }
 document.addEventListener('click',event=>{if(event.target.closest('.skip-link')){event.preventDefault();const main=$('#main');main?.setAttribute('tabindex','-1');main?.focus();return;}const roleLink=event.target.closest('[data-role]');if(roleLink)authRole=roleLink.dataset.role;const target=event.target.closest('[data-action]');if(!target)return;event.preventDefault();action(target.dataset.action,target.dataset.id,target).catch(error=>toast(error.message));});
-document.addEventListener('input',event=>{if(event.target.id==='draft'){db.draft=event.target.value;save();}});
+let searchDebounce = null;
+let isComposingSearch = false;
+document.addEventListener('compositionstart', e => { if (e.target.form && e.target.form.id === 'search-form' && e.target.name === 'search') isComposingSearch = true; });
+document.addEventListener('compositionend', e => { if (e.target.form && e.target.form.id === 'search-form' && e.target.name === 'search') { isComposingSearch = false; e.target.dispatchEvent(new Event('input', { bubbles: true })); } });
+const SEARCH_DELAY = 300;
+document.addEventListener('input', event => {
+  if (event.target.id === 'draft') { db.draft = event.target.value; save(); }
+  if (event.target.form && event.target.form.id === 'search-form' && event.target.name === 'search') {
+    if (route().page === 'incidents') {
+      if (isComposingSearch || event.isComposing) return;
+      const val = event.target.value || '';
+      if (val === view.search) return;
+      if (val.trim() === (view.search||'').trim() && val !== '') { view.search = val; return; }
+      clearTimeout(searchDebounce);
+      const doSearch = () => {
+        if (route().page !== 'incidents') return;
+        const activeInput = document.querySelector('#search-form input[name="search"]');
+        if (!activeInput) return;
+        const wasFocused = document.activeElement === activeInput;
+        let sel = null;
+        if (wasFocused) sel = [activeInput.selectionStart, activeInput.selectionEnd];
+        view.search = val;
+        render();
+        if (wasFocused) {
+          const newInput = document.querySelector('#search-form input[name="search"]');
+          if (newInput) {
+            newInput.focus({ preventScroll: true });
+            if (sel && sel[0] !== null && sel[1] !== null && newInput.value.length >= sel[1]) {
+              newInput.setSelectionRange(sel[0], sel[1]);
+            }
+          }
+        }
+      };
+      if (val === '') doSearch(); else searchDebounce = setTimeout(doSearch, SEARCH_DELAY);
+    }
+  }
+});
 document.addEventListener('search',event=>{if(event.target.closest('#search-form')){event.target.form.requestSubmit();}});
 document.addEventListener('change',event=>{if(event.target.id==='partner'){view.partner=event.target.value;render();}if(event.target.closest('#search-form')&&event.target.tagName==='SELECT')event.target.form.requestSubmit();});
-document.addEventListener('keydown',event=>{if(event.key==='Escape')togglePortalMenu(false);if(event.target.id==='global-search'&&event.key==='Enter'){event.preventDefault();const q=event.target.value.toLowerCase().trim();const match=navigation[currentUser().role].find(n=>n[1].toLowerCase().includes(q));if(q&&match)location.hash='/'+currentUser().role.toLowerCase()+'/'+match[0];else toast('No matching page found. Try Ã¢â‚¬Å“DTRÃ¢â‚¬Â, Ã¢â‚¬Å“placementÃ¢â‚¬Â, or Ã¢â‚¬Å“reportsÃ¢â‚¬Â.');}});
+document.addEventListener('keydown',event=>{if(event.key==='Escape')togglePortalMenu(false);if(event.target.id==='global-search'&&event.key==='Enter'){event.preventDefault();const q=event.target.value.toLowerCase().trim();const match=navigation[currentUser().role].find(n=>n[1].toLowerCase().includes(q));if(q&&match)location.hash='/'+currentUser().role.toLowerCase()+'/'+match[0];else toast('No matching page found. Try "DTR", "placement", or "reports".');}});
 let failedLoginAttempts = 0;
 let loginCooldownUntil = 0;
 document.addEventListener('submit',async event=>{
@@ -663,7 +806,9 @@ document.addEventListener('submit',async event=>{
             name: profile.full_name || 'Supabase User',
             status: 'Active',
             requiredHours: profile.required_hours || 600,
-            course: profile.course || 'BS Information Technology'
+            course: profile.course || 'BS Information Technology',
+            company: profile.company || '',
+            supervisorId: profile.supervisor_id || null
           };
           db.users.push(localUser);
         } else {
@@ -747,15 +892,15 @@ document.addEventListener('submit',async event=>{
         location.hash = '/login';
         return;
       }
-    if(form.id==='search-form'){view.search=values.search||'';view.mode=values.mode||'All';view.course=values.course||'All';render();return;}
+    if(form.id==='search-form'){if(typeof searchDebounce!=='undefined')clearTimeout(searchDebounce);view.search=values.search||'';view.mode=values.mode||'All';view.course=values.course||'All';render();return;}
     const user=currentUser();if(form.id!=='modal-form'&&!user)throw new Error('Your session expired. Sign in again.');
     if(form.id==='portal-form'){await portals.submit(values,form);return;}
     if(form.id==='modal-form'&&modalSubmit){if(modalUserId&&currentUser()?.id!==modalUserId)throw new Error('Your session changed. Reopen the form after signing in.');const callback=modalSubmit;await callback(values,form);modal.close();render();return;}
-    if(form.id==='profile-form'){if(!values.name.trim())throw new Error('Enter your full name.');if(db.users.some(u=>u.id!==user.id&&u.email.toLowerCase()===values.email.toLowerCase()))throw new Error('That email is already used by another demo account.');Object.assign(user,{name:values.name.trim(),email:values.email.trim(),phone:values.phone,bio:values.bio});audit('Updated profile');}
+    if(form.id==='profile-form'){if(!values.name.trim())throw new Error('Enter your full name.');if(db.users.some(u=>u.id!==user.id&&u.email.toLowerCase()===values.email.toLowerCase()))throw new Error('That email is already used by another demo account.');if(values.email.trim().toLowerCase()!==String(user.email||'').toLowerCase())throw new Error('Email cannot be changed here. Contact your coordinator.');await saveProfileRemote(user,values);await syncRemote(supabase,db);audit('Updated profile');}
     save();render();toast('Saved in the demonstration.');
   }catch(error){if(errorBox)errorBox.textContent=error.message;else toast(error.message);}finally{if(submit)submit.disabled=false;}
 });
-window.addEventListener('hashchange', async () => {
+window.addEventListener('hashchange', async () => {if(typeof searchDebounce!=='undefined')clearTimeout(searchDebounce);
   view = {search: '', filter: 'All', course: 'All', mode: 'All'};
   modal.close();
   render();
@@ -775,10 +920,27 @@ window.addEventListener('hashchange', async () => {
 });
 window.addEventListener('storage',event=>{if(event.key===STORAGE){const keep=session?db.users.find(u=>u.id===session.id):null;db=ensureCreatorAccounts(load());if(keep&&!db.users.some(u=>u.id===keep.id))db.users.push(keep);render();}});
 window.addEventListener('storage', ev => { if(ev.key !== STORAGE || !ev.newValue) return; try { const next = JSON.parse(ev.newValue); if(next?.version === 1){ db = next; if(!modal.open) render(); else if(terminalFor) tkTerminal(terminalFor); } } catch {} });
-setInterval(()=>{ const timer=$('#shift-timer'); if(timer&&currentUser()?.role==='Student'){ const active = (db.activeShifts||[]).find(sh=>sh.studentId===currentUser().id); timer.textContent=active?netElapsed(active):'00:00:00'; } document.querySelectorAll('.tk-timer').forEach(el => { const sid = el.getAttribute('data-student'); if(sid){ const sh=(db.activeShifts||[]).find(x=>x.studentId===sid); el.textContent = netElapsed(sh); return; } const start = el.getAttribute('data-start'); if(start) el.textContent = elapsed(start); }); document.querySelectorAll('.tk-break-timer').forEach(el => { const start = el.getAttribute('data-start'); if(start) el.textContent = elapsed(start); }); if(session&&!currentUser()){logout();location.hash='/login';toast('Your demo session ended. Sign in to continue.');} }, 1000);
-setInterval(async () => { if (session && await syncRemote(supabase, db)) { save(); if (!modal.open) render(); } }, 20000);
+let missingUserTicks = 0;
+setInterval(()=>{ const timer=$('#shift-timer'); if(timer&&currentUser()?.role==='Student'){ const active = (db.activeShifts||[]).find(sh=>sh.studentId===currentUser().id); timer.textContent=active?netElapsed(active):'00:00:00'; } document.querySelectorAll('.tk-timer').forEach(el => { const sid = el.getAttribute('data-student'); if(sid){ const sh=(db.activeShifts||[]).find(x=>x.studentId===sid); el.textContent = netElapsed(sh); return; } const start = el.getAttribute('data-start'); if(start) el.textContent = elapsed(start); }); document.querySelectorAll('.tk-break-timer').forEach(el => { const start = el.getAttribute('data-start'); if(start) el.textContent = elapsed(start); }); if(session&&!currentUser()){ missingUserTicks++; if(missingUserTicks >= 10) { logout(); location.hash='/login'; toast('Your demo session ended. Sign in to continue.'); } } else { missingUserTicks = 0; } }, 1000);
+function userIsMidInput() {
+  const el = document.activeElement;
+  if (el && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) && el.id !== 'global-search') return true;
+  const main = document.querySelector('main');
+  if (!main) return false;
+  const inputs = main.querySelectorAll('input, textarea, select');
+  for (let i = 0; i < inputs.length; i++) {
+    const input = inputs[i];
+    if (input.type === 'radio' || input.type === 'checkbox') {
+      if (input.checked !== input.defaultChecked) return true;
+    } else {
+      if (input.value !== input.defaultValue) return true;
+    }
+  }
+  return false;
+}
+setInterval(async () => { if (session && await syncRemote(supabase, db)) { save(); if (!modal.open && !userIsMidInput()) render(); } }, 20000);
 async function submitApplication(jobId, note) { const {error} = await supabase.from('applications').insert({ job_id: jobId, student_id: currentUser().id, status: 'Pending', applied_date: today(), notes: note || '' }); if (error) throw new Error(error.message); await syncRemote(supabase, db); }
-portals=createPortalViews({get db(){return db;},get view(){return view;},get user(){return currentUser();},route,e,icon,button,link,heading,field,textarea,select,badge,person,table,empty,progress,date,time,today,student,job,save,notify,audit,toast,render,showModal,download,fileOp,putFile,dtrTable,visibleIncidents,submitApplication,legacy:{applicationDetail,editJob,studentDetail,incidentNew,incidentDetail,evaluate,logDetail,editHTE,userNew,importUsers,documentUpload},capture(fn){capturingForm=true;capturedForm=null;try{fn();return capturedForm;}finally{capturingForm=false;}}});
+portals=createPortalViews({get db(){return db;},get view(){return view;},get user(){return currentUser();},route,e,icon,button,link,heading,field,textarea,select,badge,person,table,empty,progress,date,time,today,student,job,save,notify,audit,toast,render,showModal,download,fileOp,putFile,dtrTable,visibleIncidents,submitApplication,legacy:{uploadEvidence,applicationDetail,editJob,studentDetail,incidentNew,incidentDetail,evaluate,logDetail,editHTE,userNew,importUsers,documentUpload,assignPlacementRemote,getSignedUrl:async(p, b='documents')=>(await supabase.storage.from(b==='incident-evidence'?'incident-evidence':'documents').createSignedUrl(p,60)).data?.signedUrl},capture(fn){capturingForm=true;capturedForm=null;try{fn();return capturedForm;}finally{capturingForm=false;}}});
 
 document.addEventListener('change',event=>{if(!['public-course','public-location'].includes(event.target.id))return;const course=$('#public-course').value,place=$('#public-location').value;let count=0;document.querySelectorAll('.home-job').forEach(card=>{card.hidden=!((course==='All'||card.dataset.courses.includes(course))&&(place==='All'||card.dataset.location.includes(place)));if(!card.hidden)count++;});$('#public-empty').hidden=count>0;});
 
@@ -847,6 +1009,10 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
 
   const { data: { session: initSession } } = await supabase.auth.getSession();
   if (initSession?.user) {
+    if (db.jobs.some(j => j.id === 'j1')) {
+      db.jobs = [];
+      db.applications = [];
+    }
     const { data: profile, error } = await supabase.from('profiles').select('status').eq('id', initSession.user.id).single();
     if (error || !profile || profile.status !== 'Active') {
       await supabase.auth.signOut();
@@ -859,4 +1025,5 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
   }
   render();
 })();
+
 
