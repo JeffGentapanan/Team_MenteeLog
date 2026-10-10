@@ -1,19 +1,19 @@
-﻿# ðŸš€ MenteeLog - OJT & Internship Management System
+# MenteeLog - OJT & Internship Management System
 
 **A modern, secure, and structured web-based On-the-Job Training tracking system.**
 
 ---
 
-## ðŸ“– Project Overview
+## Project Overview
 MenteeLog is a centralized, department-level web platform designed to streamline On-the-Job Training (OJT) tracking, eliminate paper-based Daily Time Records (DTR), simplify Host Training Establishment (HTE) accreditation, and provide a highly controlled digital workflow for students, industry supervisors, and academic coordinators.
 
-## ðŸŽ¨ Brand Guidelines & Identity
+## Brand Guidelines & Identity
 MenteeLog represents a modern, clean, and highly professional aesthetic.
 * **Colors:** Deep Maroon (Primary branding), Soft Sand/Beige (Backgrounds and premium cards), Clean White (Negative space), and Dark Slate (Typography).
 * **Typography:** Modern sans-serif fonts optimized for maximum readability across dense data tables and mobile dashboards.
 * **UI Philosophy:** Buttery-smooth CSS transitions, hardware-accelerated GPU animations, and zero-jank interaction design.
 
-## ðŸŽ¯ Project Objectives
+## Project Objectives
 * **Simplify** student OJT placements with a verified HTE directory.
 * **Eliminate** manual, easily-forged paper DTRs.
 * **Provide** GPS-verified clock-in and clock-out mechanisms.
@@ -26,7 +26,7 @@ MenteeLog represents a modern, clean, and highly professional aesthetic.
 
 ---
 
-## ðŸ‘¥ System Roles & Permissions
+## System Roles & Permissions
 MenteeLog consists of three strictly separated system roles.
 
 | Role | Main Responsibilities |
@@ -37,7 +37,7 @@ MenteeLog consists of three strictly separated system roles.
 
 ---
 
-## âš™ï¸ System Overview & Workflow Diagrams
+## System Overview & Workflow Diagrams
 
 The overall MenteeLog process follows this strict lifecycle:
 
@@ -73,7 +73,7 @@ flowchart TD
 
 ---
 
-## ðŸ“ DETAILED STUDENT FLOW â€” INSTRUCTIONS
+## DETAILED STUDENT FLOW - INSTRUCTIONS
 
 1. **Student Login**
    The student logs into the system using their secure ID and password.
@@ -100,7 +100,7 @@ flowchart TD
 
 ---
 
-## ðŸ“ DETAILED SUPERVISOR (HTE) FLOW â€” INSTRUCTIONS
+## DETAILED SUPERVISOR (HTE) FLOW - INSTRUCTIONS
 
 1. **Supervisor Login**
    The industry partner logs into their restricted HTE account.
@@ -127,7 +127,7 @@ flowchart TD
 
 ---
 
-## ðŸ“¦ Portal Modules Breakdown
+## Portal Modules Breakdown
 
 ### Student Portal
 * **Dashboard:** Overview of active hours, total progress, and placement status.
@@ -157,7 +157,7 @@ flowchart TD
 
 ---
 
-## ðŸ”’ Security & Authentication Logic
+## Security & Authentication Logic
 
 MenteeLog uses layered security mechanisms to enforce data integrity:
 
@@ -168,7 +168,7 @@ MenteeLog uses layered security mechanisms to enforce data integrity:
 
 ---
 
-## ðŸ› ï¸ Technology Stack
+## Technology Stack
 
 **Frontend:**
 * React.js (Component-based UI)
@@ -188,32 +188,19 @@ MenteeLog uses layered security mechanisms to enforce data integrity:
 
 ---
 
-## ðŸ“ˆ Development Roadmap
+## Development Roadmap
 
-Foundation
-â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ 100%
-
-Authentication & RBAC Routing
-â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ 100%
-
-DTR & Timekeeping Authority
-â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ 100%
-
-Supervisor Appraisals
-â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘  90%
-
-Coordinator Analytics & Reports
-â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘  60%
-
-Testing & Integration
-â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘â–‘  30%
-
-Overall Development
-â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘ ~80%
+* **Foundation:** [====================] 100%
+* **Authentication & RBAC Routing:** [====================] 100%
+* **DTR & Timekeeping Authority:** [====================] 100%
+* **Supervisor Appraisals:** [==================  ] 90%
+* **Coordinator Analytics & Reports:** [============        ] 60%
+* **Testing & Integration:** [======              ] 30%
+* **Overall Development:** [================    ] ~80%
 
 ---
 
-## ðŸ§ª Testing Strategy
+## Testing Strategy
 
 **Student Testing:**
 * Valid login, session creation, and profile access.
@@ -237,7 +224,7 @@ Overall Development
 
 ---
 
-## ðŸ‘¥ Team MenteeLog
+## Team MenteeLog
 MenteeLog is developed collaboratively by Team MenteeLog.
 
 | Name | Responsibility |
@@ -252,7 +239,7 @@ MenteeLog is developed collaboratively by Team MenteeLog.
 
 ---
 
-## ðŸ’» Live Demonstration
+## Live Demonstration
 
 The working frontend prototype is located in the `frontend-react/` directory.
 
@@ -268,5 +255,3 @@ npm run dev
 * **Student:** `2021-00421`
 * **Supervisor:** `carlos.jose@example.com`
 * **Coordinator:** `FAC-2026-001`
-
- 
