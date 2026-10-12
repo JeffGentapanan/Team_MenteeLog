@@ -910,10 +910,14 @@ document.addEventListener('submit',async event=>{
           targetEmail = emailData;
         }
         submit.textContent = 'Sending...';
-        const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, { redirectTo: window.location.origin + '/?reset=1' });
-        if (error) throw new Error(error.message);
-        form.reset();
-        toast('Reset link sent. Please check your email.');
+        try {
+          const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, { redirectTo: window.location.origin + '/?reset=1' });
+          if (error) throw new Error(error.message);
+          form.reset();
+          toast('Reset link sent. Please check your email.');
+        } finally {
+          submit.textContent = 'Send Reset Link';
+        }
         return;
       }
       if (form.id === 'reset-password-form') {
@@ -923,15 +927,19 @@ document.addEventListener('submit',async event=>{
         if (password !== confirm) throw new Error('Passwords do not match.');
         if (password.length < 8) throw new Error('Password must be at least 8 characters.');
         submit.textContent = 'Saving...';
-        const { error } = await supabase.auth.updateUser({ password });
-        if (error) throw new Error(error.message);
-        await supabase.auth.signOut();
-        recoveryActive = false;
-        session = null;
-        try { sessionStorage.removeItem(SESSION); } catch(e) {}
-        form.reset();
-        toast('Password updated. Please log in.');
-        location.hash = '/login';
+        try {
+          const { error } = await supabase.auth.updateUser({ password });
+          if (error) throw new Error(error.message);
+          await supabase.auth.signOut();
+          recoveryActive = false;
+          session = null;
+          try { sessionStorage.removeItem(SESSION); } catch(e) {}
+          form.reset();
+          toast('Password updated. Please log in.');
+          location.hash = '/login';
+        } finally {
+          submit.textContent = 'Save New Password';
+        }
         return;
       }
     if(form.id==='search-form'){if(typeof searchDebounce!=='undefined')clearTimeout(searchDebounce);view.search=values.search||'';view.mode=values.mode||'All';view.course=values.course||'All';render();return;}
