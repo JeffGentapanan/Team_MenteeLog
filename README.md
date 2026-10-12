@@ -241,17 +241,13 @@ MenteeLog is developed collaboratively by Team MenteeLog.
 
 ## Live Demonstration
 
-The working frontend prototype is located in the `frontend-react/` directory.
+The production deployment is hosted live on Vercel:
+* **Production URL:** [https://menteelog-system.vercel.app](https://menteelog-system.vercel.app)
+
+To run the frontend prototype locally:
 
 ```bash
-cd frontend-react
+cd MenteeLog
 npm install
 npm run dev
 ```
-
-### Sample Demo Accounts
-*(Password for all accounts: `Demo@2026!`)*
-
-* **Student:** `2021-00421`
-* **Supervisor:** `carlos.jose@example.com`
-* **Coordinator:** `FAC-2026-001`

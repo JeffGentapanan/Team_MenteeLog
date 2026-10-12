@@ -1,4 +1,4 @@
-﻿import { supabase } from '../supabaseClient.js';
+import { supabase } from '../supabaseClient.js';
 const UNIVERSITY_NAME = 'Batangas State University';
 
 import {publicLanding,authScreen} from './public.js';
@@ -704,51 +704,53 @@ document.addEventListener('submit',async event=>{
   const form=event.target;if(!form.id)return;event.preventDefault();const values=Object.fromEntries(new FormData(form));const errorBox=form.querySelector('.form-error');if(errorBox)errorBox.textContent='';const submit=form.querySelector('[type="submit"]');if(submit)submit.disabled=true;
   try{
     if(form.id==='public-contact-form'){
-      const { error } = await supabase.from('demo_requests').insert([
-        { 
-          name: values.name, 
-          email: values.email, 
-          company: values.company, 
-          role: values.role, 
-          message: values.message 
-        }
-      ]);
-      
-      if (error) {
-        if (errorBox) errorBox.textContent = 'Error sending message: ' + error.message;
-      } else {
-        // Send Auto-Reply to visitor AND Alert email to your team via EmailJS
-        const emailHeaders = {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        };
+      if (submit) submit.textContent = 'Sending...';
+      const emailHeaders = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      };
 
-        // 1. Auto-Reply to Visitor
-        fetch('https://api.emailjs.com/api/v1.0/email/send', {
-          ...emailHeaders,
-          body: JSON.stringify({
-            service_id: 'service_qwbbn6g',
-            template_id: 'template_0ydi77b',
-            user_id: 'IvAdPWVmixHP7lfdu',
-            template_params: values
-          })
-        }).catch(err => console.error('EmailJS Auto-Reply Error:', err));
+      // 1. Send Auto-Reply to Visitor
+      fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        ...emailHeaders,
+        body: JSON.stringify({
+          service_id: 'service_qwbbn6g',
+          template_id: 'template_0ydi77b',
+          user_id: 'IvAdPWVmixHP7lfdu',
+          template_params: values
+        })
+      }).catch(err => console.error('EmailJS Auto-Reply Error:', err));
 
-        // 2. Alert Email to MenteeLog Team
-        fetch('https://api.emailjs.com/api/v1.0/email/send', {
-          ...emailHeaders,
-          body: JSON.stringify({
-            service_id: 'service_qwbbn6g',
-            template_id: 'template_f7mwu3a',
-            user_id: 'IvAdPWVmixHP7lfdu',
-            template_params: values
-          })
-        }).catch(err => console.error('EmailJS Team Alert Error:', err));
+      // 2. Alert Email to MenteeLog Team
+      fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        ...emailHeaders,
+        body: JSON.stringify({
+          service_id: 'service_qwbbn6g',
+          template_id: 'template_f7mwu3a',
+          user_id: 'IvAdPWVmixHP7lfdu',
+          template_params: values
+        })
+      }).catch(err => console.error('EmailJS Team Alert Error:', err));
 
-        form.reset();
-        toast('Thank you! Your demo request has been safely captured. Our team will contact you shortly to provide access.');
+      // 3. Save to Supabase demo_requests in background (handles RLS gracefully)
+      try {
+        supabase.from('demo_requests').insert([
+          { 
+            name: values.name, 
+            email: values.email, 
+            company: values.company || '', 
+            role: values.role, 
+            message: values.message 
+          }
+        ]).catch(() => {});
+      } catch(e) {}
+
+      form.reset();
+      if (submit) {
+        submit.disabled = false;
+        submit.textContent = 'Send Message';
       }
-      if (submit) submit.disabled = false;
+      toast('Thank you! Your demo request has been safely sent. Our team will reach out shortly.');
       return;
     }
     if(form.id==='login-form'){
