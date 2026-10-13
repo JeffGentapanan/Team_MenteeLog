@@ -1293,7 +1293,7 @@ html, body {
     background-color: transparent !important;
     display: flex;
     justify-content: center;
-    border-top: 1px solid #EFDFBB;
+    border: none !important;
     position: relative;
     overflow: hidden;
 }
