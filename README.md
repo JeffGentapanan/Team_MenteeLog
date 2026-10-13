@@ -1,66 +1,76 @@
 # MenteeLog - OJT & Internship Management System
 
-**A modern, secure, and structured web-based On-the-Job Training tracking system.**
+**A modern, secure, and centralized web-based On-the-Job Training tracking platform.**
 
 ---
 
-## Project Overview
-MenteeLog is a centralized, department-level web platform designed to streamline On-the-Job Training (OJT) tracking, eliminate paper-based Daily Time Records (DTR), simplify Host Training Establishment (HTE) accreditation, and provide a highly controlled digital workflow for students, industry supervisors, and academic coordinators.
+## 📌 Project Overview
+**MenteeLog** is a centralized, department-level web platform designed to streamline On-the-Job Training (OJT) tracking, eliminate paper-based Daily Time Records (DTR), simplify Host Training Establishment (HTE) accreditation, and provide a connected, auditable digital workflow for students, industry supervisors, and faculty coordinators.
 
-## Brand Guidelines & Identity
-MenteeLog represents a modern, clean, and highly professional aesthetic.
-* **Colors:** Deep Maroon (Primary branding), Soft Sand/Beige (Backgrounds and premium cards), Clean White (Negative space), and Dark Slate (Typography).
-* **Typography:** Modern sans-serif fonts optimized for maximum readability across dense data tables and mobile dashboards.
-* **UI Philosophy:** Buttery-smooth CSS transitions, hardware-accelerated GPU animations, and zero-jank interaction design.
-
-## Project Objectives
-* **Simplify** student OJT placements with a verified HTE directory.
-* **Eliminate** manual, easily-forged paper DTRs.
-* **Provide** GPS-verified clock-in and clock-out mechanisms.
-* **Track** intern break times with granular precision.
-* **Enforce** strict Supervisor-only review and approval of daily hours.
-* **Automate** the student grading process via a built-in 5-point evaluation rubric.
-* **Deliver** God-view analytics for global cohort compliance.
-* **Generate** instant CHED-compliant export reports.
-* **Maintain** strict audit logs, role-based access, and incident reporting structures.
+Developed for university OJT programs (including Batangas State University), MenteeLog unifies placement discovery, GPS-verified attendance logging, daily task summaries, performance appraisals, and CHED compliance reporting into three interconnected portals.
 
 ---
 
-## System Roles & Permissions
-MenteeLog consists of three strictly separated system roles.
+## 🎨 Brand Guidelines & Identity
+* **Primary Palette:** Deep Burgundy (`#58111A`), Rose Accent (`#D85A63`), Warm Sand/Cream (`#FAF4E8` / `#EFDFBB`), and Emerald Success (`#059669`).
+* **Typography:** Clean, high-legibility sans-serif and monospace technical accents (`ui-monospace`, `JetBrains Mono`) for coordinate, telemetry, and time tracking.
+* **UI Philosophy:** Frosted acrylic glassmorphism, hardware-accelerated GPU transitions, interactive React Bits & Anime.js-inspired physics, and responsive data tables.
+
+---
+
+## 🎯 Main Objectives & Key Pillars
+* **Verified HTE Placements:** Eliminate unaccredited student placements through a vetted directory of partner companies.
+* **Supervisor-Authorized Digital Timekeeping:** Replace manual, easily-forged paper DTRs with a live timekeeper terminal where supervisors clock students in/out and review daily task logs (enforcing a 150+ character quality gate).
+* **Granular Break & Shift Tracking:** Accurately compute net rendered hours by deducting lunch and personal breaks.
+* **Automated 5-Point Appraisal Rubrics:** Streamline student evaluations with digital scoring across technical competencies, attendance, and professionalism.
+* **Faculty Governance & God-View Analytics:** Equip coordinators with real-time cohort tracking, incident mediation hubs, and single-click CHED CMO 104 s. 2017 compliant completion reports.
+* **Tamper-Resistant Security:** Enforce strict Role-Based Access Control (RBAC), multi-tab session isolation, and audit logs.
+
+---
+
+## 👥 System Roles & Permissions
 
 | Role | Main Responsibilities |
 | --- | --- |
-| **Student / Trainee** | Registration, placement application, document uploads, read-only DTR monitoring, and incident filing. |
-| **Supervisor / Industry Partner** | Slot management, candidate review, Timekeeper Authority (approving DTRs), and 5-point performance appraisals. |
-| **Coordinator / Faculty Admin**| System administration, HTE accreditation, bulk assignment, compliance monitoring, analytics, and CHED reports. |
+| **Student / Trainee** | Browse accredited HTEs, submit applications, upload clearances & MOAs, monitor live read-only DTR progress, and file incident claims. |
+| **Supervisor / Industry Partner** | Post verified training slots, review applicants, operate the Timekeeper Terminal (Clock In / Clock Out authority), sign off on DTRs, and submit 5-point performance appraisals. |
+| **Coordinator / Faculty Admin** | Accredit HTE partners, manage bulk student placements, monitor cohort compliance, mediate student incidents, and export 1-click CHED reports. |
 
 ---
 
-## System Overview & Workflow Diagrams
+## 🔄 System Overview & Core Workflow
 
-The overall MenteeLog process follows this strict lifecycle:
+The MenteeLog lifecycle follows a strict chronological progression:
 
 ```mermaid
 flowchart TD
-    A[Student / Trainee] --> B[Browse HTE Directory]
-    B --> C[Submit Application & Requirements]
-    C --> D[Coordinator Verifies Placement]
-    D --> E[Student Begins OJT]
+    A[Student Intern] --> B[Browse Accredited HTE Directory]
+    B --> C[Submit Application & Clearance Documents]
+    C --> D[HTE Supervisor Screens & Accepts Intern]
+    D --> E[Faculty Coordinator Validates & Locks Placement]
+    E --> F[Intern Begins OJT Training]
     
-    E --> F[Digital DTR / Timekeeping]
-    F --> G{Supervisor Validates}
-    G -->|Reject| H[DTR Corrected]
-    G -->|Approve| I[Hours Logged]
+    F --> G[Timekeeper Terminal: Supervisor Clocks Intern In/Out]
+    G --> H[Intern Submits Daily Task Summary: min. 150 chars]
+    H --> I{Supervisor Validates Log}
+    I -->|Reject / Flag| J[Intern Writes Justification]
+    J --> I
+    I -->|Approve & Sign| K[Net Rendered Hours Accumulated]
     
-    I --> J{Hours Completed?}
-    J -->|No| F
-    J -->|Yes| K[Supervisor Performance Appraisal]
+    K --> L{Requirement Met? e.g. 500 hrs}
+    L -->|No| G
+    L -->|Yes| M[Supervisor Completes 5-Point Performance Appraisal]
     
-    K --> L[Automated Rubric Grading]
-    L --> M[Coordinator Dashboard & Analytics]
-    M --> N[Generate CHED Reports]
+    M --> N[Automated Final Grade Calculation]
+    N --> O[Coordinator Dashboard & Incident Clearance]
+    O --> P[Export CHED CMO Compliance & Completion Reports]
 ```
+
+---
+
+## 🏛️ System Architecture & Diagrams
+
+Below are the architectural diagrams outlining the database structure, information architecture, and core system flows.
 
 ### Database Schema (ERD)
 ![Entity-Relationship Diagram](docs/diagrams/erd_schema.png)
@@ -73,161 +83,139 @@ flowchart TD
 
 ---
 
-## DETAILED STUDENT FLOW - INSTRUCTIONS
+## 🔐 Core Portals Breakdown
 
-1. **Student Login**
-   The student logs into the system using their secure ID and password.
-2. **Access OJT Directory**
-   The student navigates to the placement directory to view accredited HTEs.
-3. **Submit Application**
-   The student selects an active slot and submits their profile for review.
-4. **Supervisor & Coordinator Review**
-   The system waits for the HTE Supervisor to Accept, and the Coordinator to Endorse.
-5. **Placement Secured**
-   Once endorsed, the student is officially locked to that HTE.
-6. **Begin OJT Shift**
-   The student reports to the HTE for duty.
-7. **Timekeeping (Read-Only)**
-   The supervisor clocks the student in via the Timekeeper Terminal.
-8. **Live DTR Sync**
-   The student views their Read-Only DTR dashboard updating in real-time.
-9. **Hours Completed**
-   The student completes their required OJT hours.
-10. **Final Appraisal Review**
-   The student views their final 5-point grading rubric score submitted by the supervisor.
-11. **END**
-   The OJT process is completed.
+### 1. Student Portal (`#/student/dashboard`)
+* **Dashboard:** Real-time visual progress bar (`rendered / required hours`), placement summary, and open incident tickets.
+* **OJT Placement:** Filterable directory of accredited partner companies with skill-matching tags and slot availability.
+* **My Applications:** Pipeline tracking from *Pending* to *Under Review* to *Accepted*.
+* **DTR Hub:** Live read-only attendance logbook synced with supervisor sign-offs, displaying clock-in/out stamps, rendered hours, and supervisor remarks.
+* **Requirements & Vault:** Secure drag-and-drop uploader for medical clearances, parent consent waivers, and endorsed MOAs.
+* **Performance Appraisal:** Read-only view of supervisor rubric scores and final evaluations.
+* **Incident Reports:** Dispute filing system with screenshot and document attachment support.
 
----
+### 2. Supervisor Portal (`#/supervisor/dashboard`)
+* **Dashboard:** Active intern roster, shifts currently in progress, and pending DTR approvals.
+* **Candidate Review:** Resume screener and applicant pipeline with one-click *Accept* and *Reject* controls.
+* **Attendance & Timekeeper Hub:** Real-time clock in and clock out terminal for intern shifts, lunch break tracking, and logbook approvals with digital signatures.
+* **Performance Appraisal:** 5-point evaluation rubric automatically calculating weighted scores across 5 core competencies.
+* **Slot Management:** Creation of training listings strictly bound to the supervisor's accredited company profile.
+* **Incident Hub:** Disciplinary action reporting and incident tracking.
 
-## DETAILED SUPERVISOR (HTE) FLOW - INSTRUCTIONS
-
-1. **Supervisor Login**
-   The industry partner logs into their restricted HTE account.
-2. **Post Job Slots**
-   The supervisor creates a job posting locked strictly to their company profile.
-3. **Review Applicants**
-   The supervisor views incoming student applications.
-4. **Accept / Reject Candidate**
-   The supervisor decides whether to hire the student for the OJT slot.
-5. **Manage Daily Attendance**
-   When the student arrives, the supervisor opens the Timekeeper Terminal.
-6. **Live GPS Validation**
-   The supervisor clocks the student in. (The system validates the GPS location).
-7. **Manage Breaks**
-   The supervisor logs any break times taken by the student.
-8. **Clock Out & Commit**
-   The supervisor clocks the student out. The net hours are permanently logged.
-9. **Conduct Performance Appraisal**
-   Once all hours are finished, the supervisor accesses the Appraisal module.
-10. **Submit 5-Point Rubric**
-   The supervisor grades the student across 5 technical and behavioral metrics.
-11. **END**
-   The student's final grade is transmitted to the Coordinator.
+### 3. Coordinator Portal (`#/coordinator/dashboard`)
+* **Dashboard:** Cohort placement statistics, accredited partner totals, and compliance alerts.
+* **HTE Accreditation:** Directory management, accreditation renewals, and partner verification.
+* **Candidate Placement:** Bulk assignment capabilities to match unplaced students with available training establishments.
+* **DTR Compliance Queue:** Global audit log of all rendered student hours, flagged records, and attendance anomalies.
+* **Report Generation:** Export batch completion certificates and CHED CMO-compliant CSV reports with a single click.
+* **Central Incident Hub:** Mediation center for workplace harassment, AWOL claims, and placement reassignment.
 
 ---
 
-## Portal Modules Breakdown
+## 🔑 Demo Accounts & Credentials
 
-### Student Portal
-* **Dashboard:** Overview of active hours, total progress, and placement status.
-* **OJT Placement:** Verified directory of available HTE positions.
-* **My Applications:** Status tracker for submitted placement requests.
-* **Performance Appraisal:** Read-only view of supervisor evaluations.
-* **DTR Hub:** Read-only digital time record synced instantly with the supervisor's terminal.
-* **Documents:** Secure portal to upload clearances, waivers, and ID requirements.
-* **Incident Reports:** Direct line to file safety claims or disputes.
+To explore the connected portals, use the following pre-configured demonstration accounts:
 
-### Supervisor Portal
-* **Dashboard:** Roster of active interns and pending tasks.
-* **Candidate Review & Application Review:** Pipeline for accepting or rejecting student applicants.
-* **Attendance & DTR (Timekeeper Terminal):** The absolute-authority terminal to log student hours, breaks, and remarks.
-* **Performance Appraisal:** Built-in 5-point grading rubric to instantly compute student performance.
-* **Slot Management:** Creation of job postings tied securely to the supervisor's read-only company profile.
-* **Incident Reports:** Disciplinary logging system.
+> **Universal Demo Password:** `Demo@2026!`
 
-### Coordinator Portal
-* **Dashboard:** High-level metrics of cohort placement and compliance.
-* **Job Management & Application Review:** Oversight of all active postings and placements.
-* **HTE Accreditation:** Management of partnered companies.
-* **Student Placement:** Bulk assignment capabilities for unplaced students.
-* **DTR Compliance:** God-view audit of all logged hours across all companies.
-* **Report Generation:** Analytics charts and 1-click CHED compliance CSV exports.
-* **User Management & Incident Reports:** Administrative oversight of accounts and severe disputes.
+| Portal | Role | Username / Identifier | Registered Email | Assigned Company / Dept |
+| --- | --- | --- | --- | --- |
+| **Student** | OJT Student | `2021-00421` | `kenzosomes@gmail.com` | Accenture Philippines (Assigned to `shisuizhin`) |
+| **Supervisor** | Industry Supervisor | `shisulzhin@gmail.com` | `shisulzhin@gmail.com` | Accenture Philippines (Supervising `kenzosomes`) |
+| **Coordinator** | Faculty Admin | `FAC-2026-001` | `jeff.gentapanan2004525@gmail.com` | College of Information Technology |
 
 ---
 
-## Security & Authentication Logic
+## ⚡ Recent Updates & Key Improvements
 
-MenteeLog uses layered security mechanisms to enforce data integrity:
+### 1. Authentication Experience (`#/login`)
+* **Interactive DTR Clock Mechanism:** Replaced static visuals with an active analog & digital clock dial animation featuring **CLOCK IN (08:00 AM)** and **CLOCK OUT (05:00 PM)** pins, glowing shift duration arc, and live sweeping clock hands.
+* **Clean Geometric Map Grid:** Integrated dual-tier blueprint/map gridlines (30px / 150px) with coordinate crosshairs `+` and interactive cursor spotlight tracking (`--spotlight-x`, `--spotlight-y`).
+* **Frosted Glass Acrylic Card:** Designed a modern, elevated card with a 4-color top spectrum line (`Burgundy → Rose → Sand Gold → Emerald`), an active **Role Status Indicator Banner**, focus glow inputs, luminous submit button, and an official SSL encryption seal.
+* **Centered Identity:** Clean, balanced branding with centered MenteeLog logo in the card header.
 
-* **Authentication:** Protected API endpoints, JWT-based security (planned integration), and Role-Based routing.
-* **Absolute-Authority Timekeeping:** Unlike legacy systems where students punch their own time, MenteeLog grants *only* the Supervisor the authority to commit hours, ensuring zero forgery.
-* **Role-Based Access Control (RBAC):** Users are strictly routed to their designated portals. Supervisors cannot access global cohort data, and Students cannot alter their own DTR hours.
-* **Field-Level Locks:** Sensitive data, such as a Supervisor's company affiliation, is locked (`readonly`) at the UI level to prevent misrepresentation during slot creation.
+### 2. Multi-Tab Session Isolation & Page Reload Fix
+* Resolved browser storage and routing conflicts (`sessionStorage.SESSION.<role>`).
+* Reloading any active tab now accurately persists the current portal view and prevents session drops or accidental role switches.
 
----
+### 3. Core Accounts Connected & Cleaned
+* Linked the core accounts: Student (`kenzosomes`), Supervisor (`shisuizhin`), and Coordinator (`jeff.gentapanan2004525`).
+* Purged mock dummy intern data so time logs, active shifts, and placements reflect the actual users.
 
-## Technology Stack
+### 4. Character Encoding & UTF-8 Normalization
+* Sanitized mangled unicode characters across all portal views (e.g. `â— `, `Â·`) with standard HTML entities and clean inline SVG icons.
 
-**Frontend:**
-* React.js (Component-based UI)
-* Vite (High-speed build tool)
-* Vanilla JavaScript (ES6+ Logic)
-* CSS3 (High-performance transitions & GPU acceleration)
-* Leaflet.js (GPS & Geolocation mapping)
-
-**Backend & Database:**
-* Node.js & Express
-* Supabase (Auth & Database)
-* PostgreSQL (Relational Data structure)
-* RESTful APIs
-
-**Design & Prototyping:**
-* Figma
+### 5. Account Activation & OTP Verification Flow (`#/activate`)
+* 3-step activation pipeline:
+  1. Identifier & email verification.
+  2. 6-digit numeric one-time passcode (OTP) validation.
+  3. Secure password setup with live confirmation and input toggles.
 
 ---
 
-## Development Roadmap
+## 💻 Technology Stack
 
-* **Foundation:** [====================] 100%
-* **Authentication & RBAC Routing:** [====================] 100%
-* **DTR & Timekeeping Authority:** [====================] 100%
-* **Supervisor Appraisals:** [==================  ] 90%
-* **Coordinator Analytics & Reports:** [============        ] 60%
-* **Testing & Integration:** [======              ] 30%
-* **Overall Development:** [================    ] ~80%
+* **Frontend:** Vanilla JavaScript (ES6+ modular architecture), React 19, Vite 8, Leaflet.js (GIS/Mapping), GPU-accelerated CSS3.
+* **Backend & Database:** Supabase, PostgreSQL, Node.js, Express.
+* **Design & Motion:** Figma, React Bits, Anime.js-inspired keyframe physics.
+* **Code Quality & Linting:** Oxlint, modern ES modules.
 
 ---
 
-## Testing Strategy
+## 🚀 Local Development Setup
 
-**Student Testing:**
-* Valid login, session creation, and profile access.
-* Placement application submission and duplicate prevention.
-* Correct denial of access to editing DTR fields (Read-Only verification).
-* Real-time reaction of the DTR Hub when a supervisor clocks them in.
-* File upload validation for requirements.
+To run the application locally on your machine:
 
-**Supervisor Testing:**
-* RBAC restrictions on the Company name during Slot Management.
-* Acceptance and rejection of candidates with proper status updates.
-* Accurate calculation of Net Hours (subtracting break times).
-* Successful submission of the 5-point rubric evaluation and lock-out post-submission.
-* GPS validation prompts on the Timekeeper Terminal.
+```bash
+# 1. Navigate to the frontend directory
+cd MenteeLog
 
-**Coordinator Testing:**
-* Accurate generation of bulk CSV reports across the entire cohort.
-* Correct display of cohort analytics charts and progress bars.
-* Successful bulk assignment of students to an HTE.
-* Administrative oversight of Incident Reports.
+# 2. Install dependencies
+npm install
+
+# 3. Start the local development server (Vite)
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser to view the application.
+
+To create a production build:
+```bash
+npm run build
+```
 
 ---
 
-## Team MenteeLog
-MenteeLog is developed collaboratively by Team MenteeLog.
+## 📁 Repository Structure
 
-| Name | Responsibility |
+```
+Team_MenteeLog/
+├── MenteeLog/                  # Core frontend application (Vite project)
+│   ├── src/
+│   │   ├── css/                # Stylesheets & animations (animations.css, portal-reference.css)
+│   │   ├── js/                 # Application modules (app.js, public.js, portal-views.js, domain.js)
+│   │   └── supabaseClient.js   # Supabase database & auth client
+│   ├── public/                 # Static assets & logos
+│   ├── package.json            # Dependencies and scripts
+│   └── vite.config.js          # Vite bundler configuration
+├── docs/                       # Project documentation & diagrams
+│   ├── diagrams/               # Architecture diagrams (ERD, sitemap, process flow)
+│   ├── design/                 # UI designs and design system specs
+│   └── assets/                 # Supporting documentation media
+├── scripts/                    # Developer & migration tooling
+│   ├── maintenance/            # Utility scripts for unicode sanitization & README builds
+│   └── migration_patches/      # Database and schema migration patches
+├── .gitignore                  # Root git ignore file
+└── README.md                   # Main project documentation
+```
+
+---
+
+## 👥 Team MenteeLog
+
+MenteeLog is developed collaboratively by:
+
+| Name | Role / Responsibility |
 | --- | --- |
 | **Jeff A. Gentapanan** | Project Manager |
 | **Kyle Renzo C. Alis** | Software Generalist |
@@ -239,19 +227,5 @@ MenteeLog is developed collaboratively by Team MenteeLog.
 
 ---
 
-## Live Demonstration
-
-The working frontend prototype is located in the `frontend-react/` directory.
-
-```bash
-cd frontend-react
-npm install
-npm run dev
-```
-
-### Sample Demo Accounts
-*(Password for all accounts: `Demo@2026!`)*
-
-* **Student:** `2021-00421`
-* **Supervisor:** `carlos.jose@example.com`
-* **Coordinator:** `FAC-2026-001`
+## 📄 License & Institutional Compliance
+Designed and developed in compliance with **CHED Memorandum Order (CMO) No. 104, Series of 2017** (*Revised Guidelines for Student Internship Program in the Philippines*) for tertiary academic institutions.

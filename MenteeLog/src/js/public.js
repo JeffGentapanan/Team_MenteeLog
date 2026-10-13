@@ -1,4 +1,4 @@
-﻿// Rebuild of the supplied landing/authentication exports. Only photograph
+// Rebuild of the supplied landing/authentication exports. Only photograph
 // regions are reused from PNGs; text, navigation, cards and buttons are HTML.
 const crops={group:['home',178,2398,500,268],employers:['home',711,2398,497,268],skills:['home',169,1548,318,177],connections:['home',520,1548,319,177],tomorrow:['home',869,1548,318,177],supervisor:['company',97,997,509,287],company:['company',791,997,510,287],career:['company',467,1529,509,286],portrait:['company',246,2427,279,267]};
 export function photo(name,cls='',label='MenteeLog students'){const overrides={group:'img1.jpg',employers:'img2.jpg',skills:'img3.jpg',connections:'img4.jpg',tomorrow:'img5.jpg',supervisor:'img6.jpg',company:'img7.jpg',career:'img8.jpg',portrait:'img9.jpg'};const [file,x,y,w,h]=crops[name]||crops.group;if(overrides[name]){return `<svg class="reference-photo ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${label}"><image href="./assets/team/${overrides[name]}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice" /></svg>`;}return `<svg class="reference-photo ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${label}"><image href="./assets/references/${file}.png" width="${file==='home'?1359:1400}" height="${file==='home'?4633:5211}"/></svg>`;}
@@ -397,16 +397,177 @@ function guideBody(icon) {
         `).join('')}
     </section>`;
 }
-export function authScreen(mode,role,{brand,icon,field}){
+export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
   const activate=mode==='activate',reset=mode==='reset-password',forgot=mode==='forgot',authError=mode==='auth-error';
   return `<div class="auth-reference">
     <section class="auth-reference-photo">${photo('group','auth-photo')}<div class="auth-tint"></div><img class="auth-watermark" src="./assets/MenteeLog_Logo.svg" alt=""><h1>Join the MenteeLog<br>Journey.<br>Step Forward into<br>Your Future.</h1><span class="auth-rule"></span><p>${icon('shield')} Official Student Mentorship Network</p></section>
     <main class="auth-reference-main" id="main">
+      <div class="auth-map-backdrop" aria-hidden="true">
+        <div class="auth-map-grid"></div>
+        <svg class="auth-map-svg" viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="clockGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#58111A" stop-opacity="0.12" />
+              <stop offset="70%" stop-color="#FAF4E8" stop-opacity="0.02" />
+              <stop offset="100%" stop-color="#FAF4E8" stop-opacity="0" />
+            </radialGradient>
+            <linearGradient id="shiftArcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#059669" stop-opacity="0.8" />
+              <stop offset="50%" stop-color="#EAB308" stop-opacity="0.7" />
+              <stop offset="100%" stop-color="#D85A63" stop-opacity="0.85" />
+            </linearGradient>
+          </defs>
+
+          <!-- TECHNICAL DTR CLOCK MECHANISM centered at (230, 360) -->
+          <g class="clock-mechanism" transform="translate(230, 360)">
+            <!-- Outer subtle technical rings -->
+            <circle cx="0" cy="0" r="210" class="clock-ring-outer" />
+            <circle cx="0" cy="0" r="165" class="clock-ring-mid" />
+            <circle cx="0" cy="0" r="135" class="clock-ring-track" />
+
+            <!-- Clock dial background -->
+            <circle cx="0" cy="0" r="120" fill="url(#clockGlow)" class="clock-face-base" />
+
+            <!-- Rendered Shift Arc from 8:00 AM (-120deg) to 5:00 PM (+150deg) -->
+            <path d="M-104,-60 A120,120 0 1,1 104,60" fill="none" stroke="url(#shiftArcGrad)" stroke-width="5" stroke-linecap="round" class="clock-arc-glow" />
+
+            <!-- 12 Hour tick marks & 60-second dash ring -->
+            <circle cx="0" cy="0" r="112" class="clock-dash-ring" />
+            <g class="clock-ticks">
+              <line x1="0" y1="-120" x2="0" y2="-106" class="tick-hour" />
+              <line x1="60" y1="-104" x2="52" y2="-90" class="tick-hour" />
+              <line x1="104" y1="-60" x2="90" y2="-52" class="tick-hour" />
+              <line x1="120" y1="0" x2="106" y2="0" class="tick-hour" />
+              <line x1="104" y1="60" x2="90" y2="52" class="tick-hour" />
+              <line x1="60" y1="104" x2="52" y2="90" class="tick-hour" />
+              <line x1="0" y1="120" x2="0" y2="106" class="tick-hour" />
+              <line x1="-60" y1="104" x2="-52" y2="90" class="tick-hour" />
+              <line x1="-104" y1="60" x2="-90" y2="52" class="tick-hour" />
+              <line x1="-120" y1="0" x2="-106" y2="0" class="tick-hour" />
+              <line x1="-104" y1="-60" x2="-90" y2="-52" class="tick-hour" />
+              <line x1="-60" y1="-104" x2="-52" y2="-90" class="tick-hour" />
+
+              <text x="0" y="-86" class="clock-num" text-anchor="middle">12</text>
+              <text x="94" y="4" class="clock-num" text-anchor="middle">3</text>
+              <text x="0" y="98" class="clock-num" text-anchor="middle">6</text>
+              <text x="-94" y="4" class="clock-num" text-anchor="middle">9</text>
+            </g>
+
+            <!-- CLOCK IN PIN at 8:00 AM (-104, -60) -->
+            <g class="clock-pin-in" transform="translate(-104, -60)">
+              <circle cx="0" cy="0" r="5" fill="#059669" />
+              <circle cx="0" cy="0" r="10" class="clock-pulse-in" />
+              <rect x="-132" y="-22" width="124" height="22" rx="11" class="clock-badge-bg in" />
+              <text x="-70" y="-7" class="clock-badge-text in" text-anchor="middle">● CLOCK IN (08:00 AM)</text>
+            </g>
+
+            <!-- CLOCK OUT PIN at 5:00 PM (104, 60) -->
+            <g class="clock-pin-out" transform="translate(104, 60)">
+              <circle cx="0" cy="0" r="5" fill="#D85A63" />
+              <circle cx="0" cy="0" r="10" class="clock-pulse-out" />
+              <rect x="8" y="2" width="134" height="22" rx="11" class="clock-badge-bg out" />
+              <text x="75" y="17" class="clock-badge-text out" text-anchor="middle">● CLOCK OUT (05:00 PM)</text>
+            </g>
+
+            <!-- Animated Hour Hand (Slow) -->
+            <g class="clock-hand-hour">
+              <line x1="0" y1="12" x2="0" y2="-55" class="hand-hour-line" />
+              <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="360s" repeatCount="indefinite" />
+            </g>
+
+            <!-- Animated Minute Hand -->
+            <g class="clock-hand-minute">
+              <line x1="0" y1="16" x2="0" y2="-82" class="hand-minute-line" />
+              <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="60s" repeatCount="indefinite" />
+            </g>
+
+            <!-- Animated Second Hand (Smooth sweep with accent tip) -->
+            <g class="clock-hand-second">
+              <line x1="0" y1="22" x2="0" y2="-100" class="hand-second-line" />
+              <circle cx="0" cy="-100" r="3.5" fill="#D85A63" />
+              <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="12s" repeatCount="indefinite" />
+            </g>
+
+            <!-- Center Pivot Cap -->
+            <circle cx="0" cy="0" r="7" class="hand-pivot-outer" />
+            <circle cx="0" cy="0" r="3" class="hand-pivot-inner" />
+
+            <!-- Timekeeper captions -->
+            <text x="0" y="152" class="clock-caption" text-anchor="middle">DIGITAL TIMEKEEPING & DTR</text>
+            <text x="0" y="170" class="clock-subcaption" text-anchor="middle">AUTOMATED CLOCK IN / CLOCK OUT</text>
+          </g>
+
+          <!-- Technical Grid intersection crosshairs "+" and corner markers -->
+          <g class="map-crosshairs">
+            <path d="M60,60 m-10,0 h20 m-10,-10 v20" />
+            <text x="75" y="64" class="crosshair-coord">GRID-01 · NORTH SECTOR</text>
+
+            <path d="M1140,60 m-10,0 h20 m-10,-10 v20" />
+            <text x="980" y="64" class="crosshair-coord">GRID-02 · EAST SECTOR</text>
+
+            <path d="M60,840 m-10,0 h20 m-10,-10 v20" />
+            <text x="75" y="844" class="crosshair-coord">GRID-03 · SOUTH SECTOR</text>
+
+            <path d="M1140,840 m-10,0 h20 m-10,-10 v20" />
+            <text x="980" y="844" class="crosshair-coord">GRID-04 · SYSTEM LOCK</text>
+
+            <path d="M600,60 m-8,0 h16 m-8,-8 v16" />
+            <path d="M600,840 m-8,0 h16 m-8,-8 v16" />
+            <path d="M60,450 m-8,0 h16 m-8,-8 v16" />
+            <path d="M1140,450 m-8,0 h16 m-8,-8 v16" />
+          </g>
+        </svg>
+
+        <div class="map-hud-top">
+          <span class="hud-item hud-live"><span class="hud-dot"></span> LIVE TIMEKEEPER ACTIVE</span>
+          <span class="hud-item hud-mono">DTR SYSTEM · AUTOMATED ATTENDANCE TRACKER</span>
+          <span class="hud-item hud-chip">CHED CMO COMPLIANT</span>
+        </div>
+
+        <div class="map-hud-bottom">
+          <span class="hud-item hud-mono">DIGITAL TIME LOGGING · CLOCK IN / CLOCK OUT HUB</span>
+          <span class="hud-item">BATANGAS STATE UNIVERSITY OJT PORTAL</span>
+        </div>
+      </div>
+      <div class="auth-orb auth-orb-1" aria-hidden="true"></div>
+      <div class="auth-orb auth-orb-2" aria-hidden="true"></div>
+      <div class="auth-orb auth-orb-3" aria-hidden="true"></div>
+
+      <div class="auth-floating-badge badge-tr" aria-hidden="true">
+        <span class="badge-pulse-dot"></span>
+        <div class="badge-text">
+          <strong>CHED CMO Verified</strong>
+          <small>OJT Hours Compliance</small>
+        </div>
+      </div>
+
+      <div class="auth-floating-badge badge-bl" aria-hidden="true">
+        <svg class="badge-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <div class="badge-text">
+          <strong>Clock In / Clock Out</strong>
+          <small>Automated DTR Timekeeping</small>
+        </div>
+      </div>
+
+      <div class="auth-floating-badge badge-br" aria-hidden="true">
+        <svg class="badge-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+        <div class="badge-text">
+          <strong>3 Connected Portals</strong>
+          <small>Role-Isolated DTR Access</small>
+        </div>
+      </div>
+
       <section class="auth-reference-card">
         <header>
           ${brand()}
-          <h2>${activate?'Activate Your MenteeLog Account':reset?'Reset Your Password':forgot?'Forgot Password?':authError?'Link Expired':'MenteeLog - Authentication Hub'}</h2>
-          <p>${activate?'Complete the steps below to set up your account':reset?'Enter a new password for your account':forgot?'Enter your email or SR code to reset your password':authError?'This reset link is invalid or has expired. Please request a new one.':'Select your role to continue'}</p>
+          <h2>${activate?'Activate Your MenteeLog Account':reset?(hasRecoverySession?'Reset Your Password':'Password Reset Link Needed'):forgot?'Forgot Password?':authError?'Link Expired':'MenteeLog - Authentication Hub'}</h2>
+          <p>${activate?'Complete the steps below to set up your account':reset?(hasRecoverySession?'Enter a new password for your account':'To protect your account, a valid reset link from your email is required.'):forgot?'Enter your email or SR code to reset your password':authError?'This reset link is invalid or has expired. Please request a new one.':'Select your role to continue'}</p>
         </header>
         <div class="auth-reference-body">
           ${activate?
@@ -415,6 +576,7 @@ export function authScreen(mode,role,{brand,icon,field}){
 `<div id="step3-container" style="display:none;"><form id="set-password-form"><div style="text-align:center;margin-bottom:24px;"><p style="font-size:14px;color:#555;">Almost done! Create a secure password for your account.</p></div><div class="field"><label for="new-password">CREATE PASSWORD</label><div class="password-field"><input id="new-password" name="password" type="password" required minlength="8" placeholder="Minimum 8 characters" autocomplete="new-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div><div class="field"><label for="confirm-password">CONFIRM PASSWORD</label><div class="password-field"><input id="confirm-password" name="confirm" type="password" required minlength="8" placeholder="Re-enter your password" autocomplete="new-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div><p class="form-error" role="alert"></p><button type="submit" class="btn full">Complete Activation</button></form></div>` +
 `<div id="activate-success" style="display:none;text-align:center;padding:20px 0;"><svg width="56" height="56" fill="none" stroke="#2d6a4f" stroke-width="2" viewBox="0 0 24 24" style="margin:0 auto 16px;display:block;"><circle cx="12" cy="12" r="10"></circle><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"></path></svg><h3 style="color:#2d6a4f;margin-bottom:8px;">Account Activated!</h3><p style="font-size:14px;color:#555;margin-bottom:24px;">Your account is ready. You can now log in with your new password.</p><a href="#/login" class="btn full">Go to Login &rarr;</a></div>`
           : reset?
+            (hasRecoverySession ?
             `<form id="reset-password-form">
                <div class="field"><label for="password">NEW PASSWORD</label><div class="password-field"><input id="password" name="password" type="password" required minlength="8" autocomplete="new-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div>
                <div class="field"><label for="confirm">CONFIRM PASSWORD</label><div class="password-field"><input id="confirm" name="confirm" type="password" required minlength="8" autocomplete="new-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div>
@@ -422,6 +584,13 @@ export function authScreen(mode,role,{brand,icon,field}){
                <button type="submit" class="btn full">Save New Password</button>
              </form>
              <a class="auth-return" href="#" data-action="forgot">&larr; Back to Forgot Password</a>`
+            :
+            `<div style="text-align:center;padding:12px 0;">
+               <p style="color:#555;font-size:14px;line-height:1.5;margin-bottom:20px;">No active reset session found. Please click the reset link sent to your email, or request a new one below.</p>
+               <button type="button" class="btn full" onclick="location.hash='/forgot'">Request Reset Link &rarr;</button>
+             </div>
+             <a class="auth-return" href="#/login" style="display:block;margin-top:1.25rem;text-align:center;">&larr; Back to Login</a>`
+            )
           : forgot?
             `<form id="forgot-form">
                ${field('EMAIL OR SR CODE','identifier','text','','required')}
@@ -433,7 +602,40 @@ export function authScreen(mode,role,{brand,icon,field}){
             `<button type="button" class="btn full" onclick="location.hash='/forgot'">Request New Link</button>
              <a class="auth-return" href="#/login" style="display:block;margin-top:1rem;text-align:center;">&larr; Back to Login</a>`
           :
-            `<div class="auth-tabs" role="group" aria-label="Authentication portals">${['Student','Supervisor','Coordinator'].map(r=>`<button class="${r===role?'selected':''}" data-action="auth-role" data-id="${r}" aria-pressed="${r===role}">${icon(r==='Student'?'users':r==='Supervisor'?'building':'users')} ${r}</button>`).join('')}</div><form id="login-form">${field(role==='Student'?'SR CODE':role==='Supervisor'?'CORPORATE EMAIL':'FACULTY ID','identifier',role==='Supervisor'?'email':'text','','required autocomplete="username"')}<div class="field"><label for="password">PASSWORD</label><div class="password-field"><input id="password" name="password" type="password" required autocomplete="current-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div><button type="button" class="forgot-link" data-action="forgot">Forgot Password?</button><p class="form-error" role="alert"></p><button class="btn full" type="submit">Login as ${role}</button></form>${role === "Coordinator" ? "" : `<p class="activate-link">First time here? <a href="#/activate">Activate ${role} Account</a></p>`}<a class="auth-return" href="#/">&larr; Back to Landing Page</a>`
+            `<div class="auth-tabs" role="group" aria-label="Authentication portals">${['Student','Supervisor','Coordinator'].map(r=>`<button class="${r===role?'selected':''}" data-action="auth-role" data-id="${r}" aria-pressed="${r===role}">${icon(r==='Student'?'users':r==='Supervisor'?'building':'users')} ${r}</button>`).join('')}</div>
+            <div class="auth-role-banner">
+              <div class="role-badge-icon">${icon(role==='Student'?'users':role==='Supervisor'?'building':'users')}</div>
+              <div class="role-badge-info">
+                <small>CURRENT PORTAL</small>
+                <strong>${role === 'Student' ? 'OJT Student Intern' : role === 'Supervisor' ? 'Industry Partner Supervisor' : 'Faculty OJT Coordinator'}</strong>
+              </div>
+              <span class="role-active-pulse" title="Portal Active"></span>
+            </div>
+            <form id="login-form">
+              ${field(role==='Student'?'SR CODE':role==='Supervisor'?'CORPORATE EMAIL':'FACULTY ID','identifier',role==='Supervisor'?'email':'text','','required autocomplete="username"')}
+              <div class="field">
+                <label for="password">PASSWORD</label>
+                <div class="password-field">
+                  <input id="password" name="password" type="password" required autocomplete="current-password">
+                  <button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button>
+                </div>
+              </div>
+              <button type="button" class="forgot-link" data-action="forgot">Forgot Password?</button>
+              <p class="form-error" role="alert"></p>
+              <button class="btn full auth-submit-btn" type="submit">
+                <span>Login as ${role}</span>
+                <svg class="btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </button>
+            </form>
+            ${role === "Coordinator" ? "" : `<div class="auth-activate-box"><p class="activate-link">First time here? <a href="#/activate">Activate ${role} Account &rarr;</a></p></div>`}
+            <a class="auth-return" href="#/">&larr; Back to Landing Page</a>
+            <div class="auth-card-security">
+              <svg class="security-lock-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span>BatState-U OJT System · 256-Bit SSL Encrypted</span>
+            </div>`
           }
         </div>
       </section>
@@ -441,6 +643,14 @@ export function authScreen(mode,role,{brand,icon,field}){
   </div>`;
 }
 
-
-
-
+if (typeof window !== 'undefined') {
+  window.addEventListener('pointermove', (e) => {
+    const authMain = document.querySelector('.auth-reference-main');
+    if (!authMain) return;
+    const rect = authMain.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    authMain.style.setProperty('--spotlight-x', `${x}px`);
+    authMain.style.setProperty('--spotlight-y', `${y}px`);
+  }, { passive: true });
+}

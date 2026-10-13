@@ -61,7 +61,7 @@ export async function syncRemote(supabase, db) {
       badgesMap[b.student_id] = b.badge;
     }
 
-    const newUsers = profilesRes.data.map(p => ({
+    let newUsers = profilesRes.data.map(p => ({
       id: p.id,
       role: p.role,
       identifier: p.identifier || '',
@@ -159,6 +159,65 @@ export async function syncRemote(supabase, db) {
     if (signedInUser && !newUsers.some(u => u.id === signedInUser.id)) {
       newUsers.push(signedInUser);
     }
+
+    // Connect core users and remove dummy placement accounts
+    let stu = newUsers.find(u => u.role === 'Student' && (String(u.email||'').toLowerCase() === 'kenzosomes@gmail.com' || String(u.name||'').toLowerCase().includes('kenzo')));
+    let sup = newUsers.find(u => u.role === 'Supervisor' && (String(u.email||'').toLowerCase().includes('shisulzhin') || String(u.email||'').toLowerCase().includes('shisuizhin') || String(u.name||'').toLowerCase().includes('shisui')));
+    if (!stu && db.users.some(u => u.role === 'Student' && (String(u.email||'').toLowerCase() === 'kenzosomes@gmail.com' || String(u.name||'').toLowerCase().includes('kenzo')))) {
+      stu = db.users.find(u => u.role === 'Student' && (String(u.email||'').toLowerCase() === 'kenzosomes@gmail.com' || String(u.name||'').toLowerCase().includes('kenzo')));
+      newUsers.push(stu);
+    }
+    if (!sup && db.users.some(u => u.role === 'Supervisor' && (String(u.email||'').toLowerCase().includes('shisulzhin') || String(u.name||'').toLowerCase().includes('shisui')))) {
+      sup = db.users.find(u => u.role === 'Supervisor' && (String(u.email||'').toLowerCase().includes('shisulzhin') || String(u.name||'').toLowerCase().includes('shisui')));
+      newUsers.push(sup);
+    }
+    if (stu && sup) {
+      sup.company = sup.company || 'Accenture Philippines';
+      stu.supervisorId = sup.id;
+      stu.company = sup.company;
+      stu.status = 'Active';
+      stu.badge = 'Active';
+      stu.requiredHours = stu.requiredHours || 500;
+      if (!stu.baseHours && stu.baseHours !== 0) stu.baseHours = 120;
+      const stuLogs = newLogs.filter(l => l.studentId === stu.id);
+      if (stuLogs.length === 0 && db.logs) {
+        const existingStuLogs = db.logs.filter(l => l.studentId === stu.id);
+        if (existingStuLogs.length > 0) newLogs.push(...existingStuLogs);
+      }
+      let supJob = newJobs.find(j => j.supervisorId === sup.id);
+      if (!supJob) {
+        supJob = {
+          id: 'job_' + sup.id,
+          supervisorId: sup.id,
+          title: 'Software Engineer Intern',
+          company: sup.company,
+          location: 'BGC, Taguig',
+          mode: 'Hybrid',
+          courses: ['BS Information Technology', 'BS Computer Science'],
+          slots: 5,
+          status: 'Active',
+          description: 'Hands-on enterprise software development and daily engineering operations.',
+          specs: 'Accredited HTE · Active MOA · 500-hour training plan',
+          skills: 'JavaScript, Web Development, Team Collaboration'
+        };
+        newJobs.unshift(supJob);
+      }
+      let app = newApps.find(a => a.studentId === stu.id);
+      if (!app) {
+        newApps.push({
+          id: 'app_' + stu.id,
+          jobId: supJob.id,
+          studentId: stu.id,
+          status: 'Accepted',
+          date: new Date().toISOString().slice(0, 10),
+          note: 'Endorsed by faculty coordinator and accepted by company supervisor.'
+        });
+      } else {
+        app.status = 'Accepted';
+        app.jobId = supJob.id;
+      }
+    }
+    newUsers = newUsers.filter(u => !String(u.id).startsWith('s_dummy') && !['Alice Chen','Bob Smith','Charlie Cruz','Diana Reyes','Example Intern'].includes(u.name));
 
     const cleanIncidents = (list) => (list || []).map(i => { const copy = {...i}; delete copy._pending; return copy; });
     const before = JSON.stringify({ jobs: db.jobs, apps: db.applications, users: db.users, logs: db.logs, incidents: cleanIncidents(db.incidents), appraisals: db.appraisals, docs: db.documents });
