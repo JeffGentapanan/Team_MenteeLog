@@ -9,10 +9,43 @@ function joinSection(safe=true){return `<section class="join-section">${safe?'<p
 function contactSection(icon) {
     return `<section id="contact" class="contact-section reveal-on-scroll">
         <div class="contact-container">
-            <div class="contact-photo">
-                ${photo('portrait', 'contact-img')}
+            <div class="contact-photo-stage">
+                <!-- Warm Breathing Glow Halo -->
+                <div class="contact-orbit-glow" aria-hidden="true"></div>
+
+                <!-- Dual Rotating SVG Orbital Rings -->
+                <svg class="contact-orbit-svg orbit-outer" viewBox="0 0 500 500" aria-hidden="true">
+                    <circle cx="250" cy="250" r="235" fill="none" class="orbit-path-outer" />
+                    <circle cx="250" cy="15" r="5" class="orbit-node-coral" />
+                    <circle cx="485" cy="250" r="4" class="orbit-node-burgundy" />
+                </svg>
+                <svg class="contact-orbit-svg orbit-inner" viewBox="0 0 500 500" aria-hidden="true">
+                    <circle cx="250" cy="250" r="215" fill="none" class="orbit-path-inner" />
+                    <circle cx="250" cy="465" r="4.5" class="orbit-node-coral" />
+                    <circle cx="35" cy="250" r="3.5" class="orbit-node-sand" />
+                </svg>
+
+                <!-- Floating Badges -->
+                <div class="contact-floating-badge badge-top-right" aria-hidden="true">
+                    <span class="badge-dot-live"></span>
+                    <strong>Verified</strong> OJT Cohort
+                </div>
+                <div class="contact-floating-badge badge-bottom-left" aria-hidden="true">
+                    <span class="badge-icon-acad">🏛️</span>
+                    <span>BatState-U Partner</span>
+                </div>
+
+                <!-- Circular Photo Wrapper -->
+                <div class="contact-photo-wrapper">
+                    ${photo('portrait', 'contact-img')}
+                </div>
             </div>
+
             <div class="contact-form-card">
+                <div class="contact-card-topbar">
+                    <span class="contact-pill-tag">✦ PARTNERSHIP & DEMO GATEWAY</span>
+                    <span class="contact-pill-meta">Response &lt; 24h</span>
+                </div>
                 <h3 class="contact-title">Connect with our team to explore partnership or request a demo.</h3>
                 <p class="contact-subtitle">Let's Work Together</p>
                 
@@ -46,7 +79,14 @@ function contactSection(icon) {
                         <label>Message <span>*</span></label>
                         <textarea name="message" placeholder="Tell us about your inquiry or how we can help..." rows="4" required></textarea>
                     </div>
-                    <button type="submit" class="btn full contact-submit">Send Message</button>
+                    <button type="submit" class="btn full contact-submit">
+                        <span>Send Message</span>
+                        <svg class="btn-arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </button>
+                    <div class="contact-trust-footer">
+                        <span>🔒 256-Bit SSL Encrypted</span>
+                        <span>⚡ Institutional Compliance Ready</span>
+                    </div>
                 </form>
             </div>
         </div>

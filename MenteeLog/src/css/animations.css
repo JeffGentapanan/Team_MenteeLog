@@ -1289,54 +1289,220 @@ html, body {
    CONTACT FORM SECTION
    ========================================= */
 .contact-section {
-    padding: 80px 5%;
+    padding: 90px 5%;
     background-color: transparent !important;
     display: flex;
     justify-content: center;
     border-top: 1px solid #EFDFBB;
+    position: relative;
+    overflow: hidden;
 }
 .contact-container {
     display: flex;
     align-items: center;
-    gap: 64px;
-    max-width: 1100px;
-    width: 100%;
-}
-.contact-photo {
-    flex: 1;
-    display: flex;
     justify-content: center;
+    gap: 60px;
+    max-width: 1140px;
+    width: 100%;
+    position: relative;
+    z-index: 2;
 }
-.contact-img {
+
+/* --- Contact Photo Stage with Orbital Rings & Badges --- */
+.contact-photo-stage {
+    position: relative;
+    width: 440px;
+    height: 440px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Warm Breathing Aura */
+.contact-orbit-glow {
+    position: absolute;
     width: 380px;
     height: 380px;
     border-radius: 50%;
-    object-fit: cover;
-    background-color: #D85A63; /* MenteeLog Red Accent */
-    box-shadow: 0 24px 48px rgba(88, 17, 26, 0.15);
+    background: radial-gradient(circle, rgba(216, 90, 99, 0.22) 0%, rgba(239, 223, 187, 0.35) 60%, rgba(255, 255, 255, 0) 75%);
+    filter: blur(20px);
+    pointer-events: none;
+    z-index: 1;
+    animation: contactGlowPulse 5s ease-in-out infinite;
 }
+
+/* Rotating SVG Orbit Rings */
+.contact-orbit-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    transform-origin: center center;
+}
+.contact-orbit-svg.orbit-outer {
+    animation: contactSpinClockwise 36s linear infinite;
+}
+.contact-orbit-svg.orbit-inner {
+    animation: contactSpinCounter 48s linear infinite;
+}
+.orbit-path-outer {
+    stroke: #58111A;
+    stroke-width: 1.5;
+    stroke-dasharray: 8 10;
+    stroke-opacity: 0.28;
+}
+.orbit-path-inner {
+    stroke: #D85A63;
+    stroke-width: 1.2;
+    stroke-dasharray: 4 8;
+    stroke-opacity: 0.32;
+}
+.orbit-node-coral {
+    fill: #D85A63;
+    filter: drop-shadow(0 0 4px rgba(216, 90, 99, 0.6));
+}
+.orbit-node-burgundy {
+    fill: #58111A;
+    filter: drop-shadow(0 0 3px rgba(88, 17, 26, 0.4));
+}
+.orbit-node-sand {
+    fill: #B8860B;
+    filter: drop-shadow(0 0 3px rgba(184, 134, 11, 0.3));
+}
+
+/* Floating Badges */
+.contact-floating-badge {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(239, 223, 187, 0.95);
+    color: #58111A;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(88, 17, 26, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 5;
+    pointer-events: auto;
+    user-select: none;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
+    white-space: nowrap;
+}
+.contact-floating-badge:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 12px 28px rgba(88, 17, 26, 0.18);
+}
+.contact-floating-badge.badge-top-right {
+    top: 20px;
+    right: -4px;
+    animation: contactBadgeBob1 5s ease-in-out infinite;
+}
+.contact-floating-badge.badge-bottom-left {
+    bottom: 24px;
+    left: -8px;
+    animation: contactBadgeBob2 6s ease-in-out infinite 0.7s;
+}
+.badge-dot-live {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #10B981;
+    display: inline-block;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: contactLivePulse 2s infinite;
+}
+.badge-icon-acad {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+/* Circular Photo Wrapper */
+.contact-photo-wrapper {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    padding: 7px;
+    background: linear-gradient(135deg, rgba(239, 223, 187, 0.95) 0%, rgba(216, 90, 99, 0.4) 50%, rgba(88, 17, 26, 0.7) 100%);
+    box-shadow: 0 20px 48px rgba(88, 17, 26, 0.18), 0 6px 16px rgba(0, 0, 0, 0.06);
+    z-index: 3;
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
+}
+.contact-photo-wrapper:hover {
+    transform: scale(1.025);
+    box-shadow: 0 26px 56px rgba(88, 17, 26, 0.24), 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+.contact-photo-wrapper .contact-img,
+.contact-photo-wrapper .reference-photo {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    background-color: #FAF4E8;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.12);
+    border: 3px solid #FAF4E8;
+}
+
+/* --- Contact Form Card & Polish --- */
 .contact-form-card {
     flex: 1.2;
     background: #FFFFFF;
-    border-radius: 20px;
-    padding: 48px 40px;
-    box-shadow: 0 20px 40px rgba(88, 17, 26, 0.08);
+    border-radius: 24px;
+    padding: 44px 40px;
+    box-shadow: 0 24px 50px rgba(88, 17, 26, 0.09), 0 4px 16px rgba(0, 0, 0, 0.03);
     border: 1px solid #EFDFBB;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.contact-form-card:hover {
+    box-shadow: 0 30px 60px rgba(88, 17, 26, 0.13), 0 6px 20px rgba(0, 0, 0, 0.04);
+}
+.contact-card-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #FAF4E8;
+}
+.contact-pill-tag {
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: #D85A63;
+    background: rgba(216, 90, 99, 0.08);
+    border: 1px solid rgba(216, 90, 99, 0.2);
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+}
+.contact-pill-meta {
+    font-size: 0.75rem;
+    color: #6B7280;
+    font-weight: 500;
 }
 .contact-title {
-    color: #58111A; /* MenteeLog Burgundy */
+    color: #58111A;
     font-size: 1.35rem;
     font-weight: bold;
     text-align: center;
     line-height: 1.4;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 .contact-subtitle {
     color: #58111A;
     font-size: 1.1rem;
     text-align: center;
     font-style: italic;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
     font-family: Georgia, serif;
 }
 .contact-form .form-row {
@@ -1376,33 +1542,145 @@ html, body {
 }
 .contact-submit {
     background-color: #58111A !important;
-    color: white !important;
+    color: #FAF4E8 !important;
     width: 100%;
-    padding: 16px;
-    font-size: 1.05rem;
-    border-radius: 8px;
-    margin-top: 24px;
-    font-weight: bold;
+    padding: 15px 24px;
+    font-size: 1rem;
+    border-radius: 10px;
+    margin-top: 22px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
     border: none;
     cursor: pointer;
-    transition: background 0.3s, transform 0.2s !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.25s ease !important;
+    box-shadow: 0 6px 18px rgba(88, 17, 26, 0.25);
 }
 .contact-submit:hover {
     background-color: #D85A63 !important;
     transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(216, 90, 99, 0.35);
+}
+.contact-submit:active {
+    transform: translateY(0);
+}
+.btn-arrow-icon {
+    transition: transform 0.2s ease;
+}
+.contact-submit:hover .btn-arrow-icon {
+    transform: translateX(4px);
+}
+.contact-trust-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid #F3F4F6;
+    font-size: 0.74rem;
+    color: #6B7280;
+    font-weight: 500;
+    flex-wrap: wrap;
 }
 
-@media (max-width: 860px) {
+/* Keyframes */
+@keyframes contactGlowPulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.12); opacity: 0.95; }
+}
+@keyframes contactSpinClockwise {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+@keyframes contactSpinCounter {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+}
+@keyframes contactBadgeBob1 {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-7px) rotate(1deg); }
+}
+@keyframes contactBadgeBob2 {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(6px) rotate(-1.5deg); }
+}
+@keyframes contactLivePulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+@media (max-width: 980px) {
     .contact-container {
         flex-direction: column;
-        gap: 40px;
+        gap: 48px;
     }
-    .contact-photo {
-        display: none;
+    .contact-photo-stage {
+        width: 360px;
+        height: 360px;
+    }
+    .contact-photo-wrapper {
+        width: 270px;
+        height: 270px;
+    }
+    .contact-orbit-glow {
+        width: 300px;
+        height: 300px;
+    }
+    .contact-form-card {
+        width: 100%;
+        padding: 36px 24px;
+    }
+}
+@media (max-width: 520px) {
+    .contact-photo-stage {
+        width: 300px;
+        height: 300px;
+    }
+    .contact-photo-wrapper {
+        width: 220px;
+        height: 220px;
+    }
+    .contact-orbit-glow {
+        width: 240px;
+        height: 240px;
+    }
+    .contact-floating-badge {
+        font-size: 0.72rem;
+        padding: 6px 10px;
+    }
+    .contact-floating-badge.badge-top-right {
+        top: 6px;
+        right: -6px;
+    }
+    .contact-floating-badge.badge-bottom-left {
+        bottom: 8px;
+        left: -8px;
+    }
+    .contact-card-topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
     }
     .contact-form .form-row {
         flex-direction: column;
         gap: 20px;
+    }
+    .contact-trust-footer {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        text-align: center;
     }
 }
 
