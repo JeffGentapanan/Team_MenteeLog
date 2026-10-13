@@ -236,8 +236,7 @@ function faqSection() {
     ];
 
     return `<section class="faq-section reveal-on-scroll">
-        <p class="section-kicker">&mdash; Frequently Asked Questions &mdash;</p>
-        <h2>Frequently Asked Questions</h2>
+        <h2 class="section-kicker faq-kicker">&mdash; Frequently Asked Questions &mdash;</h2>
         <div class="faq-container">
             ${faqs.map(([q, a]) => `
             <div class="faq-item">

@@ -958,19 +958,24 @@ html, body {
 /* =========================================
    FAQ ACCORDION SECTION
    ========================================= */
+/* Tighten gap between Join MenteeLog and FAQ Section */
+.public-home .join-section {
+    padding-bottom: 32px;
+}
+
 .faq-section {
-    padding: 80px 5%;
+    padding: 36px 5% 72px;
     background-color: var(--cream);
     text-align: center;
 }
-.faq-section .section-kicker {
+.faq-section .section-kicker,
+.faq-section h2.faq-kicker,
+.faq-section .faq-kicker {
     color: #D85A63;
-    font-weight: 600;
-    margin-bottom: 12px;
-}
-.faq-section h2 {
-    color: var(--burgundy);
-    margin-bottom: 48px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin: 0 0 28px 0;
 }
 .faq-container {
     max-width: 800px;
@@ -1550,12 +1555,16 @@ html, body {
 
     /* Join Section */
     .join-section { padding: 48px 20px !important; }
+    .public-home .join-section { padding-bottom: 24px !important; }
     .join-section h2 { font-size: 24px !important; }
 
     /* FAQ Accordion */
-    .faq-section { padding: 48px 16px !important; }
+    .faq-section { padding: 24px 16px 56px !important; }
     .faq-container { padding: 16px !important; }
     .faq-question { font-size: 14px; }
+    .faq-section .section-kicker,
+    .faq-section h2.faq-kicker,
+    .faq-section .faq-kicker { margin-bottom: 20px; font-size: 1rem; }
 
     /* OJT Success Guide Cards */
     .guide-grid { grid-template-columns: 1fr !important; }
