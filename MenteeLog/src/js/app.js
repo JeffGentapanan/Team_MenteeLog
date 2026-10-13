@@ -168,8 +168,8 @@ if(db.incidents) db.incidents = db.incidents.filter(i => !i._pending);
 let session=null,view={search:'',filter:'All',course:'All',mode:'All'},authRole='Student',modalSubmit=null,modalOpener=null,modalUserId=null,toastTimer;
 
 try {
-  if (!sessionStorage.getItem('dtr_reset_guaranteed_v5')) {
-    sessionStorage.setItem('dtr_reset_guaranteed_v5', '1');
+  if (!localStorage.getItem('dtr_reset_guaranteed_v5')) {
+    localStorage.setItem('dtr_reset_guaranteed_v5', '1');
     localStorage.removeItem(STORAGE);
     db=connectCoreUsers(ensureCreatorAccounts(seedData()));
   }
@@ -179,11 +179,72 @@ db.activeShifts = db.activeShifts || [];
 
 let capturedForm=null,capturingForm=false;
 let portals;
-try{session=JSON.parse(localStorage.getItem(SESSION)||sessionStorage.getItem(SESSION));}catch{}
+
+function route(){const hashStr=location.hash.replace(/^#\/?/,'');const [path, query]=hashStr.split('?');const parts=path.split('/');return {role:parts[0],page:parts[1]||'dashboard',sub:parts[2]||'',id:parts[3]||'',query:query||''};}
+
+function loadSession() {
+  const currentRoute = route();
+  const routeRole = currentRoute.role ? currentRoute.role.toLowerCase() : '';
+
+  // 1. Try this tab's own sessionStorage first
+  try {
+    const tabSession = JSON.parse(sessionStorage.getItem(SESSION));
+    if (tabSession?.id) {
+      if (['student', 'supervisor', 'coordinator'].includes(routeRole)) {
+        const u = db.users.find(x => x.id === tabSession.id) || tabSession.user;
+        if (u && u.role && u.role.toLowerCase() === routeRole) {
+          return tabSession;
+        }
+      } else {
+        return tabSession;
+      }
+    }
+  } catch(e) {}
+
+  // 2. If tab is on or reloading a specific role route (e.g. /student/dashboard or /supervisor/dtr),
+  // check for a stored session specifically for that role
+  if (['student', 'supervisor', 'coordinator'].includes(routeRole)) {
+    try {
+      const roleSession = JSON.parse(
+        sessionStorage.getItem(SESSION + '.' + routeRole) ||
+        localStorage.getItem(SESSION + '.' + routeRole)
+      );
+      if (roleSession?.id) {
+        sessionStorage.setItem(SESSION, JSON.stringify(roleSession));
+        return roleSession;
+      }
+    } catch(e) {}
+
+    // Fallback: look for the active user with that role in db
+    const coreUser = db.users.find(u => u.role && u.role.toLowerCase() === routeRole && u.status === 'Active');
+    if (coreUser) {
+      const s = { id: coreUser.id, user: coreUser };
+      sessionStorage.setItem(SESSION, JSON.stringify(s));
+      return s;
+    }
+  }
+
+  // 3. Fallback to localStorage session if not on a conflicting role route
+  try {
+    const saved = JSON.parse(localStorage.getItem(SESSION));
+    if (saved?.id) {
+      const u = db.users.find(x => x.id === saved.id) || saved.user;
+      if (u && (!['student', 'supervisor', 'coordinator'].includes(routeRole) || (u.role && u.role.toLowerCase() === routeRole))) {
+        sessionStorage.setItem(SESSION, JSON.stringify(saved));
+        return saved;
+      }
+    }
+  } catch(e) {}
+
+  return null;
+}
+
+try { session = loadSession(); } catch(e) {}
 function save(){try{localStorage.setItem(STORAGE,JSON.stringify(db));}catch{storageIssue=true;toast('Browser storage is full or unavailable. Changes last only until this page closes.');}}
 
 function currentUser(){
-    if(!session)return null;
+    if(!session) session = loadSession();
+    if(!session) return null;
     let u = db.users.find(u=>u.id===session.id&&u.status==='Active')||null;
     if(!u && session.user && session.user.id===session.id){
         u = session.user;
@@ -194,8 +255,35 @@ function currentUser(){
     return u;
 }
 
-function storeSession(user){session={id:user.id,user:user};try{localStorage.setItem(SESSION,JSON.stringify(session));sessionStorage.setItem(SESSION,JSON.stringify(session));}catch{}}
-function logout(){session=null;try{sessionStorage.removeItem(SESSION);localStorage.removeItem(SESSION);}catch{}supabase.auth.signOut().catch(()=>{});modal.close();location.hash='/';render();}
+function storeSession(user){
+  session = { id: user.id, user: user };
+  try {
+    sessionStorage.setItem(SESSION, JSON.stringify(session));
+    if (user.role) {
+      const roleKey = user.role.toLowerCase();
+      sessionStorage.setItem(SESSION + '.' + roleKey, JSON.stringify(session));
+      localStorage.setItem(SESSION + '.' + roleKey, JSON.stringify(session));
+    }
+    localStorage.setItem(SESSION, JSON.stringify(session));
+  } catch(e) {}
+}
+
+function logout(){
+  const currentRole = currentUser()?.role?.toLowerCase();
+  session = null;
+  try {
+    sessionStorage.removeItem(SESSION);
+    if (currentRole) {
+      sessionStorage.removeItem(SESSION + '.' + currentRole);
+      localStorage.removeItem(SESSION + '.' + currentRole);
+    }
+    localStorage.removeItem(SESSION);
+  } catch(e) {}
+  supabase.auth.signOut().catch(()=>{});
+  modal.close();
+  location.hash = '/';
+  render();
+}
 function notify(userId,type,title,message){db.notifications.unshift({id:crypto.randomUUID(),userId,type,title,message,date:new Date().toISOString(),read:false});}
 function audit(action){db.audit.unshift({id:crypto.randomUUID(),actor:currentUser()?.name||'Demo',action,date:new Date().toISOString()});db.audit=db.audit.slice(0,150);}
 function toast(message){const el=$('#toast');el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,5000);}
@@ -233,7 +321,6 @@ function showModal(title,body,onSubmit,label='Save changes'){
 }
 modal.addEventListener('close',()=>{modalSubmit=null;if(modalOpener?.isConnected)modalOpener.focus();});
 function download(name,content,type='text/csv;charset=utf-8'){const url=URL.createObjectURL(content instanceof Blob?content:new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function route(){const hashStr=location.hash.replace(/^#\/?/,'');const [path, query]=hashStr.split('?');const parts=path.split('/');return {role:parts[0],page:parts[1]||'dashboard',sub:parts[2]||'',id:parts[3]||'',query:query||''};}
 function render(){
   if (recoveryActive && route().role !== 'reset-password') { location.hash = '/reset-password'; return; }
   const {role,page}=route();
@@ -1034,6 +1121,13 @@ document.addEventListener('submit',async event=>{
 window.addEventListener('hashchange', async () => {if(typeof searchDebounce!=='undefined')clearTimeout(searchDebounce);
   view = {search: '', filter: 'All', course: 'All', mode: 'All'};
   modal.close();
+  const {role} = route();
+  if (['student', 'supervisor', 'coordinator'].includes(role)) {
+    const cur = currentUser();
+    if (!cur || cur.role.toLowerCase() !== role) {
+      session = loadSession();
+    }
+  }
   render();
   if (session && await syncRemote(supabase, db)) { save(); if (!modal.open) render(); }
   const {query} = route();
@@ -1121,31 +1215,34 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
         await supabase.auth.signOut();
         if (location.hash !== '#/login') location.hash = '/login';
       } else if (profile && profile.status === 'Active') {
-        let localUser = db.users.find(u => u.id === sessionObj.user.id);
-        if (!localUser) {
-          localUser = {
-            id: sessionObj.user.id,
-            role: profile.role,
-            identifier: profile.identifier || '',
-            email: sessionObj.user.email,
-            name: profile.full_name || 'User',
-            status: 'Active',
-            requiredHours: profile.required_hours || 600,
-            course: profile.course || 'BS Information Technology',
-            company: profile.company || '',
-            supervisorId: profile.supervisor_id || null
-          };
-          db.users.push(localUser);
-        } else {
-          localUser.role = profile.role;
-          localUser.name = profile.full_name || localUser.name;
-          localUser.identifier = profile.identifier || localUser.identifier;
-          localUser.email = sessionObj.user.email;
-          localUser.status = 'Active';
-        }
-        if (!session) {
-          storeSession(localUser);
-          render();
+        const routeRole = route().role?.toLowerCase();
+        if (!['student', 'supervisor', 'coordinator'].includes(routeRole) || profile.role.toLowerCase() === routeRole) {
+          let localUser = db.users.find(u => u.id === sessionObj.user.id);
+          if (!localUser) {
+            localUser = {
+              id: sessionObj.user.id,
+              role: profile.role,
+              identifier: profile.identifier || '',
+              email: sessionObj.user.email,
+              name: profile.full_name || 'User',
+              status: 'Active',
+              requiredHours: profile.required_hours || 600,
+              course: profile.course || 'BS Information Technology',
+              company: profile.company || '',
+              supervisorId: profile.supervisor_id || null
+            };
+            db.users.push(localUser);
+          } else {
+            localUser.role = profile.role;
+            localUser.name = profile.full_name || localUser.name;
+            localUser.identifier = profile.identifier || localUser.identifier;
+            localUser.email = sessionObj.user.email;
+            localUser.status = 'Active';
+          }
+          if (!session || session.user?.role?.toLowerCase() === profile.role.toLowerCase()) {
+            storeSession(localUser);
+            render();
+          }
         }
       }
     }, 0);
@@ -1205,33 +1302,36 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
       await supabase.auth.signOut();
       if (location.hash !== '#/login') location.hash = '/login';
     } else if (profile && profile.status === 'Active') {
-      let localUser = db.users.find(u => u.id === initSession.user.id);
-      if (!localUser) {
-        localUser = {
-          id: initSession.user.id,
-          role: profile.role,
-          identifier: profile.identifier || '',
-          email: initSession.user.email,
-          name: profile.full_name || 'User',
-          status: 'Active',
-          requiredHours: profile.required_hours || 600,
-          course: profile.course || 'BS Information Technology',
-          company: profile.company || '',
-          supervisorId: profile.supervisor_id || null
-        };
-        db.users.push(localUser);
-      } else {
-        localUser.role = profile.role;
-        localUser.name = profile.full_name || localUser.name;
-        localUser.identifier = profile.identifier || localUser.identifier;
-        localUser.email = initSession.user.email;
-        localUser.status = 'Active';
+      const routeRole = route().role?.toLowerCase();
+      if (!['student', 'supervisor', 'coordinator'].includes(routeRole) || profile.role.toLowerCase() === routeRole) {
+        let localUser = db.users.find(u => u.id === initSession.user.id);
+        if (!localUser) {
+          localUser = {
+            id: initSession.user.id,
+            role: profile.role,
+            identifier: profile.identifier || '',
+            email: initSession.user.email,
+            name: profile.full_name || 'User',
+            status: 'Active',
+            requiredHours: profile.required_hours || 600,
+            course: profile.course || 'BS Information Technology',
+            company: profile.company || '',
+            supervisorId: profile.supervisor_id || null
+          };
+          db.users.push(localUser);
+        } else {
+          localUser.role = profile.role;
+          localUser.name = profile.full_name || localUser.name;
+          localUser.identifier = profile.identifier || localUser.identifier;
+          localUser.email = initSession.user.email;
+          localUser.status = 'Active';
+        }
+        connectCoreUsers(db);
+        storeSession(localUser);
+        setTimeout(async () => {
+          if (await syncRemote(supabase, db)) { connectCoreUsers(db); save(); if (!modal.open) render(); }
+        }, 0);
       }
-      connectCoreUsers(db);
-      storeSession(localUser);
-      setTimeout(async () => {
-        if (await syncRemote(supabase, db)) { connectCoreUsers(db); save(); if (!modal.open) render(); }
-      }, 0);
     }
   }
   render();
