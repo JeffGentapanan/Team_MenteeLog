@@ -73,10 +73,16 @@
     position: sticky;
     top: 0;
     z-index: 1000;
-    transition: box-shadow 0.3s ease;
+    transition: box-shadow 0.3s ease, background 0.3s ease, backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease;
 }
 .scrolled-header {
-    box-shadow: 0 8px 24px rgba(88, 17, 26, 0.12) !important;
+    box-shadow: 0 4px 20px -2px rgba(88, 17, 26, 0.08) !important;
+}
+.topbar.scrolled-header {
+    background: rgba(250, 244, 232, 0.88) !important;
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    border-bottom: 1px solid rgba(88, 17, 26, 0.08);
 }
 .reference-header nav {
     align-items: center;
@@ -1449,29 +1455,71 @@ html, body {
 
 
 /* =========================================
-   PUBLIC HEADER: TRANSPARENT AT TOP, SOLID ON SCROLL
+   PUBLIC HEADER: TRANSPARENT AT TOP, FROSTED GLASS BLUR ON SCROLL
    ========================================= */
 .public-site .reference-header {
     position: fixed; top: 0; left: 0; right: 0; width: 100%;
     animation: none;
     background: linear-gradient(to bottom, rgba(20, 5, 8, 0.55), rgba(20, 5, 8, 0));
     box-shadow: none;
-    transition: background 0.3s ease, box-shadow 0.3s ease;
+    border-bottom: 1px solid transparent;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    transition: background 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                backdrop-filter 0.35s ease,
+                -webkit-backdrop-filter 0.35s ease,
+                border-color 0.35s ease,
+                box-shadow 0.35s ease;
 }
 .public-site .reference-header nav a { color: #FFFFFF; transition: color 0.3s ease; }
-.public-site .reference-header .header-actions .header-activate { color: #FFFFFF; border-color: #FFFFFF; }
+.public-site .reference-header .header-actions .header-activate { color: #FFFFFF; border-color: #FFFFFF; transition: all 0.3s ease; }
 .public-site .reference-header .header-actions .header-activate:hover { background: #FFFFFF; color: #58111A; }
-.public-site .reference-header .header-actions .btn:not(.header-activate) { background: #FAF4E8; color: #58111A; }
+.public-site .reference-header .header-actions .btn:not(.header-activate) { background: #FAF4E8; color: #58111A; transition: all 0.3s ease; }
 
-/* Scrolled state: cream bar + burgundy text */
+/* Scrolled state: Translucent frosted glass blur + brand burgundy accents */
 .public-site .reference-header.scrolled-header {
-    background: #FAF4E8;
-    box-shadow: 0 6px 20px rgba(88, 17, 26, 0.12) !important;
+    background: rgba(250, 244, 232, 0.82) !important;
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+    border-bottom: 1px solid rgba(88, 17, 26, 0.08);
+    box-shadow: 0 4px 20px -2px rgba(88, 17, 26, 0.08) !important;
 }
-.public-site .reference-header.scrolled-header nav a { color: #58111A; }
-.public-site .reference-header.scrolled-header .header-actions .header-activate { color: #58111A; border-color: #58111A; }
-.public-site .reference-header.scrolled-header .header-actions .header-activate:hover { background: #58111A; color: #FFFFFF; }
-.public-site .reference-header.scrolled-header .header-actions .btn:not(.header-activate) { background: #58111A; color: #FFFFFF; }
+.public-site .reference-header.scrolled-header nav a {
+    color: #58111A;
+    font-weight: 600;
+}
+.public-site .reference-header.scrolled-header nav a:hover {
+    color: #D85A63;
+}
+.public-site .reference-header.scrolled-header nav a.selected {
+    text-decoration-color: #58111A;
+}
+.public-site .reference-header.scrolled-header .mobile-menu-btn {
+    color: #58111A;
+}
+.public-site .reference-header.scrolled-header .header-actions .header-activate {
+    color: #58111A;
+    border: 1.5px solid #58111A;
+    background: rgba(250, 244, 232, 0.35);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.public-site .reference-header.scrolled-header .header-actions .header-activate:hover {
+    background: #58111A;
+    color: #FFFFFF;
+    border-color: #58111A;
+}
+.public-site .reference-header.scrolled-header .header-actions .btn:not(.header-activate) {
+    background: #58111A;
+    color: #FFFFFF;
+    border: 1.5px solid #58111A;
+    box-shadow: 0 2px 8px rgba(88, 17, 26, 0.18);
+}
+.public-site .reference-header.scrolled-header .header-actions .btn:not(.header-activate):hover {
+    background: #751a24;
+    border-color: #751a24;
+    transform: translateY(-1px);
+}
 
 /* Perfectly centered public nav: brand | nav | actions with equal side columns */
 @media (min-width: 651px) {
@@ -1512,14 +1560,14 @@ html, body {
     .public-site .reference-header .header-actions { gap: 6px; }
     .public-site .reference-header .header-actions .btn { font-size: 11px; padding: 5px 10px; min-height: 28px; }
 
-    /* Scrolled state on mobile still solid */
-    .public-site .reference-header {
-        background: #FAF4E8 !important;
-        box-shadow: 0 4px 12px rgba(88, 17, 26, 0.1) !important;
+    /* Scrolled state on mobile: Frosted glass blur */
+    .public-site .reference-header.scrolled-header {
+        background: rgba(250, 244, 232, 0.88) !important;
+        backdrop-filter: blur(14px) saturate(180%);
+        -webkit-backdrop-filter: blur(14px) saturate(180%);
+        box-shadow: 0 4px 14px rgba(88, 17, 26, 0.08) !important;
+        border-bottom: 1px solid rgba(88, 17, 26, 0.08);
     }
-    .public-site .reference-header nav a { color: #58111A !important; }
-    .public-site .reference-header .header-actions .header-activate { color: #58111A !important; border-color: #58111A !important; }
-    .public-site .reference-header .header-actions .btn:not(.header-activate) { background: #58111A !important; color: #FFFFFF !important; }
 }
 
 /* ── HERO SECTION MOBILE ── */
