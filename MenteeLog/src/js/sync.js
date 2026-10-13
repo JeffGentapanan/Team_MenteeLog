@@ -191,7 +191,7 @@ export async function syncRemote(supabase, db) {
           supervisorId: sup.id,
           title: 'Software Engineer Intern',
           company: sup.company,
-          location: 'BGC, Taguig',
+          location: 'Mandurriao, Iloilo City',
           mode: 'Hybrid',
           courses: ['BSIT', 'BSCS'],
           slots: 5,

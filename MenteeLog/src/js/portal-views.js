@@ -155,7 +155,7 @@ export function createPortalViews(c){
     const list=db().jobs.filter(j=>(isStudent?j.status==='Active':u().role==='Supervisor'?j.supervisorId===u().id:true)&&match(j.title,j.company,j.location,j.skills)&&(isStudent?(courseMatches(j.courses, c.view.course))&&(c.view.mode==='All'||j.location.toLowerCase().includes(c.view.mode.toLowerCase())):sub==='archived'?j.status==='Closed':j.status!=='Closed'));
     return (isStudent?'': '')+heading(isStudent?'OJT Placement Directory':'Slot Management',isStudent?'Browse and apply to accredited host training establishments':e(u().company||'Partner companies')+' · Internship positions',isStudent?'':b('Post New Work','job-edit','','','plus'))+(isStudent?
     `<div class="row wrap gap-8 mb32" style="margin-bottom: 32px;">
-        ${['All','BSCS','BSIT','BSCompE','BSECE','BGC, Taguig','Davao','Cebu'].map(s=>b(s,'ref-course',s, (s==='All' && c.view.course==='All' && c.view.mode==='All') || (s!=='All' && (c.view.course===s || c.view.mode===s)) ? 'ojt-filter active' : 'ojt-filter')).join('')}
+        ${['All','BSCS','BSIT','BSCompE','BSECE','Mandurriao','City Proper','Jaro'].map(s=>b(s,'ref-course',s, (s==='All' && c.view.course==='All' && c.view.mode==='All') || (s!=='All' && (c.view.course===s || c.view.mode===s)) ? 'ojt-filter active' : 'ojt-filter')).join('')}
         ${b('+ More Filters','ref-more-filters','',c.view.more?'ojt-filter active':'ojt-filter')}
       </div>
       ${c.view.more?panel('Filter Opportunities',form(`<div class="grid-2">${sel('Program','course',['All','BSCS','BSIT','BSCompE','BSECE'],c.view.course)}${sel('Location','mode',['All',...new Set(db().jobs.map(j=>j.location))],c.view.mode)}</div>`,v=>{c.view.course=v.course;c.view.mode=v.mode;c.render();},'Apply Filters'), 'mb32'):''}
@@ -244,7 +244,7 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
     if(routes[name]){location.hash=href(...routes[name],id);return true;}
     if(name==='job-edit'&&id){location.hash=href('jobs','edit',id);return true;}
     if(name==='ref-course'){
-    const locs = ['BGC, Taguig','Davao','Cebu'];
+    const locs = ['Mandurriao','City Proper','Jaro','La Paz','Molo'];
     if(id==='All') { c.view.course='All'; c.view.mode='All'; }
     else if(locs.includes(id)) { c.view.mode = c.view.mode===id ? 'All' : id; c.view.course = 'All'; }
     else { c.view.course = c.view.course===id ? 'All' : id; c.view.mode = 'All'; }
