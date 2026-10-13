@@ -2086,3 +2086,70 @@ html {
 /* Universal Fix for Button Click Glitches */
 .btn, button, .icon-btn, .nav-link { -webkit-font-smoothing: antialiased !important; -moz-osx-font-smoothing: grayscale !important; transform: translate3d(0, 0, 0); transform-style: preserve-3d; outline: none; }
 .btn:active, button:active, .icon-btn:active { transform: translate3d(0, 0, 0) scale(0.95) !important; }
+
+/* =========================================
+   PUBLIC SITE: ACADEMIC CONSTELLATION & NETWORK BACKGROUND
+   ========================================= */
+.public-site {
+    position: relative;
+    background: var(--cream);
+    color: var(--burgundy);
+    min-height: 100vh;
+}
+
+.public-constellation-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1; /* Floating directly above body background, below content */
+    overflow: hidden;
+}
+
+.public-constellation-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+}
+
+/* Ensure hero photo & footer cleanly cover the background canvas */
+.reference-hero {
+    position: relative;
+    z-index: 3;
+}
+
+.reference-footer {
+    position: relative;
+    z-index: 3;
+}
+
+/* Content sections float at z-index 2 with transparent background */
+.opportunities,
+.why-section,
+.how-section,
+.partner-section,
+.join-section,
+.faq-section,
+.role-info,
+.guide-full-page,
+.about-hero,
+.about-grid-2,
+.about-grid-3,
+.about-stats-banner,
+.contact-section {
+    position: relative;
+    z-index: 2;
+}
+
+/* Solid card surfaces stay crisp, elevated, and high-contrast */
+.home-job,
+.benefit-card,
+.how-card,
+.about-card,
+.guide-card,
+.partner-list span,
+.public-stats > div {
+    position: relative;
+    z-index: 2;
+}
+
