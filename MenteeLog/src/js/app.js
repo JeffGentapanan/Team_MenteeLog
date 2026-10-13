@@ -51,12 +51,19 @@ if(db.activeShifts.length === 0) {
 
 let capturedForm=null,capturingForm=false;
 let portals;
-try{session=JSON.parse(sessionStorage.getItem(SESSION));}catch{}
+try{session=JSON.parse(localStorage.getItem(SESSION)||sessionStorage.getItem(SESSION));}catch{}
 function save(){try{localStorage.setItem(STORAGE,JSON.stringify(db));}catch{storageIssue=true;toast('Browser storage is full or unavailable. Changes last only until this page closes.');}}
 
 function currentUser(){
-    if(!session||session.expires<Date.now())return null;
-    const u = db.users.find(u=>u.id===session.id&&u.status==='Active')||null;
+    if(!session)return null;
+    let u = db.users.find(u=>u.id===session.id&&u.status==='Active')||null;
+    if(!u && session.user && session.user.id===session.id){
+        u = session.user;
+        if(!db.users.some(x=>x.id===u.id)){
+            db.users.push(u);
+        }
+    }
+    if(!u)return null;
     
     // DEMO FIX: Inject 5 Example Interns to demonstrate roster scaling
     if (u && u.role === 'Supervisor') {
@@ -135,8 +142,8 @@ function currentUser(){
     return u;
 }
 
-function storeSession(user){session={id:user.id,expires:Date.now()+30*60*1000};try{sessionStorage.setItem(SESSION,JSON.stringify(session));}catch{toast('Session storage unavailable; this demo session will end when you reload.');}}
-function logout(){session=null;try{sessionStorage.removeItem(SESSION);}catch{}modal.close();location.hash='/';render();}
+function storeSession(user){session={id:user.id,user:user};try{localStorage.setItem(SESSION,JSON.stringify(session));sessionStorage.setItem(SESSION,JSON.stringify(session));}catch{}}
+function logout(){session=null;try{sessionStorage.removeItem(SESSION);localStorage.removeItem(SESSION);}catch{}supabase.auth.signOut().catch(()=>{});modal.close();location.hash='/';render();}
 function notify(userId,type,title,message){db.notifications.unshift({id:crypto.randomUUID(),userId,type,title,message,date:new Date().toISOString(),read:false});}
 function audit(action){db.audit.unshift({id:crypto.randomUUID(),actor:currentUser()?.name||'Demo',action,date:new Date().toISOString()});db.audit=db.audit.slice(0,150);}
 function toast(message){const el=$('#toast');el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,5000);}
@@ -491,7 +498,7 @@ const actionRoles={ 'job-edit':['Supervisor','Coordinator'],'student-detail':['S
 async function action(name,id,el){
   const publicActions=['demo','auth-role','forgot','login','toggle-password','close','watch-demo','privacy','team-connect'];
   const u=currentUser();
-  if(!publicActions.includes(name)&&!u){logout();location.hash='/login';throw new Error('Your demo session expired. Sign in again.');}
+  if(!publicActions.includes(name)&&!u){location.hash='/login';throw new Error('Please sign in to continue.');}
   if(actionRoles[name]&&!actionRoles[name].includes(u?.role))throw new Error('This action is unavailable for your role.');
   if(u&&await portals.action(name,id,el))return;
   switch(name){
@@ -989,10 +996,9 @@ window.addEventListener('hashchange', async () => {if(typeof searchDebounce!=='u
   }
   $('#main')?.focus({preventScroll:true});
 });
-window.addEventListener('storage',event=>{if(event.key===STORAGE){const keep=session?db.users.find(u=>u.id===session.id):null;db=ensureCreatorAccounts(load());if(keep&&!db.users.some(u=>u.id===keep.id))db.users.push(keep);render();}});
+window.addEventListener('storage',event=>{if(event.key===STORAGE){const keep=session?(db.users.find(u=>u.id===session.id)||session.user):null;db=ensureCreatorAccounts(load());if(keep&&!db.users.some(u=>u.id===keep.id))db.users.push(keep);render();}});
 window.addEventListener('storage', ev => { if(ev.key !== STORAGE || !ev.newValue) return; try { const next = JSON.parse(ev.newValue); if(next?.version === 1){ db = next; if(!modal.open) render(); else if(terminalFor) tkTerminal(terminalFor); } } catch {} });
-let missingUserTicks = 0;
-setInterval(()=>{ const timer=$('#shift-timer'); if(timer&&currentUser()?.role==='Student'){ const active = db.logs.find(sh=>sh.studentId===currentUser().id && sh.status==='Running'); timer.textContent=active?netElapsed(active):'00:00:00'; } document.querySelectorAll('.tk-timer').forEach(el => { const sid = el.getAttribute('data-student'); if(sid){ const sh=db.logs.find(x=>x.studentId===sid && x.status==='Running'); el.textContent = netElapsed(sh); return; } const start = el.getAttribute('data-start'); if(start) el.textContent = elapsed(start); }); document.querySelectorAll('.tk-break-timer').forEach(el => { const start = el.getAttribute('data-start'); if(start) el.textContent = elapsed(start); }); if(session&&!currentUser()){ missingUserTicks++; if(missingUserTicks >= 10) { logout(); location.hash='/login'; toast('Your demo session ended. Sign in to continue.'); } } else { missingUserTicks = 0; } }, 1000);
+setInterval(()=>{ const timer=$('#shift-timer'); if(timer&&currentUser()?.role==='Student'){ const active = db.logs.find(sh=>sh.studentId===currentUser().id && sh.status==='Running'); timer.textContent=active?netElapsed(active):'00:00:00'; } document.querySelectorAll('.tk-timer').forEach(el => { const sid = el.getAttribute('data-student'); if(sid){ const sh=db.logs.find(x=>x.studentId===sid && x.status==='Running'); el.textContent = netElapsed(sh); return; } const start = el.getAttribute('data-start'); if(start) el.textContent = elapsed(start); }); document.querySelectorAll('.tk-break-timer').forEach(el => { const start = el.getAttribute('data-start'); if(start) el.textContent = elapsed(start); }); }, 1000);
 function userIsMidInput() {
   const el = document.activeElement;
   if (el && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) && el.id !== 'global-search') return true;
@@ -1042,10 +1048,37 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
   if (event === 'SIGNED_OUT' || recoveryActive) return;
   if (sessionObj?.user) {
     setTimeout(async () => {
-      const { data: profile, error } = await supabase.from('profiles').select('status').eq('id', sessionObj.user.id).single();
-      if (error || !profile || profile.status !== 'Active') {
+      const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', sessionObj.user.id).single();
+      if ((profile && profile.status !== 'Active') || (error && error.code === 'PGRST116')) {
         await supabase.auth.signOut();
         if (location.hash !== '#/login') location.hash = '/login';
+      } else if (profile && profile.status === 'Active') {
+        let localUser = db.users.find(u => u.id === sessionObj.user.id);
+        if (!localUser) {
+          localUser = {
+            id: sessionObj.user.id,
+            role: profile.role,
+            identifier: profile.identifier || '',
+            email: sessionObj.user.email,
+            name: profile.full_name || 'User',
+            status: 'Active',
+            requiredHours: profile.required_hours || 600,
+            course: profile.course || 'BS Information Technology',
+            company: profile.company || '',
+            supervisorId: profile.supervisor_id || null
+          };
+          db.users.push(localUser);
+        } else {
+          localUser.role = profile.role;
+          localUser.name = profile.full_name || localUser.name;
+          localUser.identifier = profile.identifier || localUser.identifier;
+          localUser.email = sessionObj.user.email;
+          localUser.status = 'Active';
+        }
+        if (!session) {
+          storeSession(localUser);
+          render();
+        }
       }
     }, 0);
   }
@@ -1099,11 +1132,34 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
       db.jobs = [];
       db.applications = [];
     }
-    const { data: profile, error } = await supabase.from('profiles').select('status').eq('id', initSession.user.id).single();
-    if (error || !profile || profile.status !== 'Active') {
+    const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', initSession.user.id).single();
+    if ((profile && profile.status !== 'Active') || (error && error.code === 'PGRST116')) {
       await supabase.auth.signOut();
       if (location.hash !== '#/login') location.hash = '/login';
-    } else {
+    } else if (profile && profile.status === 'Active') {
+      let localUser = db.users.find(u => u.id === initSession.user.id);
+      if (!localUser) {
+        localUser = {
+          id: initSession.user.id,
+          role: profile.role,
+          identifier: profile.identifier || '',
+          email: initSession.user.email,
+          name: profile.full_name || 'User',
+          status: 'Active',
+          requiredHours: profile.required_hours || 600,
+          course: profile.course || 'BS Information Technology',
+          company: profile.company || '',
+          supervisorId: profile.supervisor_id || null
+        };
+        db.users.push(localUser);
+      } else {
+        localUser.role = profile.role;
+        localUser.name = profile.full_name || localUser.name;
+        localUser.identifier = profile.identifier || localUser.identifier;
+        localUser.email = initSession.user.email;
+        localUser.status = 'Active';
+      }
+      storeSession(localUser);
       setTimeout(async () => {
         if (await syncRemote(supabase, db)) { save(); if (!modal.open) render(); }
       }, 0);
