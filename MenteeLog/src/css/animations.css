@@ -1648,29 +1648,6 @@ html, body {
     overflow: hidden;
 }
 
-.hero-gps-grid {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 1;
-    background-image: 
-        linear-gradient(to right, rgba(239, 223, 187, 0.05) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(239, 223, 187, 0.05) 1px, transparent 1px);
-    background-size: 54px 54px;
-    mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.95) 25%, rgba(0, 0, 0, 0) 80%);
-    -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.95) 25%, rgba(0, 0, 0, 0) 80%);
-    opacity: 0.85;
-}
-
-.hero-gps-canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 2;
-}
-
 .public-site .reference-hero-content {
     position: relative;
     z-index: 3;
@@ -2112,18 +2089,38 @@ html {
     pointer-events: none;
 }
 
-/* Ensure hero photo & footer cleanly cover the background canvas */
+/* ========================================================
+   REDWINE / MAROON SECTIONS: STRICTLY OPAQUE (NO ANIMATION)
+   The constellation animation is strictly excluded from all
+   redwine/maroon backgrounds.
+   ======================================================== */
+.maroon,
+section.maroon,
+.role-info.maroon,
+.partner-section.maroon,
+.team-section,
+.about-stats-banner,
+.reference-footer,
 .reference-hero {
-    position: relative;
-    z-index: 3;
+    position: relative !important;
+    z-index: 10 !important;
+    background-color: var(--burgundy) !important;
 }
 
-.reference-footer {
-    position: relative;
-    z-index: 3;
+.reference-hero {
+    background-color: #240509 !important;
 }
 
-/* Content sections float at z-index 2 with transparent background */
+/* Hero photo animation completely removed */
+.hero-gps-grid,
+.hero-gps-canvas {
+    display: none !important;
+}
+
+/* ========================================================
+   CREAM BODY SECTIONS: TRANSPARENT SO CONSTELLATION FLOWS NATURALLY
+   The constellation animation lives ONLY in these cream sections.
+   ======================================================== */
 .opportunities,
 .why-section,
 .how-section,
@@ -2131,6 +2128,7 @@ html {
 .join-section,
 .faq-section,
 .role-info:not(.maroon),
+.industry-list,
 .guide-full-page,
 .about-hero,
 .about-grid-2,
@@ -2148,8 +2146,11 @@ html {
 .about-card,
 .guide-card,
 .partner-list span,
-.public-stats > div {
+.public-stats > div,
+.faq-container,
+.contact-form-card {
     position: relative;
     z-index: 2;
 }
+
 

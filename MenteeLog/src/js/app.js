@@ -7,7 +7,6 @@ import {createPortalViews} from './portal-views.js';
 import {seedData,roles,navigation,rubric} from './data.js';
 import {escapeHTML as e,canAccess,approvedHours,visibleStudents,visibleLogs,visibleApplications,hoursBetween,validateUpload,csvText,parseCSV,applyToJob,reviewLog} from './domain.js';
 import { syncRemote } from './sync.js';
-import { initHeroGpsAnimation } from './hero-gps.js';
 import { initPublicConstellation } from './public-constellation.js';
 
 // Detect a password-recovery link BEFORE anything touches the URL
@@ -328,7 +327,6 @@ function render(){
   const {role,page}=route();
   if(!role||role==='public'){app.innerHTML=landing();
   setTimeout(() => {
-    initHeroGpsAnimation();
     initPublicConstellation();
     const mapEl = document.getElementById('real-map-container');
     if (mapEl && !mapEl._leaflet_id && window.L && db.shift && db.shift.gps) {
