@@ -602,7 +602,40 @@ export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
             `<button type="button" class="btn full" onclick="location.hash='/forgot'">Request New Link</button>
              <a class="auth-return" href="#/login" style="display:block;margin-top:1rem;text-align:center;">&larr; Back to Login</a>`
           :
-            `<div class="auth-tabs" role="group" aria-label="Authentication portals">${['Student','Supervisor','Coordinator'].map(r=>`<button class="${r===role?'selected':''}" data-action="auth-role" data-id="${r}" aria-pressed="${r===role}">${icon(r==='Student'?'users':r==='Supervisor'?'building':'users')} ${r}</button>`).join('')}</div><form id="login-form">${field(role==='Student'?'SR CODE':role==='Supervisor'?'CORPORATE EMAIL':'FACULTY ID','identifier',role==='Supervisor'?'email':'text','','required autocomplete="username"')}<div class="field"><label for="password">PASSWORD</label><div class="password-field"><input id="password" name="password" type="password" required autocomplete="current-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div><button type="button" class="forgot-link" data-action="forgot">Forgot Password?</button><p class="form-error" role="alert"></p><button class="btn full" type="submit">Login as ${role}</button></form>${role === "Coordinator" ? "" : `<p class="activate-link">First time here? <a href="#/activate">Activate ${role} Account</a></p>`}<a class="auth-return" href="#/">&larr; Back to Landing Page</a>`
+            `<div class="auth-tabs" role="group" aria-label="Authentication portals">${['Student','Supervisor','Coordinator'].map(r=>`<button class="${r===role?'selected':''}" data-action="auth-role" data-id="${r}" aria-pressed="${r===role}">${icon(r==='Student'?'users':r==='Supervisor'?'building':'users')} ${r}</button>`).join('')}</div>
+            <div class="auth-role-banner">
+              <div class="role-badge-icon">${icon(role==='Student'?'users':role==='Supervisor'?'building':'users')}</div>
+              <div class="role-badge-info">
+                <small>CURRENT PORTAL</small>
+                <strong>${role === 'Student' ? 'OJT Student Intern' : role === 'Supervisor' ? 'Industry Partner Supervisor' : 'Faculty OJT Coordinator'}</strong>
+              </div>
+              <span class="role-active-pulse" title="Portal Active"></span>
+            </div>
+            <form id="login-form">
+              ${field(role==='Student'?'SR CODE':role==='Supervisor'?'CORPORATE EMAIL':'FACULTY ID','identifier',role==='Supervisor'?'email':'text','','required autocomplete="username"')}
+              <div class="field">
+                <label for="password">PASSWORD</label>
+                <div class="password-field">
+                  <input id="password" name="password" type="password" required autocomplete="current-password">
+                  <button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button>
+                </div>
+              </div>
+              <button type="button" class="forgot-link" data-action="forgot">Forgot Password?</button>
+              <p class="form-error" role="alert"></p>
+              <button class="btn full auth-submit-btn" type="submit">
+                <span>Login as ${role}</span>
+                <svg class="btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </button>
+            </form>
+            ${role === "Coordinator" ? "" : `<div class="auth-activate-box"><p class="activate-link">First time here? <a href="#/activate">Activate ${role} Account &rarr;</a></p></div>`}
+            <a class="auth-return" href="#/">&larr; Back to Landing Page</a>
+            <div class="auth-card-security">
+              <svg class="security-lock-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span>BatState-U OJT System · 256-Bit SSL Encrypted</span>
+            </div>`
           }
         </div>
       </section>

@@ -568,29 +568,42 @@ html, body {
     }
 }
 
-/* Card Modern Elevation */
+/* Card Modern Elevation & Frosted Glass */
 .auth-reference-card {
     position: relative;
     z-index: 3;
-    background: #FFFFFF !important;
-    border-radius: 20px !important;
+    background: rgba(255, 255, 255, 0.97) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 22px !important;
     width: 440px;
     max-width: 100%;
     max-height: calc(100vh - 40px);
     overflow-y: auto;
-    box-shadow: 0 25px 60px -15px rgba(88, 17, 26, 0.18), 0 0 0 1px rgba(88, 17, 26, 0.08) !important;
+    box-shadow: 0 30px 75px -15px rgba(88, 17, 26, 0.22), 0 0 0 1px rgba(88, 17, 26, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+.auth-reference-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #58111A 0%, #D85A63 35%, #EFDFBB 70%, #059669 100%);
+    z-index: 25;
+    border-radius: 22px 22px 0 0;
+}
 .auth-reference-card:hover {
-    box-shadow: 0 32px 75px -12px rgba(88, 17, 26, 0.24), 0 0 0 1px rgba(88, 17, 26, 0.14) !important;
+    box-shadow: 0 36px 85px -12px rgba(88, 17, 26, 0.26), 0 0 0 1px rgba(88, 17, 26, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
 }
 .auth-reference-card header {
     position: sticky !important;
     top: 0 !important;
     z-index: 10 !important;
-    background: linear-gradient(135deg, #58111A 0%, #3e0c13 100%) !important;
-    border-bottom: 1px solid rgba(239, 223, 187, 0.2);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #58111A 0%, #420d14 100%) !important;
+    border-bottom: 2px solid rgba(239, 223, 187, 0.35) !important;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -617,33 +630,38 @@ html, body {
     width: 100% !important;
     margin: 0 0 6px !important;
     color: #FFFFFF !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em !important;
 }
 .auth-reference-card header p {
     text-align: center !important;
     width: 100% !important;
     margin: 0 !important;
     color: #EFDFBB !important;
+    font-size: 13.5px !important;
+    opacity: 0.95 !important;
 }
 
 .auth-reference-body {
-    padding: 30px 32px 25px !important;
+    padding: 26px 30px 24px !important;
 }
 
 /* Modern Segmented Capsule Tabs */
 .auth-tabs {
     display: flex !important;
-    background: #f5ebe0 !important;
+    background: #f2e7dc !important;
     padding: 4px !important;
-    border-radius: 12px !important;
-    border: 1px solid rgba(88, 17, 26, 0.1) !important;
-    margin: 0 0 20px !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(88, 17, 26, 0.12) !important;
+    margin: 0 0 14px !important;
     gap: 4px !important;
 }
 .auth-tabs button {
     flex: 1 !important;
     padding: 9px 8px !important;
     border: none !important;
-    border-radius: 9px !important;
+    border-radius: 10px !important;
     background: transparent !important;
     color: var(--burgundy) !important;
     font-size: 13px !important;
@@ -656,38 +674,221 @@ html, body {
     cursor: pointer !important;
 }
 .auth-tabs button:hover:not(.selected) {
-    background: rgba(255, 255, 255, 0.7) !important;
+    background: rgba(255, 255, 255, 0.75) !important;
     color: #762535 !important;
+    transform: translateY(-1px) !important;
 }
 .auth-tabs button.selected {
-    background: #58111A !important;
+    background: linear-gradient(135deg, #58111A 0%, #762535 100%) !important;
     color: #FAF4E8 !important;
-    box-shadow: 0 4px 12px rgba(88, 17, 26, 0.22) !important;
+    box-shadow: 0 4px 14px rgba(88, 17, 26, 0.26) !important;
     transform: translateY(-1px) !important;
 }
 
-/* Modernized Inputs and Buttons */
+/* Interactive Role Indicator Banner */
+.auth-role-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, rgba(88, 17, 26, 0.04) 0%, rgba(239, 223, 187, 0.2) 100%);
+    border: 1px solid rgba(88, 17, 26, 0.12);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    transition: all 0.25s ease;
+}
+.role-badge-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(88, 17, 26, 0.08);
+    color: #58111A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.role-badge-icon svg {
+    width: 18px;
+    height: 18px;
+}
+.role-badge-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    text-align: left;
+}
+.role-badge-info small {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    color: #882b3c;
+    line-height: 1.2;
+}
+.role-badge-info strong {
+    font-size: 13px;
+    font-weight: 700;
+    color: #58111A;
+    line-height: 1.3;
+}
+.role-active-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.22);
+    animation: badgePulse 2s infinite ease-in-out;
+    flex-shrink: 0;
+}
+
+/* Modern Input Controls & Focus States */
+.auth-reference .field {
+    margin-bottom: 16px !important;
+    text-align: left !important;
+}
+.auth-reference .field label {
+    display: block !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    color: #6c232c !important;
+    margin-bottom: 6px !important;
+    text-transform: uppercase !important;
+}
 .auth-reference input {
-    height: 44px !important;
+    height: 46px !important;
     border: 1.5px solid #dfd1c3 !important;
-    border-radius: 10px !important;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    border-radius: 12px !important;
+    background: #FAF6F0 !important;
+    padding: 0 14px !important;
+    font-size: 14px !important;
+    color: var(--ink) !important;
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+}
+.auth-reference input:hover {
+    background: #FFFFFF !important;
+    border-color: rgba(88, 17, 26, 0.45) !important;
 }
 .auth-reference input:focus {
+    background: #FFFFFF !important;
     border-color: #58111A !important;
     box-shadow: 0 0 0 3.5px rgba(88, 17, 26, 0.12) !important;
+    outline: none !important;
 }
-.auth-reference .btn.full {
-    height: 46px !important;
-    border-radius: 10px !important;
-    background: linear-gradient(135deg, #58111A 0%, #762535 100%) !important;
-    box-shadow: 0 4px 16px rgba(88, 17, 26, 0.22) !important;
-    transition: all 0.22s ease !important;
+.auth-reference .password-field {
+    position: relative !important;
 }
-.auth-reference .btn.full:hover {
+.auth-reference .password-field input {
+    padding-right: 42px !important;
+}
+.auth-reference .password-field button {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: none !important;
+    border: none !important;
+    color: #7d6b63 !important;
+    cursor: pointer !important;
+    padding: 4px !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: color 0.18s ease !important;
+}
+.auth-reference .password-field button:hover {
+    color: #58111A !important;
+}
+
+/* Submit Button with Luminous Glow */
+.auth-submit-btn {
+    height: 48px !important;
+    border-radius: 12px !important;
+    background: linear-gradient(135deg, #58111A 0%, #762535 50%, #58111A 100%) !important;
+    box-shadow: 0 6px 20px rgba(88, 17, 26, 0.28) !important;
+    color: #FAF4E8 !important;
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.03em !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    margin-top: 6px !important;
+}
+.auth-submit-btn:hover {
     transform: translateY(-2px) !important;
-    box-shadow: 0 8px 24px rgba(88, 17, 26, 0.32) !important;
+    box-shadow: 0 10px 28px rgba(88, 17, 26, 0.38) !important;
     background: linear-gradient(135deg, #6c1822 0%, #882b3c 100%) !important;
+}
+.auth-submit-btn .btn-arrow {
+    transition: transform 0.2s ease !important;
+}
+.auth-submit-btn:hover .btn-arrow {
+    transform: translateX(4px) !important;
+}
+
+/* Forgot Link, Activate Box, and Security Seal */
+.forgot-link {
+    font-size: 12.5px !important;
+    color: #6c232c !important;
+    font-weight: 600 !important;
+    margin: 4px 0 14px auto !important;
+    display: block !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    transition: color 0.18s ease !important;
+}
+.forgot-link:hover {
+    color: #58111A !important;
+    text-decoration: underline !important;
+}
+.auth-activate-box {
+    margin: 16px 0 12px !important;
+    padding: 10px 14px !important;
+    background: rgba(239, 223, 187, 0.35) !important;
+    border: 1px dashed rgba(88, 17, 26, 0.25) !important;
+    border-radius: 11px !important;
+    text-align: center !important;
+}
+.auth-activate-box p {
+    margin: 0 !important;
+    font-size: 13px !important;
+    color: #555 !important;
+}
+.auth-activate-box a {
+    color: #58111A !important;
+    text-decoration: none !important;
+    font-weight: 700 !important;
+}
+.auth-activate-box a:hover {
+    text-decoration: underline !important;
+}
+.auth-card-security {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(88, 17, 26, 0.08);
+    font-size: 11px;
+    color: #88746c;
+    font-family: inherit;
+}
+.security-lock-icon {
+    color: #059669;
+    flex-shrink: 0;
 }
 
 .auth-watermark {
