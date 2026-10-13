@@ -758,17 +758,38 @@ document.addEventListener('submit',async event=>{
            throw new Error('Too many attempts. Try again in ' + Math.ceil((loginCooldownUntil - Date.now())/1000) + 's.');
         }
         
-        const invalidCredsMsg = authRole === 'Supervisor' ? 'Invalid email or password.' : authRole === 'Coordinator' ? 'Invalid Faculty ID or password.' : 'Invalid SR code or password.';
+        const invalidCredsMsg = authRole === 'Supervisor' ? 'Invalid corporate email or password.' : authRole === 'Coordinator' ? 'Invalid Faculty ID or password.' : 'Invalid SR Code or password.';
         
-        let targetEmail = values.identifier.trim();
-        if (!targetEmail.includes('@')) {
-          const { data: emailData, error: rpcError } = await supabase.rpc('get_login_email', { p_identifier: targetEmail });
+        const inputId = values.identifier.trim();
+        let targetEmail = inputId;
+
+        if (authRole === 'Student') {
+          if (inputId.includes('@')) {
+            throw new Error('Students must sign in using their SR Code, not an email.');
+          }
+          const { data: emailData, error: rpcError } = await supabase.rpc('get_login_email', { p_identifier: inputId });
           if (rpcError || !emailData) {
              failedLoginAttempts++;
              if (failedLoginAttempts >= 5) loginCooldownUntil = Date.now() + 60000;
              throw new Error(invalidCredsMsg);
           }
           targetEmail = emailData;
+        } else if (authRole === 'Coordinator') {
+          if (inputId.includes('@')) {
+            throw new Error('Coordinators must sign in using their Faculty ID, not an email.');
+          }
+          const { data: emailData, error: rpcError } = await supabase.rpc('get_login_email', { p_identifier: inputId });
+          if (rpcError || !emailData) {
+             failedLoginAttempts++;
+             if (failedLoginAttempts >= 5) loginCooldownUntil = Date.now() + 60000;
+             throw new Error(invalidCredsMsg);
+          }
+          targetEmail = emailData;
+        } else if (authRole === 'Supervisor') {
+          if (!inputId.includes('@')) {
+            throw new Error('Supervisors must sign in using their corporate email address.');
+          }
+          targetEmail = inputId;
         }
 
         const { data, error } = await supabase.auth.signInWithPassword({
