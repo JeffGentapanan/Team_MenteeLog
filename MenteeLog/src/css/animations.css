@@ -146,7 +146,37 @@ html, body {
     scrollbar-width: none !important;  
 }
 
-/* 9. Auth Page Perfect Fit Alignment */
+/* =========================================
+   AUTH PAGE DESIGN & ANIMATIONS (React Bits Inspired)
+   ========================================= */
+@keyframes floatOrb1 {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(45px, -35px) scale(1.12); }
+    100% { transform: translate(-25px, 30px) scale(0.95); }
+}
+@keyframes floatOrb2 {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-40px, 40px) scale(1.15); }
+    100% { transform: translate(35px, -25px) scale(0.9); }
+}
+@keyframes floatOrb3 {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, 25px) scale(1.08); }
+    100% { transform: translate(-35px, -30px) scale(0.92); }
+}
+@keyframes badgeFloat1 {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(0.4deg); }
+}
+@keyframes badgeFloat2 {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(8px) rotate(-0.4deg); }
+}
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.25); opacity: 1; }
+}
+
 .auth-reference {
     height: 100vh;
     overflow: hidden;
@@ -156,19 +186,237 @@ html, body {
     height: 100vh;
 }
 .auth-reference-main {
+    position: relative;
     height: 100vh;
-    padding: 20px;
+    padding: 24px;
     box-sizing: border-box;
     display: grid;
     place-items: center;
+    background: #FAF4E8 !important;
+    overflow: hidden;
+    z-index: 1;
 }
+
+/* Subtle Interactive Spotlight */
+.auth-reference-main::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(650px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), rgba(216, 90, 99, 0.08), transparent 60%);
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity 0.3s ease;
+}
+
+/* React Bits Geometric Dot Grid */
+.auth-bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(88, 17, 26, 0.12) 1.2px, transparent 1.2px);
+    background-size: 26px 26px;
+    mask-image: radial-gradient(circle at center, black 45%, transparent 90%);
+    -webkit-mask-image: radial-gradient(circle at center, black 45%, transparent 90%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Ambient Glowing Orbs */
+.auth-orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(55px);
+    will-change: transform;
+}
+.auth-orb-1 {
+    width: 360px;
+    height: 360px;
+    top: -50px;
+    right: -50px;
+    background: radial-gradient(circle, rgba(216, 90, 99, 0.22) 0%, rgba(88, 17, 26, 0.08) 60%, transparent 75%);
+    animation: floatOrb1 16s ease-in-out infinite alternate;
+}
+.auth-orb-2 {
+    width: 300px;
+    height: 300px;
+    bottom: -40px;
+    left: -40px;
+    background: radial-gradient(circle, rgba(239, 223, 187, 0.9) 0%, rgba(221, 168, 83, 0.2) 60%, transparent 75%);
+    animation: floatOrb2 20s ease-in-out infinite alternate;
+}
+.auth-orb-3 {
+    width: 220px;
+    height: 220px;
+    top: 50%;
+    right: 8%;
+    background: radial-gradient(circle, rgba(88, 17, 26, 0.12) 0%, transparent 70%);
+    animation: floatOrb3 14s ease-in-out infinite alternate;
+}
+
+/* Floating Trust Badges */
+.auth-floating-badge {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(88, 17, 26, 0.14);
+    border-radius: 30px;
+    box-shadow: 0 14px 32px rgba(88, 17, 26, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 2;
+    pointer-events: none;
+    transition: transform 0.3s ease;
+}
+.auth-floating-badge.badge-tr {
+    top: 36px;
+    right: 36px;
+    animation: badgeFloat1 5s ease-in-out infinite;
+}
+.auth-floating-badge.badge-bl {
+    bottom: 38px;
+    left: 28px;
+    animation: badgeFloat2 6s ease-in-out infinite;
+}
+.auth-floating-badge.badge-br {
+    bottom: 34px;
+    right: 36px;
+    animation: badgeFloat1 7s ease-in-out infinite 1s;
+}
+.badge-pulse-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.25);
+    animation: badgePulse 2s infinite ease-in-out;
+}
+.badge-svg {
+    width: 17px;
+    height: 17px;
+    color: var(--burgundy);
+    flex-shrink: 0;
+}
+.badge-text {
+    display: flex;
+    flex-direction: column;
+}
+.badge-text strong {
+    font-size: 11.5px;
+    color: var(--burgundy);
+    font-weight: 700;
+    line-height: 1.25;
+}
+.badge-text small {
+    font-size: 10px;
+    color: #6B7280;
+    line-height: 1.25;
+}
+
+@media (max-width: 1250px) {
+    .auth-floating-badge.badge-br {
+        display: none;
+    }
+}
+@media (max-width: 1080px) {
+    .auth-floating-badge {
+        display: none;
+    }
+}
+
+/* Card Modern Elevation */
 .auth-reference-card {
+    position: relative;
+    z-index: 3;
+    background: #FFFFFF !important;
+    border-radius: 20px !important;
+    width: 440px;
+    max-width: 100%;
     max-height: calc(100vh - 40px);
-    overflow-y: auto; 
+    overflow-y: auto;
+    box-shadow: 0 25px 60px -15px rgba(88, 17, 26, 0.18), 0 0 0 1px rgba(88, 17, 26, 0.08) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+.auth-reference-card:hover {
+    box-shadow: 0 32px 75px -12px rgba(88, 17, 26, 0.24), 0 0 0 1px rgba(88, 17, 26, 0.14) !important;
+}
+.auth-reference-card header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background: linear-gradient(135deg, #58111A 0%, #3e0c13 100%) !important;
+    border-bottom: 1px solid rgba(239, 223, 187, 0.2);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
 .auth-reference-body {
     padding: 30px 32px 25px !important;
 }
+
+/* Modern Segmented Capsule Tabs */
+.auth-tabs {
+    display: flex !important;
+    background: #f5ebe0 !important;
+    padding: 4px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(88, 17, 26, 0.1) !important;
+    margin: 0 0 20px !important;
+    gap: 4px !important;
+}
+.auth-tabs button {
+    flex: 1 !important;
+    padding: 9px 8px !important;
+    border: none !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    color: var(--burgundy) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    cursor: pointer !important;
+}
+.auth-tabs button:hover:not(.selected) {
+    background: rgba(255, 255, 255, 0.7) !important;
+    color: #762535 !important;
+}
+.auth-tabs button.selected {
+    background: #58111A !important;
+    color: #FAF4E8 !important;
+    box-shadow: 0 4px 12px rgba(88, 17, 26, 0.22) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Modernized Inputs and Buttons */
+.auth-reference input {
+    height: 44px !important;
+    border: 1.5px solid #dfd1c3 !important;
+    border-radius: 10px !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+.auth-reference input:focus {
+    border-color: #58111A !important;
+    box-shadow: 0 0 0 3.5px rgba(88, 17, 26, 0.12) !important;
+}
+.auth-reference .btn.full {
+    height: 46px !important;
+    border-radius: 10px !important;
+    background: linear-gradient(135deg, #58111A 0%, #762535 100%) !important;
+    box-shadow: 0 4px 16px rgba(88, 17, 26, 0.22) !important;
+    transition: all 0.22s ease !important;
+}
+.auth-reference .btn.full:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(88, 17, 26, 0.32) !important;
+    background: linear-gradient(135deg, #6c1822 0%, #882b3c 100%) !important;
+}
+
 .auth-watermark {
     top: 3% !important;
     width: 65% !important;
@@ -177,12 +425,6 @@ html, body {
 }
 .auth-reference-photo h1 {
     margin-top: 120px !important; 
-}
-.auth-reference-card header {
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 10 !important;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 /* 10. Card Glows and Smooth Physics (The Ultimate Version) */

@@ -402,6 +402,41 @@ export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
   return `<div class="auth-reference">
     <section class="auth-reference-photo">${photo('group','auth-photo')}<div class="auth-tint"></div><img class="auth-watermark" src="./assets/MenteeLog_Logo.svg" alt=""><h1>Join the MenteeLog<br>Journey.<br>Step Forward into<br>Your Future.</h1><span class="auth-rule"></span><p>${icon('shield')} Official Student Mentorship Network</p></section>
     <main class="auth-reference-main" id="main">
+      <div class="auth-bg-grid" aria-hidden="true"></div>
+      <div class="auth-orb auth-orb-1" aria-hidden="true"></div>
+      <div class="auth-orb auth-orb-2" aria-hidden="true"></div>
+      <div class="auth-orb auth-orb-3" aria-hidden="true"></div>
+
+      <div class="auth-floating-badge badge-tr" aria-hidden="true">
+        <span class="badge-pulse-dot"></span>
+        <div class="badge-text">
+          <strong>CHED CMO Verified</strong>
+          <small>OJT Compliance Gateway</small>
+        </div>
+      </div>
+
+      <div class="auth-floating-badge badge-bl" aria-hidden="true">
+        <svg class="badge-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+          <circle cx="12" cy="9" r="2.5"/>
+        </svg>
+        <div class="badge-text">
+          <strong>GPS Geofenced Lock</strong>
+          <small>Anti-Tamper Attendance</small>
+        </div>
+      </div>
+
+      <div class="auth-floating-badge badge-br" aria-hidden="true">
+        <svg class="badge-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+        <div class="badge-text">
+          <strong>3 Connected Portals</strong>
+          <small>Role-Isolated Access</small>
+        </div>
+      </div>
+
       <section class="auth-reference-card">
         <header>
           ${brand()}
@@ -449,6 +484,14 @@ export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
   </div>`;
 }
 
-
-
-
+if (typeof window !== 'undefined') {
+  window.addEventListener('pointermove', (e) => {
+    const authMain = document.querySelector('.auth-reference-main');
+    if (!authMain) return;
+    const rect = authMain.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    authMain.style.setProperty('--spotlight-x', `${x}px`);
+    authMain.style.setProperty('--spotlight-y', `${y}px`);
+  }, { passive: true });
+}
