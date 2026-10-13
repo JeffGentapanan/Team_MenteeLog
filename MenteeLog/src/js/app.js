@@ -1207,7 +1207,7 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
     render();
     return; 
   }
-  if (event === 'SIGNED_OUT' || recoveryActive) return;
+  if (event === 'SIGNED_OUT' || recoveryActive || event === 'INITIAL_SESSION') return;
   if (sessionObj?.user) {
     setTimeout(async () => {
       const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', sessionObj.user.id).single();
@@ -1291,6 +1291,10 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
     return;
   }
 
+  if (!isAuthError && !isRecoveryLink) {
+    render();
+  }
+
   const { data: { session: initSession } } = await supabase.auth.getSession();
   if (initSession?.user) {
     if (db.jobs.some(j => j.id === 'j1')) {
@@ -1327,14 +1331,20 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
           localUser.status = 'Active';
         }
         connectCoreUsers(db);
+        const prevId = session?.id;
+        const prevRole = session?.user?.role;
         storeSession(localUser);
+        if (prevId !== localUser.id || prevRole !== localUser.role) {
+          render();
+        }
         setTimeout(async () => {
           if (await syncRemote(supabase, db)) { connectCoreUsers(db); save(); if (!modal.open) render(); }
         }, 0);
       }
     }
+  } else if (!session) {
+    render();
   }
-  render();
 })();
 
 

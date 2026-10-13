@@ -177,6 +177,13 @@ export async function syncRemote(supabase, db) {
       stu.company = sup.company;
       stu.status = 'Active';
       stu.badge = 'Active';
+      stu.requiredHours = stu.requiredHours || 500;
+      if (!stu.baseHours && stu.baseHours !== 0) stu.baseHours = 120;
+      const stuLogs = newLogs.filter(l => l.studentId === stu.id);
+      if (stuLogs.length === 0 && db.logs) {
+        const existingStuLogs = db.logs.filter(l => l.studentId === stu.id);
+        if (existingStuLogs.length > 0) newLogs.push(...existingStuLogs);
+      }
       let supJob = newJobs.find(j => j.supervisorId === sup.id);
       if (!supJob) {
         supJob = {

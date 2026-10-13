@@ -64,7 +64,8 @@
 
 /* 5. Dashboard / Portal Cards � instant visible, gentle entry */
 .student-dash-grid .card, .dashboard-quick, .reference-table-panel {
-    animation: fadeInUp 0.4s ease-out both;
+    animation: none !important;
+    opacity: 1 !important;
 }
 
 /* 6. Gentle Sticky Shadow & Alignment */
@@ -1029,8 +1030,9 @@ tbody tr {
 }
 
 /* Smooth stat card loading � no blank flash */
-.stat {
-    animation: fadeIn 0.3s ease-out both;
+.stat, .overview-stats, .stat-grid-modern {
+    animation: none !important;
+    opacity: 1 !important;
 }
 
 /* Prevent layout shift on icon buttons */
