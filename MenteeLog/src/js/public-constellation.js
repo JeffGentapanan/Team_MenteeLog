@@ -65,15 +65,26 @@ export function initPublicConstellation() {
     window.addEventListener('mousemove', mouseMoveHandler, { passive: true });
     window.addEventListener('mouseleave', mouseLeaveHandler, { passive: true });
 
-    // Track scroll for subtle parallax
+    // Track scroll with responsive parallax nudge
+    let lastScrollY = window.scrollY || 0;
     scrollHandler = () => {
-        scrollY = window.scrollY || 0;
+        const curScrollY = window.scrollY || 0;
+        const delta = curScrollY - lastScrollY;
+        lastScrollY = curScrollY;
+
+        // Parallax vertical movement so nodes drift naturally with page scroll
+        const nudge = Math.max(-30, Math.min(30, delta * 0.22));
+        for (let i = 0; i < nodes.length; i++) {
+            nodes[i].y -= nudge;
+            if (nodes[i].y < -40) nodes[i].y = height + 40;
+            else if (nodes[i].y > height + 40) nodes[i].y = -40;
+        }
     };
     window.addEventListener('scroll', scrollHandler, { passive: true });
 
-    // Node count: responsive scaling
+    // Node count: responsive scaling with rich density
     const isMobile = width < 768;
-    const nodeCount = isMobile ? 18 : 34;
+    const nodeCount = isMobile ? 24 : 48;
 
     const nodeTypes = [
         { type: 'student', radius: 2.8, color: 'rgba(88, 17, 26, 0.45)', label: 'Intern' },
@@ -84,16 +95,20 @@ export function initPublicConstellation() {
 
     const nodes = [];
     for (let i = 0; i < nodeCount; i++) {
-        const typeConfig = (i % 8 === 0) ? nodeTypes[1] // HTE hub
-                         : (i % 8 === 3) ? nodeTypes[2] // Academic hub
-                         : (i % 8 === 5) ? nodeTypes[3] // DTR verified hub
+        const typeConfig = (i % 7 === 0) ? nodeTypes[1] // HTE hub
+                         : (i % 7 === 2) ? nodeTypes[2] // Academic hub
+                         : (i % 7 === 4) ? nodeTypes[3] // DTR verified hub
                          : nodeTypes[0];                // Student intern
 
-        const hasLabel = (i < 6); // First 6 key hub nodes show subtle architectural badges
+        const hasLabel = (i < 8); // First 8 key hub nodes show subtle architectural badges
+
+        // Distribute initial positions evenly across viewport height with natural jitter
+        const sliceY = (height / nodeCount) * i;
+        const yPos = (sliceY + (Math.random() - 0.5) * (height / nodeCount * 1.5) + height) % height;
 
         nodes.push({
             x: Math.random() * width,
-            y: Math.random() * height,
+            y: yPos,
             baseX: 0,
             baseY: 0,
             vx: (Math.random() - 0.5) * 0.32,
@@ -110,7 +125,7 @@ export function initPublicConstellation() {
     // Dynamic data packets (traveling pulses between connected nodes)
     const packets = [];
     function spawnPacket(fromNode, toNode) {
-        if (packets.length >= 6) return;
+        if (packets.length >= 7) return;
         packets.push({
             from: fromNode,
             to: toNode,
@@ -121,7 +136,7 @@ export function initPublicConstellation() {
     }
 
     let lastPacketSpawn = 0;
-    const maxDistance = isMobile ? 110 : 140;
+    const maxDistance = isMobile ? 120 : 160;
 
     // Animation Render Loop
     function render(timestamp) {
@@ -143,11 +158,11 @@ export function initPublicConstellation() {
             n.x += n.vx;
             n.y += n.vy;
 
-            // Soft screen boundary bouncing with padding
-            if (n.x < -20) n.x = width + 20;
-            else if (n.x > width + 20) n.x = -20;
-            if (n.y < -20) n.y = height + 20;
-            else if (n.y > height + 20) n.y = -20;
+            // Soft screen boundary wrapping with padding
+            if (n.x < -40) n.x = width + 40;
+            else if (n.x > width + 40) n.x = -40;
+            if (n.y < -40) n.y = height + 40;
+            else if (n.y > height + 40) n.y = -40;
 
             // Interactive mouse attraction
             if (mouse.active) {

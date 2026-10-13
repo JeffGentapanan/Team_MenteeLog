@@ -971,7 +971,7 @@ html, body {
 
 .faq-section {
     padding: 36px 5% 72px;
-    background-color: var(--cream);
+    background-color: transparent !important;
     text-align: center;
 }
 .faq-section .section-kicker,
@@ -1290,7 +1290,7 @@ html, body {
    ========================================= */
 .contact-section {
     padding: 80px 5%;
-    background-color: #FAF4E8;
+    background-color: transparent !important;
     display: flex;
     justify-content: center;
     border-top: 1px solid #EFDFBB;
@@ -2127,18 +2127,18 @@ html {
 .opportunities,
 .why-section,
 .how-section,
-.partner-section,
+.partner-section:not(.maroon),
 .join-section,
 .faq-section,
-.role-info,
+.role-info:not(.maroon),
 .guide-full-page,
 .about-hero,
 .about-grid-2,
 .about-grid-3,
-.about-stats-banner,
 .contact-section {
     position: relative;
     z-index: 2;
+    background-color: transparent !important;
 }
 
 /* Solid card surfaces stay crisp, elevated, and high-contrast */
