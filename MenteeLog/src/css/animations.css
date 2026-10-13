@@ -62,7 +62,7 @@
 .public-stats > div:nth-child(3) { animation-delay: 0.6s; }
 .public-stats > div:nth-child(4) { animation-delay: 0.8s; }
 
-/* 5. Dashboard / Portal Cards � instant visible, gentle entry */
+/* 5. Dashboard / Portal Cards - instant visible, gentle entry */
 .student-dash-grid .card, .dashboard-quick, .reference-table-panel {
     animation: none !important;
     opacity: 1 !important;
@@ -2257,7 +2257,7 @@ tbody tr {
     transition: background-color 0.12s ease !important;
 }
 
-/* Smooth stat card loading � no blank flash */
+/* Smooth stat card loading - no blank flash */
 .stat, .overview-stats, .stat-grid-modern {
     animation: none !important;
     opacity: 1 !important;

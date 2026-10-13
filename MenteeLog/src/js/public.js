@@ -31,8 +31,8 @@ function contactSection(icon) {
                     <strong>Verified</strong> OJT Cohort
                 </div>
                 <div class="contact-floating-badge badge-bottom-left" aria-hidden="true">
-                    <span class="badge-icon-acad">🏛️</span>
-                    <span>BatState-U Partner</span>
+                    <span class="badge-icon-acad"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg></span>
+                    <span>MenteeLog Partner</span>
                 </div>
 
                 <!-- Circular Photo Wrapper -->
@@ -84,8 +84,8 @@ function contactSection(icon) {
                         <svg class="btn-arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                     </button>
                     <div class="contact-trust-footer">
-                        <span>🔒 256-Bit SSL Encrypted</span>
-                        <span>⚡ Institutional Compliance Ready</span>
+                        <span><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>256-Bit SSL Encrypted</span>
+                        <span><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Institutional Compliance Ready</span>
                     </div>
                 </form>
             </div>
@@ -673,7 +673,7 @@ export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
-              <span>BatState-U OJT System · 256-Bit SSL Encrypted</span>
+              <span>MenteeLog OJT System · 256-Bit SSL Encrypted</span>
             </div>`
           }
         </div>
