@@ -1636,6 +1636,66 @@ html, body {
 }
 
 /* =========================================
+   PUBLIC HERO SPACING & FLOATING NAVBAR CLEARANCE
+   ========================================= */
+.public-site .reference-hero {
+    min-height: 620px;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.public-site .reference-hero-content {
+    position: relative;
+    z-index: 1;
+    padding-top: 120px !important;
+    padding-bottom: 50px !important;
+    padding-left: 24px;
+    padding-right: 24px;
+    max-width: 960px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.public-site .reference-hero-content .hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px !important;
+}
+
+.public-site .reference-hero-content h1 {
+    margin: 14px 0 18px !important;
+    line-height: 1.18;
+}
+
+.public-site .reference-hero-content p {
+    margin: 0 auto 28px !important;
+    max-width: 720px;
+    line-height: 1.55;
+}
+
+.public-site .reference-hero-content .hero-cta {
+    margin-top: 6px;
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+}
+
+/* Tablet Clearance (≤ 950px) */
+@media (max-width: 950px) {
+    .public-site .reference-hero {
+        min-height: 570px;
+    }
+    .public-site .reference-hero-content {
+        padding-top: 110px !important;
+        padding-bottom: 40px !important;
+    }
+}
+
+/* =========================================
    COMPREHENSIVE MOBILE RESPONSIVE FIXES
    ========================================= */
 
@@ -1668,12 +1728,37 @@ html, body {
 
 /* ── HERO SECTION MOBILE ── */
 @media (max-width: 650px) {
-    .reference-hero { height: 380px; }
-    .reference-hero h1 { font-size: 28px !important; }
-    .reference-hero p { font-size: 14px; }
-    .hero-cta { flex-direction: column; gap: 10px; align-items: center; }
-    .hero-cta .btn { width: 80%; text-align: center; }
-    .hero-pill { font-size: 10px; padding: 4px 12px; }
+    .public-site .reference-hero {
+        min-height: 520px !important;
+        height: auto !important;
+    }
+    .public-site .reference-hero-content {
+        padding-top: 96px !important;
+        padding-bottom: 36px !important;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    .public-site .reference-hero-content h1 {
+        font-size: 28px !important;
+        margin: 12px 0 14px !important;
+    }
+    .public-site .reference-hero-content p {
+        font-size: 14px !important;
+        margin: 0 auto 22px !important;
+    }
+    .hero-cta {
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+    .hero-cta .btn {
+        width: 85%;
+        text-align: center;
+    }
+    .hero-pill {
+        font-size: 10px;
+        padding: 4px 12px;
+    }
 }
 
 /* ── LANDING PAGE SECTIONS MOBILE ── */
@@ -1774,12 +1859,7 @@ html, body {
     .public-site .reference-hero { margin-top: 0; }
 }
 
-/* ── PUBLIC HERO PADDING FIX (Pill Visibility) ── */
-@media (max-width: 768px) {
-    .public-site .reference-hero-content {
-        padding-top: 80px !important;
-    }
-}
+
 
 /* ── MOBILE MENU TOGGLE ── */
 .mobile-menu-btn {
