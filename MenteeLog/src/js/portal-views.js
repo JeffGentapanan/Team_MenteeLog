@@ -1,4 +1,4 @@
-﻿import { supabase } from '../supabaseClient.js';
+import { supabase } from '../supabaseClient.js';
 import { syncRemote } from './sync.js';
 import {approvedHours,visibleStudents,visibleLogs,visibleApplications,applyToJob,validateUpload,csvText} from './domain.js';
 import {rubric,roles,navigation} from './data.js';
@@ -131,13 +131,34 @@ export function createPortalViews(c){
         </div>
       </div>`;
     }
-    const list=db().jobs.filter(j=>(isStudent?j.status==='Active':u().role==='Supervisor'?j.supervisorId===u().id:true)&&match(j.title,j.company,j.location,j.skills)&&(isStudent?(c.view.course==='All'||j.courses.includes(c.view.course))&&(c.view.mode==='All'||j.location.toLowerCase().includes(c.view.mode.toLowerCase())):sub==='archived'?j.status==='Closed':j.status!=='Closed'));
+    const toCourseCode = c => {
+      const m = {
+        'BS Computer Science': 'BSCS',
+        'BS Information Technology': 'BSIT',
+        'BS Computer Engineering': 'BSCompE',
+        'BS Electronics Engineering': 'BSECE',
+        'BSCpE': 'BSCompE',
+        'BSSA': 'BSCS',
+        'BSBA': 'BSIT',
+        'BSEE': 'BSECE'
+      };
+      return m[c] || c;
+    };
+    const courseMatches = (jCourses, filter) => {
+      if (!filter || filter === 'All') return true;
+      const targetFilter = toCourseCode(filter);
+      return (jCourses || []).some(c => {
+        const code = toCourseCode(c);
+        return code === targetFilter || code === filter;
+      });
+    };
+    const list=db().jobs.filter(j=>(isStudent?j.status==='Active':u().role==='Supervisor'?j.supervisorId===u().id:true)&&match(j.title,j.company,j.location,j.skills)&&(isStudent?(courseMatches(j.courses, c.view.course))&&(c.view.mode==='All'||j.location.toLowerCase().includes(c.view.mode.toLowerCase())):sub==='archived'?j.status==='Closed':j.status!=='Closed'));
     return (isStudent?'': '')+heading(isStudent?'OJT Placement Directory':'Slot Management',isStudent?'Browse and apply to accredited host training establishments':e(u().company||'Partner companies')+' · Internship positions',isStudent?'':b('Post New Work','job-edit','','','plus'))+(isStudent?
     `<div class="row wrap gap-8 mb32" style="margin-bottom: 32px;">
-        ${['All','BS Computer Science','BSIT','BSSA','BGC, Taguig','Davao','Cebu'].map(s=>b(s,'ref-course',s, (s==='All' && c.view.course==='All' && c.view.mode==='All') || (s!=='All' && (c.view.course===s || c.view.mode===s)) ? 'ojt-filter active' : 'ojt-filter')).join('')}
+        ${['All','BSCS','BSIT','BSCompE','BSECE','BGC, Taguig','Davao','Cebu'].map(s=>b(s,'ref-course',s, (s==='All' && c.view.course==='All' && c.view.mode==='All') || (s!=='All' && (c.view.course===s || c.view.mode===s)) ? 'ojt-filter active' : 'ojt-filter')).join('')}
         ${b('+ More Filters','ref-more-filters','',c.view.more?'ojt-filter active':'ojt-filter')}
       </div>
-      ${c.view.more?panel('Filter Opportunities',form(`<div class="grid-2">${sel('Program','course',['All','BS Computer Science','BS Information Technology','BS Computer Engineering'],c.view.course)}${sel('Location','mode',['All',...new Set(db().jobs.map(j=>j.location))],c.view.mode)}</div>`,v=>{c.view.course=v.course;c.view.mode=v.mode;c.render();},'Apply Filters'), 'mb32'):''}
+      ${c.view.more?panel('Filter Opportunities',form(`<div class="grid-2">${sel('Program','course',['All','BSCS','BSIT','BSCompE','BSECE'],c.view.course)}${sel('Location','mode',['All',...new Set(db().jobs.map(j=>j.location))],c.view.mode)}</div>`,v=>{c.view.course=v.course;c.view.mode=v.mode;c.render();},'Apply Filters'), 'mb32'):''}
       ` : tabs([['','Active Slots'],['archived','Archived Slots']]))+(list.length?(isStudent?list.map(j=>{const applied=db().applications.some(a=>a.studentId===u().id&&a.jobId===j.id&&a.status!=='Rejected');return `
       <article class="ojt-job-card">
         <div class="ojt-job-card-inner">
@@ -153,7 +174,7 @@ export function createPortalViews(c){
           </div>
           <div class="row ojt-job-meta">
             <span>${icon('pin')} ${e(j.location)}</span>
-            <span>${icon('briefcase')} ${e(j.courses.join(' / '))}</span>
+            <span>${icon('briefcase')} ${e((j.courses||[]).map(toCourseCode).join(' / '))}</span>
             <span>${icon('users')} ${j.slots} slots left</span>
             <span style="color:#D97706;">${icon('star')} ${(Math.random()*1+4).toFixed(1)}</span>
           </div>

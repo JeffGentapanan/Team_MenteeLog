@@ -193,7 +193,7 @@ export async function syncRemote(supabase, db) {
           company: sup.company,
           location: 'BGC, Taguig',
           mode: 'Hybrid',
-          courses: ['BS Information Technology', 'BS Computer Science'],
+          courses: ['BSIT', 'BSCS'],
           slots: 5,
           status: 'Active',
           description: 'Hands-on enterprise software development and daily engineering operations.',
