@@ -399,21 +399,41 @@ function notificationsMini(u){
   const unread = db.notifications.filter(n=>n.userId===u.id && !n.read).reverse().slice(0, 5);
   return `
     <div class="drawer-header">
-      <div class="card-title" style="margin-bottom:15px; align-items:center;">
-        <h2 style="font-size:18px; margin:0;">Notifications</h2>
-        ${unread.length ? '<button class="text-btn small" data-action="read-all">Mark all read</button>' : ''}
-      </div>
+      <h3>
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span>Notifications</span>
+        ${unread.length ? `<span class="badge red" style="font-size:10px;padding:2px 7px;border-radius:10px;margin-left:4px;">${unread.length} new</span>` : ''}
+      </h3>
+      ${unread.length ? '<button class="text-btn small" data-action="read-all">Mark all read</button>' : ''}
     </div>
     <div class="drawer-notes-list">
-      ${unread.map(n=>`
-        <div class="notification-card" style="padding:14px; background:var(--sand-light); border-radius:8px; margin-bottom:10px; border:1px solid #e9dfd9;">
-          <strong style="display:block; color:var(--burgundy); font-size:14px;">${e(n.title)}</strong>
-          <p style="margin:6px 0 0; font-size:13px; color:var(--ink); line-height:1.4;">${e(n.message)}</p>
+      ${unread.length ? unread.map(n=>`
+        <div class="notification-card">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+            <strong style="color:var(--burgundy);font-size:13px;font-weight:700;">${e(n.title)}</strong>
+            <small style="color:var(--muted);font-size:11px;white-space:nowrap;">${date(n.date)}</small>
+          </div>
+          <p style="margin:5px 0 0;font-size:12px;color:var(--ink);line-height:1.45;">${e(n.message)}</p>
         </div>
-      `).join('') || '<p class="small muted" style="padding:15px 0; text-align:center;">You\'re all caught up!</p>'}
+      `).join('') : `
+        <div class="drawer-empty">
+          <div class="drawer-empty-icon">
+            <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <p class="drawer-empty-title">You're all caught up!</p>
+          <p class="drawer-empty-sub">No unread notifications at the moment.</p>
+        </div>
+      `}
     </div>
-    <hr class="hr" style="margin:16px 0;">
-    <a class="text-btn full" style="text-align:center; display:block;" href="#/${u.role.toLowerCase()}/notifications">View all notifications &rarr;</a>
+    <div class="drawer-footer">
+      <a class="drawer-footer-link" href="#/${u.role.toLowerCase()}/notifications">
+        <span>View all notifications</span>
+        <span class="arrow">&rarr;</span>
+      </a>
+    </div>
   `.replace(/\n\s+/g, '');
 }
 function dashboard(u){
