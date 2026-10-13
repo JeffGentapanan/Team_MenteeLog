@@ -806,7 +806,7 @@ async function action(name,id,el){
     case 'user-new':userNew();return;
     case 'import-users':importUsers();return;
     case 'user-status':{const target=student(id);if(!target||target.id===u.id)throw new Error('You cannot change your own account status.');showModal(target.status==='Active'?'Suspend demo account?':'Activate demo account?',`<p>${e(target.name)} (${e(target.role)}) will be ${target.status==='Active'?'unable':'able'} to use this demo account. This changes only local demonstration data.</p>`,()=>{target.status=target.status==='Active'?'Suspended':'Active';audit('Changed account status for '+target.name);save();toast('Demo account updated.');},'Confirm change');return;}
-    case 'csv-template':download('menteelog-candidates-template.csv','identifier,name,email,course\r\n2026-01001,Sample Student,student@example.edu,BS Information Technology\r\n');return;
+    case 'csv-template':download('menteelog-candidates-template.csv','identifier,name,email,course\r\n2026-01001,Sample Student,student@example.edu,BSIT\r\n');return;
     case 'announcement':announcement();return;
     
     
