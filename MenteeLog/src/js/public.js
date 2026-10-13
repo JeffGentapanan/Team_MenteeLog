@@ -1,4 +1,4 @@
-﻿// Rebuild of the supplied landing/authentication exports. Only photograph
+// Rebuild of the supplied landing/authentication exports. Only photograph
 // regions are reused from PNGs; text, navigation, cards and buttons are HTML.
 const crops={group:['home',178,2398,500,268],employers:['home',711,2398,497,268],skills:['home',169,1548,318,177],connections:['home',520,1548,319,177],tomorrow:['home',869,1548,318,177],supervisor:['company',97,997,509,287],company:['company',791,997,510,287],career:['company',467,1529,509,286],portrait:['company',246,2427,279,267]};
 export function photo(name,cls='',label='MenteeLog students'){const overrides={group:'img1.jpg',employers:'img2.jpg',skills:'img3.jpg',connections:'img4.jpg',tomorrow:'img5.jpg',supervisor:'img6.jpg',company:'img7.jpg',career:'img8.jpg',portrait:'img9.jpg'};const [file,x,y,w,h]=crops[name]||crops.group;if(overrides[name]){return `<svg class="reference-photo ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${label}"><image href="./assets/team/${overrides[name]}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice" /></svg>`;}return `<svg class="reference-photo ${cls}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${label}"><image href="./assets/references/${file}.png" width="${file==='home'?1359:1400}" height="${file==='home'?4633:5211}"/></svg>`;}
@@ -397,7 +397,7 @@ function guideBody(icon) {
         `).join('')}
     </section>`;
 }
-export function authScreen(mode,role,{brand,icon,field}){
+export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
   const activate=mode==='activate',reset=mode==='reset-password',forgot=mode==='forgot',authError=mode==='auth-error';
   return `<div class="auth-reference">
     <section class="auth-reference-photo">${photo('group','auth-photo')}<div class="auth-tint"></div><img class="auth-watermark" src="./assets/MenteeLog_Logo.svg" alt=""><h1>Join the MenteeLog<br>Journey.<br>Step Forward into<br>Your Future.</h1><span class="auth-rule"></span><p>${icon('shield')} Official Student Mentorship Network</p></section>
@@ -405,8 +405,8 @@ export function authScreen(mode,role,{brand,icon,field}){
       <section class="auth-reference-card">
         <header>
           ${brand()}
-          <h2>${activate?'Activate Your MenteeLog Account':reset?'Reset Your Password':forgot?'Forgot Password?':authError?'Link Expired':'MenteeLog - Authentication Hub'}</h2>
-          <p>${activate?'Complete the steps below to set up your account':reset?'Enter a new password for your account':forgot?'Enter your email or SR code to reset your password':authError?'This reset link is invalid or has expired. Please request a new one.':'Select your role to continue'}</p>
+          <h2>${activate?'Activate Your MenteeLog Account':reset?(hasRecoverySession?'Reset Your Password':'Password Reset Link Needed'):forgot?'Forgot Password?':authError?'Link Expired':'MenteeLog - Authentication Hub'}</h2>
+          <p>${activate?'Complete the steps below to set up your account':reset?(hasRecoverySession?'Enter a new password for your account':'To protect your account, a valid reset link from your email is required.'):forgot?'Enter your email or SR code to reset your password':authError?'This reset link is invalid or has expired. Please request a new one.':'Select your role to continue'}</p>
         </header>
         <div class="auth-reference-body">
           ${activate?
@@ -415,6 +415,7 @@ export function authScreen(mode,role,{brand,icon,field}){
 `<div id="step3-container" style="display:none;"><form id="set-password-form"><div style="text-align:center;margin-bottom:24px;"><p style="font-size:14px;color:#555;">Almost done! Create a secure password for your account.</p></div><div class="field"><label for="new-password">CREATE PASSWORD</label><div class="password-field"><input id="new-password" name="password" type="password" required minlength="8" placeholder="Minimum 8 characters" autocomplete="new-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div><div class="field"><label for="confirm-password">CONFIRM PASSWORD</label><div class="password-field"><input id="confirm-password" name="confirm" type="password" required minlength="8" placeholder="Re-enter your password" autocomplete="new-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div><p class="form-error" role="alert"></p><button type="submit" class="btn full">Complete Activation</button></form></div>` +
 `<div id="activate-success" style="display:none;text-align:center;padding:20px 0;"><svg width="56" height="56" fill="none" stroke="#2d6a4f" stroke-width="2" viewBox="0 0 24 24" style="margin:0 auto 16px;display:block;"><circle cx="12" cy="12" r="10"></circle><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"></path></svg><h3 style="color:#2d6a4f;margin-bottom:8px;">Account Activated!</h3><p style="font-size:14px;color:#555;margin-bottom:24px;">Your account is ready. You can now log in with your new password.</p><a href="#/login" class="btn full">Go to Login &rarr;</a></div>`
           : reset?
+            (hasRecoverySession ?
             `<form id="reset-password-form">
                <div class="field"><label for="password">NEW PASSWORD</label><div class="password-field"><input id="password" name="password" type="password" required minlength="8" autocomplete="new-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div>
                <div class="field"><label for="confirm">CONFIRM PASSWORD</label><div class="password-field"><input id="confirm" name="confirm" type="password" required minlength="8" autocomplete="new-password"><button type="button" data-action="toggle-password" aria-label="Show password">${icon('eye')}</button></div></div>
@@ -422,6 +423,13 @@ export function authScreen(mode,role,{brand,icon,field}){
                <button type="submit" class="btn full">Save New Password</button>
              </form>
              <a class="auth-return" href="#" data-action="forgot">&larr; Back to Forgot Password</a>`
+            :
+            `<div style="text-align:center;padding:12px 0;">
+               <p style="color:#555;font-size:14px;line-height:1.5;margin-bottom:20px;">No active reset session found. Please click the reset link sent to your email, or request a new one below.</p>
+               <button type="button" class="btn full" onclick="location.hash='/forgot'">Request Reset Link &rarr;</button>
+             </div>
+             <a class="auth-return" href="#/login" style="display:block;margin-top:1.25rem;text-align:center;">&larr; Back to Login</a>`
+            )
           : forgot?
             `<form id="forgot-form">
                ${field('EMAIL OR SR CODE','identifier','text','','required')}

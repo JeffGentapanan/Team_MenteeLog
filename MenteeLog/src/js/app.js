@@ -245,7 +245,7 @@ document.addEventListener('keydown',event=>{
 matchMedia('(max-width:1000px)').addEventListener('change',()=>togglePortalMenu(false));
 function heading(title,sub,actions=''){return `<div class="page-heading"><div><h1>${title}</h1><p>${sub}</p></div>${actions?`<div class="row wrap">${actions}</div>`:''}</div>`;}
 function landing(){return publicLanding(route().role==='public'?route().page:'home',{brand,icon});}
-function authPage(mode){return authScreen(mode,authRole,{brand,icon,field});}
+function authPage(mode){return authScreen(mode,authRole,{brand,icon,field,hasRecoverySession: Boolean(recoveryActive || currentUser())});}
 function pageContent(page,u){try{return portals.page(page,u)??({dashboard,applications:applicationsPage,profile:profilePage}[page]||dashboard)(u);}catch(error){return heading('Page unavailable',e(error.message))+link('Back to dashboard','dashboard');}}
 function notificationsMini(u){
   const unread = db.notifications.filter(n=>n.userId===u.id && !n.read).reverse().slice(0, 5);
@@ -1008,12 +1008,16 @@ document.addEventListener('click',event=>{const drawer=$('#notice-drawer');if(dr
 // MAIN APP GATE
 function showResetPage() {
   if (location.hash === '#/reset-password') return;
-  history.replaceState(null, '', location.pathname);
   location.hash = '/reset-password';
 }
 
 supabase.auth.onAuthStateChange((event, sessionObj) => {
-  if (event === 'PASSWORD_RECOVERY') { recoveryActive = true; showResetPage(); return; }
+  if (event === 'PASSWORD_RECOVERY') { 
+    recoveryActive = true; 
+    showResetPage(); 
+    render();
+    return; 
+  }
   if (event === 'SIGNED_OUT' || recoveryActive) return;
   if (sessionObj?.user) {
     setTimeout(async () => {
@@ -1039,13 +1043,24 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
   }
 
   if (isRecoveryLink) {
-    let { data: { session: s } } = await supabase.auth.getSession();
-    if (!s && urlParams.has('code')) {
-      const { error } = await supabase.auth.exchangeCodeForSession(urlParams.get('code'));
-      if (!error) ({ data: { session: s } } = await supabase.auth.getSession());
+    recoveryActive = true;
+    if (urlParams.has('code')) {
+      try { await supabase.auth.exchangeCodeForSession(urlParams.get('code')); } catch(e) {}
     }
+    
+    // Allow Supabase client to parse hash tokens asynchronously without racing
+    let s = (await supabase.auth.getSession()).data?.session;
+    if (!s && (location.hash.includes('access_token') || isRecoveryLink)) {
+      for (let i = 0; i < 8; i++) {
+        await new Promise(r => setTimeout(r, 100));
+        s = (await supabase.auth.getSession()).data?.session;
+        if (s) break;
+      }
+    }
+
     if (s) {
       recoveryActive = true;
+      history.replaceState(null, '', location.pathname);
       showResetPage();
     } else {
       recoveryActive = false;
