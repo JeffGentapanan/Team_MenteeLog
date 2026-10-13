@@ -406,68 +406,110 @@ export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
         <div class="auth-map-grid"></div>
         <svg class="auth-map-svg" viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice">
           <defs>
-            <radialGradient id="radarSweepGrad" cx="0%" cy="0%" r="100%">
-              <stop offset="0%" stop-color="#58111A" stop-opacity="0.32" />
-              <stop offset="60%" stop-color="#D85A63" stop-opacity="0.1" />
-              <stop offset="100%" stop-color="#D85A63" stop-opacity="0" />
+            <radialGradient id="clockGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#58111A" stop-opacity="0.12" />
+              <stop offset="70%" stop-color="#FAF4E8" stop-opacity="0.02" />
+              <stop offset="100%" stop-color="#FAF4E8" stop-opacity="0" />
             </radialGradient>
+            <linearGradient id="shiftArcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#059669" stop-opacity="0.8" />
+              <stop offset="50%" stop-color="#EAB308" stop-opacity="0.7" />
+              <stop offset="100%" stop-color="#D85A63" stop-opacity="0.85" />
+            </linearGradient>
           </defs>
 
-          <!-- Topographic elevation contours -->
-          <g class="map-contours">
-            <path d="M-60,140 C180,60 380,240 680,160 C980,80 1150,220 1300,160" />
-            <path d="M-60,220 C220,130 420,320 720,240 C1020,160 1180,300 1300,240" />
-            <path d="M-60,320 C260,220 460,400 780,320 C1060,240 1200,380 1300,340" />
-            <path d="M-60,440 C280,340 520,500 820,420 C1100,340 1220,480 1300,440" />
-            <path d="M-60,580 C320,480 560,620 880,540 C1120,460 1240,600 1300,560" />
-            <path d="M-60,720 C360,620 620,740 920,660 C1160,580 1260,700 1300,680" />
+          <!-- TECHNICAL DTR CLOCK MECHANISM centered at (230, 360) -->
+          <g class="clock-mechanism" transform="translate(230, 360)">
+            <!-- Outer subtle technical rings -->
+            <circle cx="0" cy="0" r="210" class="clock-ring-outer" />
+            <circle cx="0" cy="0" r="165" class="clock-ring-mid" />
+            <circle cx="0" cy="0" r="135" class="clock-ring-track" />
 
-            <text x="240" y="115" class="contour-label">120m</text>
-            <text x="820" y="145" class="contour-label">140m</text>
-            <text x="360" y="275" class="contour-label">160m</text>
-            <text x="940" y="225" class="contour-label">180m</text>
-            <text x="440" y="445" class="contour-label">200m</text>
-            <text x="1020" y="415" class="contour-label">220m</text>
-          </g>
+            <!-- Clock dial background -->
+            <circle cx="0" cy="0" r="120" fill="url(#clockGlow)" class="clock-face-base" />
 
-          <!-- Geofence Radar / Sonar System centered at (x: 230, y: 310) -->
-          <g class="map-radar-center" transform="translate(230, 310)">
-            <circle class="radar-ring ring-1" cx="0" cy="0" r="120" />
-            <circle class="radar-ring ring-2" cx="0" cy="0" r="220" />
-            <circle class="radar-ring ring-3" cx="0" cy="0" r="340" />
-            <circle class="radar-ring ring-4" cx="0" cy="0" r="480" />
+            <!-- Rendered Shift Arc from 8:00 AM (-120deg) to 5:00 PM (+150deg) -->
+            <path d="M-104,-60 A120,120 0 1,1 104,60" fill="none" stroke="url(#shiftArcGrad)" stroke-width="5" stroke-linecap="round" class="clock-arc-glow" />
 
-            <circle class="sonar-wave" cx="0" cy="0" r="10" />
+            <!-- 12 Hour tick marks & 60-second dash ring -->
+            <circle cx="0" cy="0" r="112" class="clock-dash-ring" />
+            <g class="clock-ticks">
+              <line x1="0" y1="-120" x2="0" y2="-106" class="tick-hour" />
+              <line x1="60" y1="-104" x2="52" y2="-90" class="tick-hour" />
+              <line x1="104" y1="-60" x2="90" y2="-52" class="tick-hour" />
+              <line x1="120" y1="0" x2="106" y2="0" class="tick-hour" />
+              <line x1="104" y1="60" x2="90" y2="52" class="tick-hour" />
+              <line x1="60" y1="104" x2="52" y2="90" class="tick-hour" />
+              <line x1="0" y1="120" x2="0" y2="106" class="tick-hour" />
+              <line x1="-60" y1="104" x2="-52" y2="90" class="tick-hour" />
+              <line x1="-104" y1="60" x2="-90" y2="52" class="tick-hour" />
+              <line x1="-120" y1="0" x2="-106" y2="0" class="tick-hour" />
+              <line x1="-104" y1="-60" x2="-90" y2="-52" class="tick-hour" />
+              <line x1="-60" y1="-104" x2="-52" y2="-90" class="tick-hour" />
 
-            <line x1="-500" y1="0" x2="500" y2="0" class="radar-axis" />
-            <line x1="0" y1="-450" x2="0" y2="450" class="radar-axis" />
-
-            <g class="radar-sweep-group">
-              <path d="M0,0 L200,-115 A230,230 0 0,1 230,0 Z" fill="url(#radarSweepGrad)" />
+              <text x="0" y="-86" class="clock-num" text-anchor="middle">12</text>
+              <text x="94" y="4" class="clock-num" text-anchor="middle">3</text>
+              <text x="0" y="98" class="clock-num" text-anchor="middle">6</text>
+              <text x="-94" y="4" class="clock-num" text-anchor="middle">9</text>
             </g>
 
-            <circle cx="0" cy="0" r="5" class="radar-center-dot" />
-            <circle cx="0" cy="0" r="12" class="radar-center-ring" />
+            <!-- CLOCK IN PIN at 8:00 AM (-104, -60) -->
+            <g class="clock-pin-in" transform="translate(-104, -60)">
+              <circle cx="0" cy="0" r="5" fill="#059669" />
+              <circle cx="0" cy="0" r="10" class="clock-pulse-in" />
+              <rect x="-132" y="-22" width="124" height="22" rx="11" class="clock-badge-bg in" />
+              <text x="-70" y="-7" class="clock-badge-text in" text-anchor="middle">● CLOCK IN (08:00 AM)</text>
+            </g>
 
-            <text x="14" y="4" class="radar-site-label">BATSTATE-U ALANGILAN CAMPUS GEOFENCE</text>
-            <text x="124" y="-8" class="radar-dist-label">100m</text>
-            <text x="224" y="-8" class="radar-dist-label">250m</text>
-            <text x="344" y="-8" class="radar-dist-label">500m GEOFENCE LOCK</text>
+            <!-- CLOCK OUT PIN at 5:00 PM (104, 60) -->
+            <g class="clock-pin-out" transform="translate(104, 60)">
+              <circle cx="0" cy="0" r="5" fill="#D85A63" />
+              <circle cx="0" cy="0" r="10" class="clock-pulse-out" />
+              <rect x="8" y="2" width="134" height="22" rx="11" class="clock-badge-bg out" />
+              <text x="75" y="17" class="clock-badge-text out" text-anchor="middle">● CLOCK OUT (05:00 PM)</text>
+            </g>
+
+            <!-- Animated Hour Hand (Slow) -->
+            <g class="clock-hand-hour">
+              <line x1="0" y1="12" x2="0" y2="-55" class="hand-hour-line" />
+              <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="360s" repeatCount="indefinite" />
+            </g>
+
+            <!-- Animated Minute Hand -->
+            <g class="clock-hand-minute">
+              <line x1="0" y1="16" x2="0" y2="-82" class="hand-minute-line" />
+              <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="60s" repeatCount="indefinite" />
+            </g>
+
+            <!-- Animated Second Hand (Smooth sweep with accent tip) -->
+            <g class="clock-hand-second">
+              <line x1="0" y1="22" x2="0" y2="-100" class="hand-second-line" />
+              <circle cx="0" cy="-100" r="3.5" fill="#D85A63" />
+              <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="12s" repeatCount="indefinite" />
+            </g>
+
+            <!-- Center Pivot Cap -->
+            <circle cx="0" cy="0" r="7" class="hand-pivot-outer" />
+            <circle cx="0" cy="0" r="3" class="hand-pivot-inner" />
+
+            <!-- Timekeeper captions -->
+            <text x="0" y="152" class="clock-caption" text-anchor="middle">DIGITAL TIMEKEEPING & DTR</text>
+            <text x="0" y="170" class="clock-subcaption" text-anchor="middle">AUTOMATED CLOCK IN / CLOCK OUT</text>
           </g>
 
-          <!-- Technical GIS map crosshairs "+" and corner markers -->
+          <!-- Technical Grid intersection crosshairs "+" and corner markers -->
           <g class="map-crosshairs">
             <path d="M60,60 m-10,0 h20 m-10,-10 v20" />
-            <text x="75" y="64" class="crosshair-coord">13°46'00"N · 121°02'30"E</text>
+            <text x="75" y="64" class="crosshair-coord">GRID-01 · NORTH SECTOR</text>
 
             <path d="M1140,60 m-10,0 h20 m-10,-10 v20" />
-            <text x="1000" y="64" class="crosshair-coord">13°46'00"N · 121°04'30"E</text>
+            <text x="980" y="64" class="crosshair-coord">GRID-02 · EAST SECTOR</text>
 
             <path d="M60,840 m-10,0 h20 m-10,-10 v20" />
-            <text x="75" y="844" class="crosshair-coord">13°44'30"N · 121°02'30"E</text>
+            <text x="75" y="844" class="crosshair-coord">GRID-03 · SOUTH SECTOR</text>
 
             <path d="M1140,840 m-10,0 h20 m-10,-10 v20" />
-            <text x="1000" y="844" class="crosshair-coord">13°44'30"N · 121°04'30"E</text>
+            <text x="980" y="844" class="crosshair-coord">GRID-04 · SYSTEM LOCK</text>
 
             <path d="M600,60 m-8,0 h16 m-8,-8 v16" />
             <path d="M600,840 m-8,0 h16 m-8,-8 v16" />
@@ -477,14 +519,14 @@ export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
         </svg>
 
         <div class="map-hud-top">
-          <span class="hud-item hud-live"><span class="hud-dot"></span> LIVE GPS GEOFENCE ACTIVE</span>
-          <span class="hud-item hud-mono">LAT: 13.7563° N &nbsp;|&nbsp; LNG: 121.0583° E</span>
-          <span class="hud-item hud-chip">ACCURACY: ±1.8M</span>
+          <span class="hud-item hud-live"><span class="hud-dot"></span> LIVE TIMEKEEPER ACTIVE</span>
+          <span class="hud-item hud-mono">DTR SYSTEM · AUTOMATED ATTENDANCE TRACKER</span>
+          <span class="hud-item hud-chip">CHED CMO COMPLIANT</span>
         </div>
 
         <div class="map-hud-bottom">
-          <span class="hud-item hud-mono">BSU-OJT CARTOGRAPHIC GRID · ZONE 51P</span>
-          <span class="hud-item">CHED CMO 104 S. 2017 COMPLIANT VERIFICATION</span>
+          <span class="hud-item hud-mono">DIGITAL TIME LOGGING · CLOCK IN / CLOCK OUT HUB</span>
+          <span class="hud-item">BATANGAS STATE UNIVERSITY OJT PORTAL</span>
         </div>
       </div>
       <div class="auth-orb auth-orb-1" aria-hidden="true"></div>
@@ -495,18 +537,18 @@ export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
         <span class="badge-pulse-dot"></span>
         <div class="badge-text">
           <strong>CHED CMO Verified</strong>
-          <small>OJT Compliance Gateway</small>
+          <small>OJT Hours Compliance</small>
         </div>
       </div>
 
       <div class="auth-floating-badge badge-bl" aria-hidden="true">
         <svg class="badge-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-          <circle cx="12" cy="9" r="2.5"/>
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
         </svg>
         <div class="badge-text">
-          <strong>GPS Geofenced Lock</strong>
-          <small>Anti-Tamper Attendance</small>
+          <strong>Clock In / Clock Out</strong>
+          <small>Automated DTR Timekeeping</small>
         </div>
       </div>
 
@@ -517,14 +559,13 @@ export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
         </svg>
         <div class="badge-text">
           <strong>3 Connected Portals</strong>
-          <small>Role-Isolated Access</small>
+          <small>Role-Isolated DTR Access</small>
         </div>
       </div>
 
       <section class="auth-reference-card">
         <header>
           ${brand()}
-          <div class="card-status-badge"><span class="badge-pulse-dot"></span><span>OJT PORTAL GATEWAY</span></div>
           <h2>${activate?'Activate Your MenteeLog Account':reset?(hasRecoverySession?'Reset Your Password':'Password Reset Link Needed'):forgot?'Forgot Password?':authError?'Link Expired':'MenteeLog - Authentication Hub'}</h2>
           <p>${activate?'Complete the steps below to set up your account':reset?(hasRecoverySession?'Enter a new password for your account':'To protect your account, a valid reset link from your email is required.'):forgot?'Enter your email or SR code to reset your password':authError?'This reset link is invalid or has expired. Please request a new one.':'Select your role to continue'}</p>
         </header>

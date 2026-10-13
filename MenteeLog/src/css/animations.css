@@ -230,24 +230,24 @@ html, body {
     z-index: 0;
 }
 
-/* Dual-Tier Technical Map Grid */
+/* Crisp Geometric Map Grid */
 .auth-map-grid {
     position: absolute;
     inset: 0;
     background-image:
-        /* Minor coordinate gridlines (32px) */
-        linear-gradient(to right, rgba(88, 17, 26, 0.06) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(88, 17, 26, 0.06) 1px, transparent 1px),
-        /* Major coordinate gridlines (160px) */
-        linear-gradient(to right, rgba(88, 17, 26, 0.16) 1.5px, transparent 1.5px),
-        linear-gradient(to bottom, rgba(88, 17, 26, 0.16) 1.5px, transparent 1.5px);
-    background-size: 32px 32px, 32px 32px, 160px 160px, 160px 160px;
-    mask-image: radial-gradient(ellipse at 50% 50%, black 50%, transparent 95%);
-    -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 50%, transparent 95%);
-    opacity: 0.9;
+        /* Minor coordinate gridlines (30px) */
+        linear-gradient(to right, rgba(88, 17, 26, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(88, 17, 26, 0.08) 1px, transparent 1px),
+        /* Major coordinate gridlines (150px) */
+        linear-gradient(to right, rgba(88, 17, 26, 0.18) 1.5px, transparent 1.5px),
+        linear-gradient(to bottom, rgba(88, 17, 26, 0.18) 1.5px, transparent 1.5px);
+    background-size: 30px 30px, 30px 30px, 150px 150px, 150px 150px;
+    mask-image: radial-gradient(ellipse at 50% 50%, black 72%, transparent 98%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 72%, transparent 98%);
+    opacity: 0.95;
 }
 
-/* Vector Map SVG Layer (Contours, Radar Geofence, Crosshairs) */
+/* Vector Map SVG Layer */
 .auth-map-svg {
     position: absolute;
     inset: 0;
@@ -255,85 +255,139 @@ html, body {
     height: 100%;
     pointer-events: none;
 }
-.map-contours path {
-    stroke: #58111A;
-    stroke-opacity: 0.11;
-    stroke-width: 1.2;
-    fill: none;
+
+/* Technical DTR Clock Mechanism */
+.clock-mechanism {
+    pointer-events: none;
 }
-.contour-label {
-    font-size: 10px;
-    fill: #58111A;
-    fill-opacity: 0.4;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-}
-.radar-ring {
+.clock-ring-outer {
     fill: none;
     stroke: #58111A;
-    stroke-linecap: round;
+    stroke-opacity: 0.09;
+    stroke-width: 1;
+    stroke-dasharray: 4 6;
 }
-.radar-ring.ring-1 {
-    stroke-opacity: 0.22;
-    stroke-width: 1.5;
-    stroke-dasharray: 6 5;
-}
-.radar-ring.ring-2 {
-    stroke-opacity: 0.18;
+.clock-ring-mid {
+    fill: none;
+    stroke: #58111A;
+    stroke-opacity: 0.13;
     stroke-width: 1.2;
     stroke-dasharray: 8 6;
 }
-.radar-ring.ring-3 {
-    stroke-opacity: 0.14;
-    stroke-width: 1.2;
-    stroke-dasharray: 10 8;
-}
-.radar-ring.ring-4 {
-    stroke-opacity: 0.08;
-    stroke-width: 1;
-}
-.sonar-wave {
+.clock-ring-track {
     fill: none;
-    stroke: #059669;
-    animation: sonarPulse 4.5s cubic-bezier(0.1, 0.8, 0.2, 1) infinite;
-}
-.radar-axis {
     stroke: #58111A;
-    stroke-opacity: 0.12;
+    stroke-opacity: 0.16;
+    stroke-width: 1.5;
+}
+.clock-face-base {
+    stroke: #58111A;
+    stroke-opacity: 0.24;
+    stroke-width: 2;
+}
+.clock-arc-glow {
+    filter: drop-shadow(0 0 6px rgba(5, 150, 105, 0.4));
+}
+.clock-dash-ring {
+    fill: none;
+    stroke: #58111A;
+    stroke-opacity: 0.22;
     stroke-width: 1;
-    stroke-dasharray: 4 4;
+    stroke-dasharray: 2 4;
 }
-.radar-sweep-group {
-    animation: radarSweep 14s linear infinite;
-    transform-origin: 0 0;
+.tick-hour {
+    stroke: #58111A;
+    stroke-opacity: 0.6;
+    stroke-width: 2;
+    stroke-linecap: round;
 }
-.radar-center-dot {
-    fill: #059669;
-    filter: drop-shadow(0 0 6px rgba(5, 150, 105, 0.8));
+.clock-num {
+    font-size: 11px;
+    font-weight: 700;
+    fill: #58111A;
+    fill-opacity: 0.72;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
-.radar-center-ring {
+
+/* Clock In & Clock Out Pins & Badges */
+.clock-pulse-in {
     fill: none;
     stroke: #059669;
     stroke-width: 1.5;
-    opacity: 0.8;
-    animation: pingRing 2.2s ease-out infinite;
-    transform-origin: 0 0;
+    animation: badgePulse 2s infinite ease-in-out;
 }
-.radar-site-label {
+.clock-pulse-out {
+    fill: none;
+    stroke: #D85A63;
+    stroke-width: 1.5;
+    animation: badgePulse 2s infinite ease-in-out 1s;
+}
+.clock-badge-bg.in {
+    fill: rgba(5, 150, 105, 0.12);
+    stroke: #059669;
+    stroke-width: 1.2;
+}
+.clock-badge-bg.out {
+    fill: rgba(216, 90, 99, 0.12);
+    stroke: #D85A63;
+    stroke-width: 1.2;
+}
+.clock-badge-text.in {
+    font-size: 9px;
+    font-weight: 700;
+    fill: #059669;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    letter-spacing: 0.05em;
+}
+.clock-badge-text.out {
+    font-size: 9px;
+    font-weight: 700;
+    fill: #D85A63;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    letter-spacing: 0.05em;
+}
+
+/* Clock Hands */
+.hand-hour-line {
+    stroke: #58111A;
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+.hand-minute-line {
+    stroke: #58111A;
+    stroke-opacity: 0.88;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+}
+.hand-second-line {
+    stroke: #D85A63;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+}
+.hand-pivot-outer {
+    fill: #58111A;
+}
+.hand-pivot-inner {
+    fill: #FAF4E8;
+}
+.clock-caption {
     font-size: 10px;
     font-weight: 700;
     fill: #58111A;
-    fill-opacity: 0.65;
+    fill-opacity: 0.75;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
 }
-.radar-dist-label {
-    font-size: 9px;
+.clock-subcaption {
+    font-size: 8.5px;
+    font-weight: 600;
     fill: #58111A;
     fill-opacity: 0.45;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    letter-spacing: 0.06em;
 }
+
+/* Map Grid Crosshairs */
 .map-crosshairs path {
     stroke: #58111A;
     stroke-opacity: 0.35;
@@ -537,21 +591,38 @@ html, body {
     background: linear-gradient(135deg, #58111A 0%, #3e0c13 100%) !important;
     border-bottom: 1px solid rgba(239, 223, 187, 0.2);
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 26px 28px 22px !important;
 }
-.card-status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(239, 223, 187, 0.22);
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: #EFDFBB;
-    margin-bottom: 8px;
-    text-transform: uppercase;
+.auth-reference-card header .brand-link {
+    display: inline-flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 auto 12px !important;
+    width: 100% !important;
+}
+.auth-reference-card header .logo {
+    height: 44px !important;
+    max-width: 220px !important;
+    width: auto !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
+.auth-reference-card header h2 {
+    text-align: center !important;
+    width: 100% !important;
+    margin: 0 0 6px !important;
+    color: #FFFFFF !important;
+}
+.auth-reference-card header p {
+    text-align: center !important;
+    width: 100% !important;
+    margin: 0 !important;
+    color: #EFDFBB !important;
 }
 
 .auth-reference-body {
