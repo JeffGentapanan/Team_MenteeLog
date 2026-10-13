@@ -402,7 +402,91 @@ export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
   return `<div class="auth-reference">
     <section class="auth-reference-photo">${photo('group','auth-photo')}<div class="auth-tint"></div><img class="auth-watermark" src="./assets/MenteeLog_Logo.svg" alt=""><h1>Join the MenteeLog<br>Journey.<br>Step Forward into<br>Your Future.</h1><span class="auth-rule"></span><p>${icon('shield')} Official Student Mentorship Network</p></section>
     <main class="auth-reference-main" id="main">
-      <div class="auth-bg-grid" aria-hidden="true"></div>
+      <div class="auth-map-backdrop" aria-hidden="true">
+        <div class="auth-map-grid"></div>
+        <svg class="auth-map-svg" viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="radarSweepGrad" cx="0%" cy="0%" r="100%">
+              <stop offset="0%" stop-color="#58111A" stop-opacity="0.32" />
+              <stop offset="60%" stop-color="#D85A63" stop-opacity="0.1" />
+              <stop offset="100%" stop-color="#D85A63" stop-opacity="0" />
+            </radialGradient>
+          </defs>
+
+          <!-- Topographic elevation contours -->
+          <g class="map-contours">
+            <path d="M-60,140 C180,60 380,240 680,160 C980,80 1150,220 1300,160" />
+            <path d="M-60,220 C220,130 420,320 720,240 C1020,160 1180,300 1300,240" />
+            <path d="M-60,320 C260,220 460,400 780,320 C1060,240 1200,380 1300,340" />
+            <path d="M-60,440 C280,340 520,500 820,420 C1100,340 1220,480 1300,440" />
+            <path d="M-60,580 C320,480 560,620 880,540 C1120,460 1240,600 1300,560" />
+            <path d="M-60,720 C360,620 620,740 920,660 C1160,580 1260,700 1300,680" />
+
+            <text x="240" y="115" class="contour-label">120m</text>
+            <text x="820" y="145" class="contour-label">140m</text>
+            <text x="360" y="275" class="contour-label">160m</text>
+            <text x="940" y="225" class="contour-label">180m</text>
+            <text x="440" y="445" class="contour-label">200m</text>
+            <text x="1020" y="415" class="contour-label">220m</text>
+          </g>
+
+          <!-- Geofence Radar / Sonar System centered at (x: 230, y: 310) -->
+          <g class="map-radar-center" transform="translate(230, 310)">
+            <circle class="radar-ring ring-1" cx="0" cy="0" r="120" />
+            <circle class="radar-ring ring-2" cx="0" cy="0" r="220" />
+            <circle class="radar-ring ring-3" cx="0" cy="0" r="340" />
+            <circle class="radar-ring ring-4" cx="0" cy="0" r="480" />
+
+            <circle class="sonar-wave" cx="0" cy="0" r="10" />
+
+            <line x1="-500" y1="0" x2="500" y2="0" class="radar-axis" />
+            <line x1="0" y1="-450" x2="0" y2="450" class="radar-axis" />
+
+            <g class="radar-sweep-group">
+              <path d="M0,0 L200,-115 A230,230 0 0,1 230,0 Z" fill="url(#radarSweepGrad)" />
+            </g>
+
+            <circle cx="0" cy="0" r="5" class="radar-center-dot" />
+            <circle cx="0" cy="0" r="12" class="radar-center-ring" />
+
+            <text x="14" y="4" class="radar-site-label">BATSTATE-U ALANGILAN CAMPUS GEOFENCE</text>
+            <text x="124" y="-8" class="radar-dist-label">100m</text>
+            <text x="224" y="-8" class="radar-dist-label">250m</text>
+            <text x="344" y="-8" class="radar-dist-label">500m GEOFENCE LOCK</text>
+          </g>
+
+          <!-- Technical GIS map crosshairs "+" and corner markers -->
+          <g class="map-crosshairs">
+            <path d="M60,60 m-10,0 h20 m-10,-10 v20" />
+            <text x="75" y="64" class="crosshair-coord">13°46'00"N · 121°02'30"E</text>
+
+            <path d="M1140,60 m-10,0 h20 m-10,-10 v20" />
+            <text x="1000" y="64" class="crosshair-coord">13°46'00"N · 121°04'30"E</text>
+
+            <path d="M60,840 m-10,0 h20 m-10,-10 v20" />
+            <text x="75" y="844" class="crosshair-coord">13°44'30"N · 121°02'30"E</text>
+
+            <path d="M1140,840 m-10,0 h20 m-10,-10 v20" />
+            <text x="1000" y="844" class="crosshair-coord">13°44'30"N · 121°04'30"E</text>
+
+            <path d="M600,60 m-8,0 h16 m-8,-8 v16" />
+            <path d="M600,840 m-8,0 h16 m-8,-8 v16" />
+            <path d="M60,450 m-8,0 h16 m-8,-8 v16" />
+            <path d="M1140,450 m-8,0 h16 m-8,-8 v16" />
+          </g>
+        </svg>
+
+        <div class="map-hud-top">
+          <span class="hud-item hud-live"><span class="hud-dot"></span> LIVE GPS GEOFENCE ACTIVE</span>
+          <span class="hud-item hud-mono">LAT: 13.7563° N &nbsp;|&nbsp; LNG: 121.0583° E</span>
+          <span class="hud-item hud-chip">ACCURACY: ±1.8M</span>
+        </div>
+
+        <div class="map-hud-bottom">
+          <span class="hud-item hud-mono">BSU-OJT CARTOGRAPHIC GRID · ZONE 51P</span>
+          <span class="hud-item">CHED CMO 104 S. 2017 COMPLIANT VERIFICATION</span>
+        </div>
+      </div>
       <div class="auth-orb auth-orb-1" aria-hidden="true"></div>
       <div class="auth-orb auth-orb-2" aria-hidden="true"></div>
       <div class="auth-orb auth-orb-3" aria-hidden="true"></div>
@@ -440,6 +524,7 @@ export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
       <section class="auth-reference-card">
         <header>
           ${brand()}
+          <div class="card-status-badge"><span class="badge-pulse-dot"></span><span>OJT PORTAL GATEWAY</span></div>
           <h2>${activate?'Activate Your MenteeLog Account':reset?(hasRecoverySession?'Reset Your Password':'Password Reset Link Needed'):forgot?'Forgot Password?':authError?'Link Expired':'MenteeLog - Authentication Hub'}</h2>
           <p>${activate?'Complete the steps below to set up your account':reset?(hasRecoverySession?'Enter a new password for your account':'To protect your account, a valid reset link from your email is required.'):forgot?'Enter your email or SR code to reset your password':authError?'This reset link is invalid or has expired. Please request a new one.':'Select your role to continue'}</p>
         </header>
