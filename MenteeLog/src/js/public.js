@@ -42,9 +42,14 @@ function contactSection(icon) {
             </div>
 
             <div class="contact-form-card">
-                <div class="contact-card-topbar">
-                    <span class="contact-pill-tag">✦ PARTNERSHIP & DEMO GATEWAY</span>
-                    <span class="contact-pill-meta">Response &lt; 24h</span>
+                <div class="contact-card-top-decor" aria-hidden="true">
+                    <span class="decor-line"></span>
+                    <div class="decor-motif">
+                        <span class="decor-dot dot-burgundy"></span>
+                        <span class="decor-dot dot-coral"></span>
+                        <span class="decor-dot dot-sand"></span>
+                    </div>
+                    <span class="decor-line"></span>
                 </div>
                 <h3 class="contact-title">Connect with our team to explore partnership or request a demo.</h3>
                 <p class="contact-subtitle">Let's Work Together</p>
@@ -79,13 +84,15 @@ function contactSection(icon) {
                         <label>Message <span>*</span></label>
                         <textarea name="message" placeholder="Tell us about your inquiry or how we can help..." rows="4" required></textarea>
                     </div>
-                    <button type="submit" class="btn full contact-submit">
-                        <span>Send Message</span>
-                        <svg class="btn-arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                    </button>
-                    <div class="contact-trust-footer">
-                        <span><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>256-Bit SSL Encrypted</span>
-                        <span><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Institutional Compliance Ready</span>
+                    <button type="submit" class="btn full contact-submit">Send Message</button>
+                    <div class="contact-card-bottom-decor" aria-hidden="true">
+                        <span class="decor-bottom-line"></span>
+                        <div class="decor-bottom-motif">
+                            <span class="decor-dot dot-coral"></span>
+                            <span class="decor-dot dot-burgundy"></span>
+                            <span class="decor-dot dot-coral"></span>
+                        </div>
+                        <span class="decor-bottom-line"></span>
                     </div>
                 </form>
             </div>
