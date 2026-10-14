@@ -1490,31 +1490,40 @@ html, body {
 .contact-form-card:hover {
     box-shadow: 0 30px 60px rgba(88, 17, 26, 0.13), 0 6px 20px rgba(0, 0, 0, 0.04);
 }
-.contact-card-topbar {
+/* Contact Card Top & Bottom Design Motifs (Design Only) */
+.contact-card-top-decor {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: 12px;
-    margin-bottom: 14px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #FAF4E8;
+    margin-bottom: 22px;
+    opacity: 0.9;
 }
-.contact-pill-tag {
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
-    font-weight: 700;
-    color: #D85A63;
-    background: rgba(216, 90, 99, 0.08);
-    border: 1px solid rgba(216, 90, 99, 0.2);
+.contact-card-top-decor .decor-line {
+    flex: 1;
+    max-width: 90px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #EFDFBB 50%, transparent);
+}
+.contact-card-top-decor .decor-motif {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: 4px 10px;
+    background: #FAF4E8;
+    border: 1px solid #EFDFBB;
     border-radius: 999px;
-    text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(88, 17, 26, 0.04);
 }
-.contact-pill-meta {
-    font-size: 0.75rem;
-    color: #6B7280;
-    font-weight: 500;
+.contact-card-top-decor .decor-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
 }
+.contact-card-top-decor .dot-burgundy { background: #58111A; }
+.contact-card-top-decor .dot-coral { background: #D85A63; }
+.contact-card-top-decor .dot-sand { background: #EFDFBB; border: 1px solid #D85A63; }
 .contact-title {
     color: #58111A;
     font-size: 1.35rem;
@@ -1600,19 +1609,40 @@ html, body {
 .contact-submit:hover .btn-arrow-icon {
     transform: translateX(4px);
 }
-.contact-trust-footer {
+.contact-card-bottom-decor {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-top: 6px;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 22px;
     padding-top: 6px;
-    border-top: 1px solid #F3F4F6;
-    font-size: 0.74rem;
-    color: #6B7280;
-    font-weight: 500;
-    flex-wrap: wrap;
+    opacity: 0.85;
 }
+.contact-card-bottom-decor .decor-bottom-line {
+    flex: 1;
+    max-width: 100px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #EFDFBB 50%, transparent);
+}
+.contact-card-bottom-decor .decor-bottom-motif {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    background: #FAF4E8;
+    border: 1px solid #EFDFBB;
+    border-radius: 999px;
+    box-shadow: 0 2px 6px rgba(88, 17, 26, 0.04);
+}
+.contact-card-bottom-decor .decor-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.contact-card-bottom-decor .dot-burgundy { background: #58111A; }
+.contact-card-bottom-decor .dot-coral { background: #D85A63; }
+.contact-card-bottom-decor .dot-sand { background: #EFDFBB; border: 1px solid #D85A63; }
 
 /* Keyframes */
 @keyframes contactGlowPulse {
@@ -1694,20 +1724,9 @@ html, body {
         bottom: 8px;
         left: -8px;
     }
-    .contact-card-topbar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
     .contact-form .form-row {
         flex-direction: column;
         gap: 20px;
-    }
-    .contact-trust-footer {
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        text-align: center;
     }
 }
 
@@ -2271,9 +2290,15 @@ input, select, textarea {
     animation: fadeInDown 0.15s ease-out both;
 }
 
-/* Smooth sidebar mobile slide */
+/* Smooth sidebar mobile slide & desktop unscrollable fix */
 .portal-sidebar {
     transition: transform 0.25s ease !important;
+}
+@media (min-width: 1001px) {
+    .portal-sidebar {
+        overflow: hidden !important;
+        overflow-y: hidden !important;
+    }
 }
 .portal-scrim {
     transition: opacity 0.25s ease !important;

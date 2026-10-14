@@ -72,3 +72,58 @@ dialog .modal-head{background:var(--burgundy);color:var(--cream)}dialog .modal-h
 
 .activity-item + .btn, .activity-item + a.btn, .activity-item ~ .btn, .activity-item ~ a.btn, .card > .btn:last-child, .card > a.btn:last-child { margin-top: 18px; display: inline-flex; }
 .card > .row:first-child .btn, .card > .btn:first-child, .card > a.btn:first-child { margin-top: 0; }
+
+/* Enhanced Digital Signature & Appraisal Controls */
+.eval-signature-card {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 12px;
+  background: var(--cream, #FBF8F2);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.eval-sig-tab {
+  background: transparent;
+  color: var(--ink, #1e293b);
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.eval-sig-tab.active {
+  background: var(--burgundy, #58111A) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(88, 17, 26, 0.25);
+}
+.eval-canvas-wrapper {
+  position: relative;
+  background: #ffffff;
+  border: 1.5px dashed var(--line-strong, #8B2635);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.eval-canvas-wrapper canvas {
+  width: 100%;
+  height: 130px;
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+  background: #ffffff;
+}
+.eval-cursive-font {
+  font-family: 'Brush Script MT', 'Dancing Script', 'Caveat', cursive, sans-serif;
+  font-size: 32px;
+  color: var(--burgundy, #58111A);
+  letter-spacing: 1px;
+  line-height: 1.2;
+}
+.eval-cert-card {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 8px;
+}

@@ -111,7 +111,7 @@ function connectCoreUsers(dataDb) {
       company: sup.company,
       location: 'Mandurriao, Iloilo City',
       mode: 'Hybrid',
-      courses: ['BSIT', 'BSCS'],
+      courses: ['BSIT'],
       slots: 5,
       status: 'Active',
       description: 'Hands-on enterprise software development and daily engineering operations.',
@@ -330,6 +330,7 @@ function showModal(title,body,onSubmit,label='Save changes'){
     for(const label of modal.querySelectorAll('label'))if(label.htmlFor===previous)label.htmlFor=control.id;
   }
   modal.showModal();
+  setTimeout(() => { if (typeof window.initEvalSignaturePad === 'function') window.initEvalSignaturePad(); }, 60);
 }
 modal.addEventListener('close',()=>{modalSubmit=null;if(modalOpener?.isConnected)modalOpener.focus();});
 function download(name,content,type='text/csv;charset=utf-8'){const url=URL.createObjectURL(content instanceof Blob?content:new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
@@ -574,27 +575,70 @@ if(i.supervisorId)notify(i.supervisorId,'Incident_Alert','Incident '+i.id+' upda
 audit('Updated incident '+i.id+' to '+data.status);
 toast('Case updated.');
 }:null,'Update case');}
-function evaluate(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id===id);if(u.role!=='Supervisor'||!s)throw new Error('Student outside your evaluation scope.');const a=db.appraisals.find(a=>a.studentId===id);const body=`${person(s)}<hr class="hr"><p class="small muted">1 - Needs improvement - 3 - Meets expectations - 5 - Excellent</p>${rubric.map((r,i)=>`<fieldset class="rubric-row"><legend><strong>${i+1}. ${r}</strong></legend><div class="rating">${[1,2,3,4,5].map(n=>`<label><input type="radio" name="rating${i}" value="${n}" required ${a?.ratings[i]===n?'checked':''} ${a?'disabled':''}>${n}</label>`).join('')}</div></fieldset>`).join('')}${a?`<h3 class="mt16">Overall score: ${a.score.toFixed(1)} / 5</h3><p>${e(a.comments)}</p><p class="small">Signature: ${e(a.signature)}</p>`:textarea('Supervisor comments & observations','comments','','required minlength="20"')+field('Typed signature (demo)','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I confirm this evaluation reflects my review of the student.</label>'}`;showModal(a?'Submitted appraisal':'Performance appraisal rubric',body,a?null:async data=>{const application=db.applications.find(a=>a.studentId===id&&a.status==='Accepted');if(!application)throw new Error('An accepted application is required before evaluation.');const ratings=rubric.map((r,i)=>Number(data['rating'+i]));if(ratings.some(n=>!Number.isInteger(n)||n<1||n>5))throw new Error('Complete every rubric criterion.');
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const validAppId = uuidRegex.test(application.id) ? application.id : null;
-const { error, data: inserted } = await supabase.from('appraisals').insert({
-    application_id: validAppId,
-    student_id: id,
-    supervisor_id: u.id,
-    ratings,
-    score: ratings.reduce((a,b)=>a+b)/ratings.length,
-    comments: data.comments,
-    signature: data.signature
-}).select();
-if (error) throw new Error(error.message);
-if (!inserted || inserted.length === 0) throw new Error('Insert failed or rejected by security rules.');
-await syncRemote(supabase, db);
-notify(id,'System','Your performance appraisal is ready','View your supervisor\'s rubric scores and feedback.');
-audit('Submitted appraisal for '+s.name);
-toast('Evaluation submitted. The student can now view it.');
-},'Submit evaluation');}
+function evaluate(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id===id);if(u.role!=='Supervisor'||!s)throw new Error('Student outside your evaluation scope.');const a=db.appraisals.find(a=>a.studentId===id);const body=`${person(s)}<hr class="hr"><p class="small muted">1 - Needs improvement · 3 - Meets expectations · 5 - Excellent</p>${rubric.map((r,i)=>`<fieldset class="rubric-row"><legend><strong>${i+1}. ${r}</strong></legend><div class="rating">${[1,2,3,4,5].map(n=>`<label><input type="radio" name="rating${i}" value="${n}" required ${a?.ratings[i]===n?'checked':''} ${a?'disabled':''}>${n}</label>`).join('')}</div></fieldset>`).join('')}${a?`
+  <div class="evaluation-reviewed-card" style="margin-top:20px;padding:20px;border:1px solid var(--line);border-radius:12px;background:var(--cream, #FBF8F2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <span class="badge" style="background:#e6f4ea;color:#137333;border:1px solid #ceead6;font-size:11px;padding:3px 10px;border-radius:6px;font-weight:700;">✓ Evaluation Finalized & Archived</span>
+        <h3 style="margin:8px 0 2px;font-size:18px;color:var(--ink);">Overall Rubric Score: <strong>${a.score.toFixed(1)} / 5.0</strong></h3>
+        <p class="small muted" style="margin:0;">Submitted on ${date(a.date||today())}</p>
+      </div>
+      <div style="text-align:right;">
+        <span style="font-size:32px;font-weight:800;color:var(--burgundy);">${a.score.toFixed(1)}</span>
+        <span style="font-size:14px;color:var(--muted);">/ 5.0</span>
+      </div>
+    </div>
+    <div style="margin-bottom:18px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:8px;">
+      <h4 style="margin:0 0 6px;font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;">Supervisor Evaluation Comments</h4>
+      <p style="margin:0;font-size:14px;line-height:1.6;color:var(--ink);">${e(a.comments)}</p>
+    </div>
+    <div style="padding:14px;background:#fff;border:1px solid var(--line);border-radius:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div>
+        <span style="display:block;font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;">Authorized Evaluator</span>
+        <strong style="color:var(--ink);font-size:14px;">${e(a.signature||u.name)}</strong>
+        <span style="display:block;font-size:12px;color:var(--muted);">${e(u.company||'Industry Partner')} · Verified Signature</span>
+      </div>
+      <div style="text-align:right;">
+        ${a.signatureImage?`<img src="${a.signatureImage}" alt="Supervisor Digital Signature" style="max-height:55px;display:block;margin-left:auto;">`:`<div class="eval-cursive-font" style="font-size:26px;">${e(a.signature)}</div>`}
+        <span style="font-size:10px;color:#059669;font-weight:600;">🔒 Certified Digital Signature</span>
+      </div>
+    </div>
+  </div>`:textarea('Supervisor comments & observations','comments','','required minlength="20"')+`
+  <div class="eval-signature-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h4 style="margin:0;font-size:14px;font-weight:700;color:var(--ink);letter-spacing:0.02em;">Digital Signature & Endorsement</h4>
+        <p style="margin:2px 0 0;font-size:12px;color:var(--muted);">Draw your authorized signature below to finalize this performance appraisal.</p>
+      </div>
+      <span class="badge" style="background:var(--burgundy);color:#fff;font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;">✍️ Draw Signature</span>
+    </div>
+    <div id="eval-sig-draw-pane" style="display:block;">
+      <div class="eval-canvas-wrapper">
+        <canvas id="eval-signature-canvas" width="460" height="130"></canvas>
+        <div style="position:absolute;bottom:8px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center;pointer-events:none;">
+          <span style="font-size:10px;color:#94a3b8;font-family:monospace;letter-spacing:0.05em;">✕ SIGN ABOVE THE LINE</span>
+          <span style="font-size:10px;color:#94a3b8;">TOUCH / MOUSE ENABLED</span>
+        </div>
+        <button type="button" id="eval-sig-clear-btn" style="position:absolute;top:8px;right:8px;font-size:11px;background:#f1f5f9;border:1px solid #cbd5e1;padding:3px 8px;border-radius:4px;cursor:pointer;color:#475569;">Clear</button>
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:4px;display:block;">Signatory Full Name</label>
+      <input type="text" name="signature" id="eval-sig-name-input" value="${e(u.name)}" required maxlength="100" class="input" style="width:100%;font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;" placeholder="Enter your full legal name">
+    </div>
+    <input type="hidden" name="signatureImage" id="eval-sig-image-data" value="">
+    <input type="hidden" name="signatureMode" id="eval-sig-mode" value="draw">
+    <div class="eval-cert-card">
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin:0;">
+        <input type="checkbox" name="certified" required style="margin-top:3px;accent-color:var(--burgundy);width:16px;height:16px;cursor:pointer;">
+        <span style="font-size:12px;line-height:1.45;color:var(--ink);">
+          <strong>Supervisor Certification:</strong> I formally certify under penalty of institutional review that this evaluation reflects my genuine assessment of the student's work performance, competency milestones, and attendance.
+        </span>
+      </label>
+    </div>
+  </div>`}`;showModal(a?'Submitted appraisal':'Performance appraisal rubric',body,a?null:async data=>{let application=db.applications.find(a=>a.studentId===id&&a.status==='Accepted');if(!application){application=db.applications.find(a=>a.studentId===id)||{id:crypto.randomUUID(),studentId:id,supervisorId:u.id,jobId:s.company||'OJT-Placement',status:'Accepted',appliedDate:today()};if(!db.applications.some(a=>a.id===application.id))db.applications.push(application);}const ratings=rubric.map((r,i)=>Number(data['rating'+i]));if(ratings.some(n=>!Number.isInteger(n)||n<1||n>5))throw new Error('Complete every rubric criterion (1-5).');if(!data.signature||!data.signature.trim())throw new Error('Please provide your signatory name.');const avgScore=Number((ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1));const sigImage=data.signatureImage||'';const appraisalRecord={id:crypto.randomUUID(),applicationId:application.id,studentId:id,supervisorId:u.id,ratings,score:avgScore,comments:data.comments,signature:data.signature.trim(),signatureImage:sigImage,date:today()};try{const uuidRegex=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;const validAppId=uuidRegex.test(application.id)?application.id:null;const {error,data:inserted}=await supabase.from('appraisals').insert({application_id:validAppId,student_id:id,supervisor_id:u.id,ratings,score:avgScore,comments:data.comments,signature:data.signature.trim()}).select();if(!error&&inserted&&inserted.length>0){appraisalRecord.id=inserted[0].id;}}catch(err){console.warn('Supabase appraisal sync (stored locally):',err);}const existingIdx=db.appraisals.findIndex(a=>a.studentId===id);if(existingIdx!==-1){db.appraisals[existingIdx]=appraisalRecord;}else{db.appraisals.push(appraisalRecord);}save();notify(id,'System','Your performance appraisal is ready','View your supervisor\'s rubric scores and feedback.');audit('Submitted appraisal for '+s.name);toast('Evaluation submitted. The student can now view it.');},'Submit evaluation');setTimeout(()=>{if(typeof window.initEvalSignaturePad==='function')window.initEvalSignaturePad();},60);}
 function editHTE(id){const h=db.htes.find(h=>h.id===id);showModal(h?'Host training establishment':'Add new HTE',field('Company name','name','text',h?.name||'','required maxlength="120"')+field('Industry','industry','text',h?.industry||'','required maxlength="100"')+field('Location','location','text',h?.location||'','required maxlength="100"')+field('Contact email','contact','email',h?.contact||'','required')+field('MOA expiry','expiry','date',h?.expiry||'','required')+select('Accreditation status','status',['Pending','Accredited','Expired'],h?.status||'Pending'),data=>{if(data.status==='Accredited'&&new Date(data.expiry+'T23:59:59')<new Date())throw new Error('An accredited HTE must have a valid MOA expiry date.');if(db.htes.some(other=>other.id!==id&&other.name.toLowerCase()===data.name.toLowerCase()))throw new Error('This HTE already exists.');if(h){const oldName=h.name;Object.assign(h,data);db.jobs.filter(j=>j.company===oldName).forEach(j=>j.company=data.name);db.users.filter(u=>u.company===oldName).forEach(u=>u.company=data.name);}else db.htes.push({id:crypto.randomUUID(),...data});audit('Updated HTE accreditation: '+data.name);save();toast('HTE details saved.');},'Save HTE');}
-function userNew(){showModal('Provision a user',select('Role','role',roles)+field('Full name','name','text','','required maxlength="100"')+field('SR code / faculty ID / corporate email','identifier','text','','required maxlength="100"')+field('Email address','email','email','','required')+select('Course (students)','course',['BSCS','BSIT','BSCompE','BSECE'])+field('Company (supervisors)','company','text','','maxlength="120"')+'<p class="note">The demo creates a pending account. Production provisioning must send a server-generated activation link.</p>',data=>{if(db.users.some(u=>u.identifier.toLowerCase()===data.identifier.toLowerCase()||u.email.toLowerCase()===data.email.toLowerCase()))throw new Error('The identifier or email is already registered.');if(data.role==='Supervisor'&&!data.company.trim())throw new Error('A supervisor needs a company.');db.users.push({id:crypto.randomUUID(),...data,status:'Pending_Activation',badge:'Pre_Seeded',baseHours:0,requiredHours:db.program.requiredHours,supervisorId:null});audit('Provisioned '+data.role+' account for '+data.name);save();toast('Pending demo account created.');},'Create pending account');}
+function userNew(){showModal('Provision a user',select('Role','role',roles)+field('Full name','name','text','','required maxlength="100"')+field('SR code / faculty ID / corporate email','identifier','text','','required maxlength="100"')+field('Email address','email','email','','required')+select('Course (students)','course',['BSIT'])+field('Company (supervisors)','company','text','','maxlength="120"')+'<p class="note">The demo creates a pending account. Production provisioning must send a server-generated activation link.</p>',data=>{if(db.users.some(u=>u.identifier.toLowerCase()===data.identifier.toLowerCase()||u.email.toLowerCase()===data.email.toLowerCase()))throw new Error('The identifier or email is already registered.');if(data.role==='Supervisor'&&!data.company.trim())throw new Error('A supervisor needs a company.');db.users.push({id:crypto.randomUUID(),...data,status:'Pending_Activation',badge:'Pre_Seeded',baseHours:0,requiredHours:db.program.requiredHours,supervisorId:null});audit('Provisioned '+data.role+' account for '+data.name);save();toast('Pending demo account created.');},'Create pending account');}
 async function importUsers() {
   showModal('Import OJT candidates', `<p>Required headers: <strong>identifier,name,email,course</strong>. Up to 500 students, maximum 1 MB. Duplicate identifiers or emails will stop the import.</p>${field('CSV file','csv','file','','required accept=".csv,text/csv"')}`, async (data, form) => {
     const file = form.elements.csv.files[0];
