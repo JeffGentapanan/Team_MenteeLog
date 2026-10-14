@@ -28,7 +28,7 @@ export function createPortalViews(c){
   const incident=(id)=>{const i=c.visibleIncidents(u()).find(i=>i.id===id);if(!i)throw new Error('This case is outside your portal scope.');return i;};
   const job=(id)=>{const j=db().jobs.find(j=>j.id===id&&(u().role!=='Supervisor'||j.supervisorId===u().id)&&(u().role!=='Student'||j.status==='Active'));if(!j)throw new Error('Position unavailable.');return j;};
   const descriptors=['Executes project milestones efficiently with minimal oversight. Maintains industry standards in code and documentation.','Adheres closely to the OJT schedule and communicates attendance changes.','Demonstrates capacity to propose engineering solutions and seeks feedback.','Proficiency in tools, software, and technical tasks.','Expresses complex software concepts clearly to non-technical stakeholders.'];
-  function appraisalResult(s,a){return `<div class="ref-appraisal-result"><div class="ref-identity"><div class="row"><span class="avatar">${e(s.name.split(' ').map(n=>n[0]).slice(0,2).join(''))}</span><div><h2>${e(s.name)}</h2><small>${e(s.course)} · ${e(s.company||'OJT Student')}</small></div></div><div class="ref-overall"><small>OVERALL SCORE</small><strong>${a?a.score.toFixed(1)+'<small> / 5.0</small>':'Pending'}</strong></div></div><h2 class="ref-rubric-heading">Performance Appraisal Rubric</h2>`+(a?rubric.map((label,i)=>panel('',`<div class="ref-rubric"><div><h3>${i+1}. ${e(label)}</h3><p>${descriptors[i]}</p></div><div class="ref-scores">${[1,2,3,4,5].map(n=>`<span class="${a.ratings[i]===n?'selected':''}">${n}</span>`).join('')}</div></div>`)).join('')+panel('Supervisor Comments & General Observations',`<blockquote>${e(a.comments)}</blockquote><small>${e(c.student(a.supervisorId)?.name)} · ${date(a.date)}</small>`):panel('',empty('Your appraisal is not available yet','Your supervisor’s submitted rubric and comments will appear here.')) )+'</div>';}
+  function appraisalResult(s,a){return `<div class="ref-appraisal-result"><div class="ref-identity"><div class="row"><span class="avatar">${e(s.name.split(' ').map(n=>n[0]).slice(0,2).join(''))}</span><div><h2>${e(s.name)}</h2><small>${e(s.course)} · ${e(s.company||'OJT Student')}</small></div></div><div class="ref-overall"><small>OVERALL SCORE</small><strong>${a?a.score.toFixed(1)+'<small> / 5.0</small>':'Pending'}</strong></div></div><h2 class="ref-rubric-heading">Performance Appraisal Rubric</h2>`+(a?rubric.map((label,i)=>panel('',`<div class="ref-rubric"><div><h3>${i+1}. ${e(label)}</h3><p>${descriptors[i]}</p></div><div class="ref-scores">${[1,2,3,4,5].map(n=>`<span class="${a.ratings[i]===n?'selected':''}">${n}</span>`).join('')}</div></div>`)).join('')+panel('Supervisor Comments & Official Endorsement',`<blockquote>${e(a.comments)}</blockquote><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);"><div><small style="display:block;color:var(--muted);font-size:12px;">Evaluated & Signed by</small><strong style="color:var(--ink);">${e(c.student(a.supervisorId)?.name||a.signature||'Supervisor')}</strong><span style="display:block;font-size:11px;color:var(--muted);">${e(s.company||'Industry Partner')} · ${date(a.date||today())}</span></div><div style="text-align:right;">${a.signatureImage?`<img src="${a.signatureImage}" alt="Supervisor Digital Signature" style="max-height:50px;display:block;margin-left:auto;">`:`<div style="font-family:'Brush Script MT','Caveat',cursive,sans-serif;font-size:22px;color:var(--burgundy);">${e(a.signature)}</div>`}<span class="badge" style="background:#e6f4ea;color:#137333;border:1px solid #ceead6;font-size:10px;padding:2px 8px;border-radius:4px;">✓ Authenticated Digital Signature</span></div></div>`):panel('',empty('Your appraisal is not available yet','Your supervisor’s submitted rubric and comments will appear here.')) )+'</div>';}
 
 
   function jobs(){const {sub,id}=r();const isStudent=u().role==='Student';
@@ -201,8 +201,8 @@ export function createPortalViews(c){
   }
 
   function appraisals(){const {sub,id}=r();if(u().role==='Student')return '<h1 class="sr-only">Performance Appraisal</h1><p class="ref-evaluation-period">Evaluation Period: Final Assessment</p>'+appraisalResult(u(),db().appraisals.find(a=>a.studentId===u().id));
-    if(sub==='evaluate'){const s=student(id);return back('appraisals')+`<div class="ref-identity">${person(s)}<span>Final Evaluation Period</span></div>`+legacyForm(()=>c.legacy.evaluate(id),()=>finish('Evaluation submitted successfully!','appraisals','submitted',id));}
-    if(sub==='submitted'){const s=student(id),a=db().appraisals.find(a=>a.studentId===id);return `<div class="ref-success"><span class="ref-success-icon">${icon('check')}</span><h1>Evaluation Submitted Successfully!</h1><p>Appraisal rubric has been processed and archived.</p>${panel('Evaluation Summary',`<p>Student: ${e(s.name)}</p><p>Evaluation type: Final Evaluation</p><h2>${a?.score.toFixed(1)||'—'} / 5.0</h2><p>${e(a?.comments||'')}</p>`)}${nav('Back to Appraisals','appraisals','','','')}</div>`;}
+    if(sub==='evaluate'){const s=student(id);setTimeout(()=>{if(typeof window.initEvalSignaturePad==='function')window.initEvalSignaturePad();},60);return back('appraisals')+`<div class="ref-identity">${person(s)}<span>Final Evaluation Period</span></div>`+legacyForm(()=>c.legacy.evaluate(id),()=>finish('Evaluation submitted successfully!','appraisals','submitted',id));}
+    if(sub==='submitted'){const s=student(id),a=db().appraisals.find(a=>a.studentId===id);return `<div class="ref-success"><span class="ref-success-icon">${icon('check')}</span><h1>Evaluation Submitted Successfully!</h1><p>Appraisal rubric has been processed and archived.</p>${panel('Evaluation Summary',`<p>Student: ${e(s.name)}</p><p>Evaluation type: Final Evaluation</p><h2>${a?.score.toFixed(1)||'—'} / 5.0</h2><p style="margin-top:8px;">${e(a?.comments||'')}</p><div style="margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;"><div><span style="font-size:11px;color:var(--muted);display:block;">Digitally Signed by</span><strong>${e(a?.signature||u().name)}</strong></div>${a?.signatureImage?`<img src="${a.signatureImage}" alt="Signature" style="max-height:45px;">`:''}</div>`)}${nav('Back to Appraisals','appraisals','','','')}</div>`;}
     const list=visibleStudents(db(),u()).filter(s=>match(s.name,s.course));return heading('Performance Appraisal','Evaluate student performance, record scores, and sign off evaluations.')+panel('',search('Search by student name or cohort')+(list.length?table(['Intern Name','Department','Evaluation Period','Score / Rating','Status','Action'],list.map(s=>{const a=db().appraisals.find(a=>a.studentId===s.id);return `<tr><td>${person(s)}</td><td>${e(s.company)}</td><td>Final Evaluation</td><td>${a?a.score.toFixed(1)+' / 5.0':'— Not evaluated'}</td><td>${badge(a?'Completed':'Pending')}</td><td>${nav(a?'Review':'Evaluate','appraisals','evaluate',s.id,'small')}</td></tr>`;})):empty('No interns found','No student records found to evaluate.')));
   }
 
@@ -828,6 +828,142 @@ return false;
   async function governanceAction(){return false;}
 
   return {page,action,submit};
+}
+
+export function initEvalSignaturePad() {
+  const canvas = document.getElementById('eval-signature-canvas');
+  if (!canvas || canvas._evalInit) return;
+  canvas._evalInit = true;
+
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const width = rect.width || 460;
+  const height = 130;
+
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
+
+  ctx.scale(dpr, dpr);
+  ctx.strokeStyle = '#58111A';
+  ctx.lineWidth = 2.4;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  let drawing = false;
+  let hasDrawn = false;
+  let lastX = 0;
+  let lastY = 0;
+
+  function getCanvasPos(e) {
+    const r = canvas.getBoundingClientRect();
+    const cx = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+    const cy = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
+    return {
+      x: cx - r.left,
+      y: cy - r.top
+    };
+  }
+
+  function start(e) {
+    e.preventDefault();
+    drawing = true;
+    hasDrawn = true;
+    const pos = getCanvasPos(e);
+    lastX = pos.x;
+    lastY = pos.y;
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+  }
+
+  function move(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const pos = getCanvasPos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    lastX = pos.x;
+    lastY = pos.y;
+
+    const hidden = document.getElementById('eval-sig-image-data');
+    if (hidden) hidden.value = canvas.toDataURL('image/png');
+  }
+
+  function stop() {
+    if (drawing) {
+      drawing = false;
+      const hidden = document.getElementById('eval-sig-image-data');
+      if (hidden && hasDrawn) {
+        hidden.value = canvas.toDataURL('image/png');
+      }
+    }
+  }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', stop);
+
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  window.addEventListener('touchend', stop);
+  window.addEventListener('touchcancel', stop);
+
+  const clearBtn = document.getElementById('eval-sig-clear-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      ctx.clearRect(0, 0, width, height);
+      hasDrawn = false;
+      const hidden = document.getElementById('eval-sig-image-data');
+      if (hidden) hidden.value = '';
+    });
+  }
+
+  const tabDraw = document.getElementById('tab-sig-draw');
+  const tabType = document.getElementById('tab-sig-type');
+  const paneDraw = document.getElementById('eval-sig-draw-pane');
+  const paneType = document.getElementById('eval-sig-type-pane');
+  const modeInput = document.getElementById('eval-sig-mode');
+
+  if (tabDraw && tabType && paneDraw && paneType) {
+    tabDraw.addEventListener('click', (e) => {
+      e.preventDefault();
+      tabDraw.classList.add('active');
+      tabType.classList.remove('active');
+      paneDraw.style.display = 'block';
+      paneType.style.display = 'none';
+      if (modeInput) modeInput.value = 'draw';
+    });
+
+    tabType.addEventListener('click', (e) => {
+      e.preventDefault();
+      tabType.classList.add('active');
+      tabDraw.classList.remove('active');
+      paneDraw.style.display = 'none';
+      paneType.style.display = 'block';
+      if (modeInput) modeInput.value = 'type';
+    });
+  }
+
+  const nameInput = document.getElementById('eval-sig-name-input');
+  const stampNamePreview = document.getElementById('eval-stamp-name-preview');
+  const cursivePreview = document.getElementById('eval-cursive-preview');
+
+  if (nameInput) {
+    nameInput.addEventListener('input', () => {
+      const val = nameInput.value.trim() || 'Supervisor Signature';
+      if (stampNamePreview) stampNamePreview.textContent = val;
+      if (cursivePreview) cursivePreview.textContent = val;
+    });
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.initEvalSignaturePad = initEvalSignaturePad;
 }
 
 
