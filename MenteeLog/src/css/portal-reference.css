@@ -69,3 +69,6 @@ dialog .modal-head{background:var(--burgundy);color:var(--cream)}dialog .modal-h
 
 .application-card[data-status="Under_Review"]>.row>.badge{background:#abc9a1;color:#203d24;padding:6px 12px}
 @media(max-width:650px){.application-step>span{white-space:nowrap}.application-path{column-gap:3px}.application-step{font-size:10px}}
+
+.activity-item + .btn, .activity-item + a.btn, .activity-item ~ .btn, .activity-item ~ a.btn, .card > .btn:last-child, .card > a.btn:last-child { margin-top: 18px; display: inline-flex; }
+.card > .row:first-child .btn, .card > .btn:first-child, .card > a.btn:first-child { margin-top: 0; }

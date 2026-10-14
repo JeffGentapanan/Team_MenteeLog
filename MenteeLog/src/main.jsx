@@ -18,7 +18,7 @@ window.addEventListener('load', () => window.scrollTo(0, 0));
 window.addEventListener('scroll', () => {
   const headers = document.querySelectorAll('.reference-header, .topbar');
   headers.forEach(h => {
-    if (window.scrollY > 20) {
+    if (window.scrollY > 40) {
       h.classList.add('scrolled-header');
     } else {
       h.classList.remove('scrolled-header');

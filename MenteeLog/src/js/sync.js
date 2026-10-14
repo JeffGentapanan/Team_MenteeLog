@@ -7,7 +7,7 @@ export async function syncRemote(supabase, db) {
   const currentRun = ++syncRunCounter;
 
   try {
-    const [jobsRes, appsRes, profilesRes, badgesRes, logsRes, incidentsRes, appraisalsRes, docsRes] = await Promise.all([
+    const [jobsRes, appsRes, profilesRes, badgesRes, logsRes, incidentsRes, appraisalsRes, docsRes, registryRes] = await Promise.all([
       supabase.from('listings_jobs').select('*'),
       supabase.from('applications').select('*'),
       supabase.from('profiles').select('*'),
@@ -15,7 +15,8 @@ export async function syncRemote(supabase, db) {
       supabase.from('logs').select('*'),
       supabase.from('incidents').select('*'),
       supabase.from('appraisals').select('*'),
-      supabase.from('documents').select('*')
+      supabase.from('documents').select('*'),
+      supabase.from('school_registry').select('*')
     ]);
 
     if (currentRun !== syncRunCounter) return false;
@@ -61,22 +62,41 @@ export async function syncRemote(supabase, db) {
       badgesMap[b.student_id] = b.badge;
     }
 
-    let newUsers = profilesRes.data.map(p => ({
-      id: p.id,
-      role: p.role,
-      identifier: p.identifier || '',
-      email: p.email || '',
-      name: (p.full_name && p.full_name.trim()) || (p.email ? p.email.split('@')[0] : 'Unnamed user'),
-      course: p.course || '',
-      company: p.company || '',
-      supervisorId: p.supervisor_id || null,
-      baseHours: p.base_hours || 0,
-      requiredHours: p.required_hours || 600,
-      phone: p.phone || '',
-      bio: p.bio || '',
-      status: p.status || 'Active',
-      badge: badgesMap[p.id] || (p.role === 'Student' ? 'Eligible' : undefined)
-    }));
+    let newUsers = profilesRes.data.map(p => {
+      const existing = (db.users || []).find(u => 
+        u.id === p.id || 
+        (u.email && p.email && u.email.toLowerCase() === p.email.toLowerCase()) ||
+        (u.identifier && p.identifier && u.identifier.toLowerCase() === p.identifier.toLowerCase())
+      );
+      const identifier = p.identifier || existing?.identifier || '';
+      const name = (p.full_name && p.full_name.trim()) || existing?.name || (p.email ? p.email.split('@')[0] : 'Unnamed user');
+      const course = p.course || existing?.course || (p.role === 'Student' ? 'BSIT' : '');
+
+      if (existing && (!p.identifier || !p.course || !p.full_name)) {
+        supabase.from('profiles').update({
+          identifier: identifier,
+          full_name: name,
+          course: course
+        }).eq('id', p.id).then?.(() => {}).catch?.(() => {});
+      }
+
+      return {
+        id: p.id,
+        role: p.role,
+        identifier: identifier,
+        email: p.email || existing?.email || '',
+        name: name,
+        course: course,
+        company: p.company || existing?.company || '',
+        supervisorId: p.supervisor_id || existing?.supervisorId || null,
+        baseHours: p.base_hours || existing?.baseHours || 0,
+        requiredHours: p.required_hours || existing?.requiredHours || 500,
+        phone: p.phone || existing?.phone || '',
+        bio: p.bio || existing?.bio || '',
+        status: p.status || existing?.status || 'Active',
+        badge: badgesMap[p.id] || existing?.badge || (p.role === 'Student' ? 'Active' : undefined)
+      };
+    });
 
     const newLogs = (logsRes.data || []).map(l => ({
       id: l.id,
@@ -191,9 +211,9 @@ export async function syncRemote(supabase, db) {
           supervisorId: sup.id,
           title: 'Software Engineer Intern',
           company: sup.company,
-          location: 'BGC, Taguig',
+          location: 'Mandurriao, Iloilo City',
           mode: 'Hybrid',
-          courses: ['BS Information Technology', 'BS Computer Science'],
+          courses: ['BSIT', 'BSCS'],
           slots: 5,
           status: 'Active',
           description: 'Hands-on enterprise software development and daily engineering operations.',
@@ -218,6 +238,36 @@ export async function syncRemote(supabase, db) {
       }
     }
     newUsers = newUsers.filter(u => !String(u.id).startsWith('s_dummy') && !['Alice Chen','Bob Smith','Charlie Cruz','Diana Reyes','Example Intern'].includes(u.name));
+    
+    // 1. Include any pre-seeded candidates from school_registry
+    if (registryRes?.data && registryRes.data.length > 0) {
+      for (const reg of registryRes.data) {
+        if (!newUsers.some(u => (u.identifier && u.identifier.toLowerCase() === (reg.identifier || '').toLowerCase()) || (u.email && u.email.toLowerCase() === (reg.email || '').toLowerCase()))) {
+          newUsers.push({
+            id: reg.id || crypto.randomUUID(),
+            role: reg.role || 'Student',
+            identifier: reg.identifier || '',
+            email: reg.email || '',
+            name: reg.name || reg.full_name || 'Pre-Seeded Student',
+            course: reg.course || 'BSIT',
+            company: '',
+            supervisorId: null,
+            baseHours: 0,
+            requiredHours: db.program?.requiredHours || 500,
+            status: 'Pending_Activation',
+            badge: 'Pre_Seeded'
+          });
+        }
+      }
+    }
+
+    // 2. Retain all pre-seeded / pending candidates already in db.users so periodic sync does not wipe them
+    const preSeeded = (db.users || []).filter(u => u.badge === 'Pre_Seeded' || u.status === 'Pending_Activation');
+    for (const p of preSeeded) {
+      if (!newUsers.some(u => (u.identifier && u.identifier.toLowerCase() === (p.identifier || '').toLowerCase()) || (u.email && u.email.toLowerCase() === (p.email || '').toLowerCase()))) {
+        newUsers.push(p);
+      }
+    }
 
     const cleanIncidents = (list) => (list || []).map(i => { const copy = {...i}; delete copy._pending; return copy; });
     const before = JSON.stringify({ jobs: db.jobs, apps: db.applications, users: db.users, logs: db.logs, incidents: cleanIncidents(db.incidents), appraisals: db.appraisals, docs: db.documents });
