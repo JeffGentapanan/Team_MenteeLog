@@ -151,6 +151,20 @@ To explore the connected portals, use the following pre-configured demonstration
   2. 6-digit numeric one-time passcode (OTP) validation.
   3. Secure password setup with live confirmation and input toggles.
 
+### 6. Login UI & Responsive Layout Optimization (`#/login`)
+* **Zero-Scroll 100% Zoom Fit:** Refined card width (`395px`) and vertical hierarchy to comfortably display all form inputs, role capsules, actions, and activation links without page or card scrolling.
+* **Side-Slot Floating Badges:** Repositioned floating trust badges (`CHED CMO Verified`, `Clock In / Clock Out`, `3 Connected Portals`) into designated open side slots with gentle `±4px` physics and `z-index: 10`, ensuring full readability and zero collision with background HUD telemetry.
+* **Cleaned HUD Labels:** Normalized the bottom portal HUD to `STATE UNIVERSITY OJT PORTAL`.
+
+### 7. Department Hours Progress & Reporting (`#/coordinator/dashboard`)
+* Replaced text summaries in the Coordinator Portal with modern, interactive progress cards featuring rendered vs. required hours, percentage completion, and automatic `BSIT` department badge fallback.
+
+### 8. Terminology Alignment & Guide Modernization
+* Removed specification module numbers (`1.1`, `2.4`, etc.) across Coordinator Incident tabs and the public Landing Page OJT Success Guide, replacing them with user-centric categories (*Attendance*, *Task Summaries*, *Compliance*, *Appraisals*, *Mediation*).
+
+### 9. Candidate Pre-Seeding & Sync Resilience
+* Enhanced `syncRemote` routines in `sync.js` to ingest and persist pre-seeded candidate activations from `school_registry`, preventing periodic remote sync cycles from purging pending student rosters.
+
 ---
 
 ## 💻 Technology Stack

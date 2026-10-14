@@ -196,20 +196,20 @@ function roleBody(page,icon){let title,kicker,sub,items;if(page==='students'){ti
           <article class="guide-card reveal-on-scroll">
               <div class="guide-gradient">${icon('users')}</div>
               <div class="guide-content">
-                  <span class="guide-subtitle">Modules 2.1 & 2.2 - Quick Setup Guide</span>
-                  <h3>Step 1: Complete Setup & Apply for HTE Slots</h3>
-                  <p class="excerpt">Before submitting applications, set up your SR Code profile, upload required clearance documents, and browse accredited Host Training Establishments (HTEs).</p>
+                  <span class="guide-subtitle">Account Activation & Placement</span>
+                  <h3>Step 1: Activate Account & Apply for HTE Slots</h3>
+                  <p class="excerpt">Activate your pre-seeded account with your SR Code and OTP, upload required clearance documents, and browse accredited Host Training Establishments (HTEs).</p>
                   
                   <button class="btn secondary guide-toggle">Read Guide ${icon('chevron-down')}</button>
                   <div class="guide-drawer">
                       <div class="guide-drawer-inner">
                           <div class="guide-drawer-content">
                               <ol>
-                                  <li>Navigate to Profile Setup (2.1) and complete personal details.</li>
+                                  <li>Activate your pre-seeded account via OTP using your SR Code and institutional email.</li>
                                   <li>Upload clearance documents in Requirements (2.7).</li>
-                                  <li>Browse approved HTE slots in Job Browse (2.2) and click Apply.</li>
+                                  <li>Browse approved HTE partner slots in Placement Directory and submit your application.</li>
                               </ol>
-                              <a href="#/login" class="btn">Go to Job Browse -></a>
+                              <a href="#/login" class="btn">Go to Placement Directory -></a>
                           </div>
                       </div>
                   </div>
@@ -219,18 +219,18 @@ function roleBody(page,icon){let title,kicker,sub,items;if(page==='students'){ti
           <article class="guide-card reveal-on-scroll">
               <div class="guide-gradient">${icon('clock')}</div>
               <div class="guide-content">
-                  <span class="guide-subtitle">Module 2.4 - Compliance Rules</span>
+                  <span class="guide-subtitle">Attendance & Shift Tracking</span>
                   <h3>Step 2: Master Your Daily Time Record (DTR)</h3>
-                  <p class="excerpt">Ensure your OJT hours count by logging daily clock-ins, enabling GPS location verification, and writing daily summaries with at least 150 characters.</p>
+                  <p class="excerpt">Ensure your OJT hours count by recording daily attendance, enabling GPS location verification, and writing daily summaries with at least 150 characters.</p>
                   
                   <button class="btn secondary guide-toggle">Read Guide ${icon('chevron-down')}</button>
                   <div class="guide-drawer">
                       <div class="guide-drawer-inner">
                           <div class="guide-drawer-content">
                               <ol>
-                                  <li>Clock in upon arrival at your HTE site; verify GPS location marker.</li>
-                                  <li>Draft your logbook entry during the day (auto-saves draft).</li>
-                                  <li>Submit daily summary (minimum 150 characters) for Supervisor approval.</li>
+                                  <li>Record attendance upon arrival at your HTE site; verify GPS location marker.</li>
+                                  <li>Draft your daily accomplishment log throughout your shift (auto-saves draft).</li>
+                                  <li>Submit your daily summary (minimum 150 characters) for Supervisor review and approval.</li>
                               </ol>
                               <a href="#/login" class="btn">Open DTR Hub -></a>
                           </div>
@@ -242,8 +242,8 @@ function roleBody(page,icon){let title,kicker,sub,items;if(page==='students'){ti
           <article class="guide-card reveal-on-scroll">
               <div class="guide-gradient">${icon('star')}</div>
               <div class="guide-content">
-                  <span class="guide-subtitle">Modules 2.5 & 2.6 - Support & Evaluation</span>
-                  <h3>Step 3: Track Appraisals & Handle Incidents</h3>
+                  <span class="guide-subtitle">Appraisals & Incident Resolution</span>
+                  <h3>Step 3: Track Appraisals & Resolve Incidents</h3>
                   <p class="excerpt">View supervisor rubric evaluation scores and submit incident claims with evidence if workplace issues or DTR discrepancies arise.</p>
                   
                   <button class="btn secondary guide-toggle">Read Guide ${icon('chevron-down')}</button>
@@ -251,9 +251,9 @@ function roleBody(page,icon){let title,kicker,sub,items;if(page==='students'){ti
                       <div class="guide-drawer-inner">
                           <div class="guide-drawer-content">
                               <ol>
-                                  <li>Review performance appraisal scores and supervisor feedback in Module 2.6.</li>
-                                  <li>If an issue occurs, file a report via the Student Incident Module (2.5) with attachments.</li>
-                                  <li>Track resolution status routed through the Coordinator Incident Hub (4.4).</li>
+                                  <li>Review performance appraisal rubric scores and supervisor feedback upon completing hours.</li>
+                                  <li>If a workplace issue occurs, file an Incident Claim with supporting photos or documents.</li>
+                                  <li>Track case investigation and mediation updates managed by your university Coordinator.</li>
                               </ol>
                               <a href="#/login" class="btn">View Incident Hub -></a>
                           </div>
@@ -271,8 +271,8 @@ function faqSection() {
         ['Is MenteeLog free for students and partner universities?', 'Yes! MenteeLog provides a centralized platform for OJT student interns, host company supervisors, and university coordinators to manage daily time records (DTR), placements, and performance appraisals seamlessly.'],
         ['How does MenteeLog ensure the validity of student DTR logs?', 'MenteeLog features built-in verification mechanisms including geolocation boundary checks, daily summary character validation (minimum 150 characters), and direct digital supervisor approvals to prevent manual errors or falsified hours.'],
         ['What user roles are supported on the platform?', 'MenteeLog features dedicated role-based portals for Students (SR Code access for DTR & logbooks), Company Supervisors (corporate email for verification & performance appraisal rubrics), and University Coordinators (faculty ID for candidate placement & compliance tracking).'],
-        ['How does MenteeLog handle disciplinary or workplace incident reports?', 'Students and supervisors can log incident claims directly with supporting evidence attachments. These automatically route into the Central Compliance Drawer (Incident Hub 4.4) for coordinator review and resolution tracking.'],
-        ['How do students get started on MenteeLog?', 'Students sign in through the Multi-Role Auth Gateway using their university credentials, complete their profile setup, upload required clearance documents, and browse approved host establishment listings.']
+        ['How does MenteeLog handle disciplinary or workplace incident reports?', 'Students and supervisors can log incident claims directly with supporting evidence attachments. These automatically route into the Central Compliance Drawer (Incident & Compliance Hub) for coordinator review and resolution tracking.'],
+        ['How do students get started on MenteeLog?', 'Students activate their pre-seeded accounts using their university SR Code and OTP, complete their profile setup, upload required clearance documents, and browse approved host establishment listings.']
     ];
 
     return `<section class="faq-section reveal-on-scroll">
@@ -372,28 +372,28 @@ function guideBody(icon) {
         {
             title: "Phase 1: Setup & Placement",
             cards: [
-                ['2.1', 'Profile Setup & Authentication', 'Complete your basic profile, connect your SR Code, and set up your MenteeLog credentials securely.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Navigate to your Account Profile settings.</li><li>Ensure your SR Code and institutional email are correctly entered.</li><li>Select your specific academic department (e.g., BS Information Technology).</li><li>Save changes; this data is required before you can apply to any HTEs.</li></ul>'],
-                ['2.2', 'Browsing HTE Opportunities', 'Filter through accredited companies, check required skills, and find the perfect OJT match.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Open the OJT Placement directory from your dashboard.</li><li>Use the filters to sort by Location, Industry, or Work Mode (Remote/Hybrid/Onsite).</li><li>Review the "Required Skills" on each listing to ensure you meet the criteria.</li><li>Click "Apply" to send your profile directly to the industry supervisor.</li></ul>'],
-                ['2.3', 'Application Tracking', 'Monitor your application statuses from "Under Review" to "Accepted" directly from the dashboard.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Access the "My Applications" tab to see real-time updates.</li><li>Applications transition through states: <strong>Pending -> Under Review -> Interview -> Accepted</strong>.</li><li>Once a supervisor accepts you, your status updates and you are officially assigned to that company.</li></ul>'],
-                ['2.7', 'Document Uploads & Clearance', 'Upload your signed MOAs, medical clearances, and waivers directly to the secure file vault.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Go to the Document Management Portal.</li><li>Drag and drop your clearance documents (Medical, Parent Waiver, signed MOA).</li><li>Ensure files are in PDF, JPG, or PNG format and under 10MB.</li><li>Wait for the Coordinator to verify and approve your documents.</li></ul>']
+                ['Activation', 'Account Activation & Profile Setup', 'Activate your pre-seeded student account using your SR Code and OTP, then verify your personal and academic details.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Click "Activate" on the navigation bar and enter your university SR Code and email.</li><li>Verify your identity using the 6-digit one-time PIN (OTP) sent to your inbox.</li><li>Set your secure account password and log in to your Student Portal.</li><li>Verify your academic program (e.g., BS Information Technology) and contact details.</li></ul>'],
+                ['Placement', 'Browsing HTE Opportunities', 'Filter through accredited companies, check required skills, and find the perfect OJT match.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Open the OJT Placement directory from your dashboard.</li><li>Use the filters to sort by Location, Industry, or Work Mode (Remote/Hybrid/Onsite).</li><li>Review the "Required Skills" on each listing to ensure you meet the criteria.</li><li>Click "Apply" to send your profile directly to the industry supervisor.</li></ul>'],
+                ['Applications', 'Application Tracking & Status', 'Monitor your application statuses from "Pending" to "Accepted" directly from the dashboard.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Access the "My Applications" tab to see real-time updates.</li><li>Applications transition through states: <strong>Pending -> Under Review -> Accepted</strong>.</li><li>Once a supervisor accepts you, your status updates and you are officially assigned to that company.</li></ul>'],
+                ['Documents', 'Document Uploads & Clearance', 'Upload your signed MOAs, medical clearances, and waivers directly to the secure file vault.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Go to the Document Management Portal.</li><li>Upload required clearance documents (Medical Certificate, Parent Waiver, signed MOA).</li><li>Ensure files are in PDF, JPG, or PNG format and under 10 MB.</li><li>The Coordinator verifies and approves your documents prior to deployment.</li></ul>']
             ]
         },
         {
             title: "Phase 2: DTR & Daily Logs",
             cards: [
-                ['2.4.1', 'GPS-Verified Clock Ins', 'Learn how the platform verifies your location against the company geofence when you clock in.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Upon arriving at your site, open the DTR Hub and click "Clock In".</li><li>Grant browser location permissions if prompted.</li><li>The system cross-references your live coordinates with the HTE headquarters radius.</li><li>If you are off-site, you can still clock in, but it will require manual supervisor review.</li></ul>'],
-                ['2.4.2', 'Writing Task Summaries', 'Best practices for writing your daily 150-character task summaries for supervisor approval.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Throughout your shift, draft your activities in the logbook (it auto-saves).</li><li>Before clocking out, finalize your summary. It <strong>must be at least 150 characters</strong>.</li><li>Be specific: mention the software used, tasks completed, and any meetings attended.</li><li>Click "Submit & Clock Out" to forward it to your supervisor.</li></ul>'],
-                ['2.4.3', 'Handling Flagged DTRs', 'What to do if your time record is flagged for location mismatch or short task descriptions.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>The system automatically flags entries that violate compliance (e.g., logged in 5km away, or summary is too brief).</li><li>Flagged entries are not counted toward your total hours until resolved.</li><li>Your supervisor receives an alert and can choose to either Reject or Approve the flagged log.</li></ul>'],
-                ['2.4.4', 'Submitting Justifications', 'How to attach evidence (like internet outage proofs) for rejected or flagged attendances.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>If a log is flagged, click the "Write Justification" button on the entry.</li><li>Explain the anomaly clearly (e.g., "I was on a field deployment with my manager").</li><li>Attach evidence such as photos, emails, or chat screenshots.</li><li>Submit the justification for final coordinator or supervisor review.</li></ul>']
+                ['Attendance', 'GPS-Verified Attendance & Clock-In', 'Learn how the platform records your arrival and verifies your location against the company premises.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Upon arriving at your workplace, open the DTR Hub and clock in.</li><li>Grant location permissions so your attendance coordinates are logged.</li><li>Your supervisor can also verify and clock you in directly via the on-site timekeeper roster.</li><li>Entries outside designated sites are flagged for supervisor review.</li></ul>'],
+                ['Task Summaries', 'Writing Daily Task Summaries', 'Best practices for writing your daily 150-character task summaries for supervisor approval.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Throughout your shift, draft your activities in the logbook (it auto-saves your draft).</li><li>Before clocking out, finalize your summary (minimum 150 characters).</li><li>Be specific: mention tasks accomplished, software tools utilized, and learnings.</li><li>Submit for supervisor review to credit your daily rendered hours.</li></ul>'],
+                ['Compliance', 'Handling Flagged DTRs', 'What to do if your time record is flagged for location mismatch or short task descriptions.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>The system flags entries that have location discrepancies or brief descriptions.</li><li>Flagged entries remain in review until validated by supervisor or coordinator.</li><li>Your supervisor receives an alert and can resolve the flagged log.</li></ul>'],
+                ['Justifications', 'Submitting Attendance Justifications', 'How to attach evidence (like field assignments or network outages) for flagged attendances.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>If a log is flagged, open the entry details and submit a justification.</li><li>Explain the circumstance clearly (e.g., off-site client deployment, connectivity issue).</li><li>Attach supporting evidence or supervisor notes.</li><li>Your supervisor or coordinator will review and validate the rendered hours.</li></ul>']
             ]
         },
         {
             title: "Phase 3: Evaluation & Governance",
             cards: [
-                ['2.6', 'Understanding the Appraisal Rubric', 'See exactly how your supervisor will score your performance across 5 key competencies.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>At the end of your term, supervisors navigate to the Performance Appraisal module.</li><li>You are graded on a 5.0 scale covering Technical Skills, Attendance, Initiative, and Professionalism.</li><li>Once submitted, the final score and feedback are permanently logged to your academic record.</li></ul>'],
-                ['2.5', 'Filing an Incident Report', 'A step-by-step guide to reporting workplace issues, disputes, or harassment with attached evidence.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>If you experience an issue, open the Incident Reports tab.</li><li>Draft a secure claim detailing the nature of the issue (harassment, AWOL, dispute).</li><li>Upload supporting screenshots or documents.</li><li>Submitting this claim securely alerts your university Coordinator immediately.</li></ul>'],
-                ['4.4', 'Coordinator Mediation', 'How the university tracks your incidents and mediates disputes between you and the company.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Coordinators use the Central Incident Hub to monitor all student claims.</li><li>They can update the status of the ticket from "Reviewing" to "Mediating" or "Resolved".</li><li>If necessary, the coordinator can use the platform to reassign you to a new HTE.</li></ul>'],
-                ['3.3', 'Supervisor Sign-offs', 'The digital signature process supervisors use to validate your final completed hours.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Supervisors have a "Bulk Approve" feature in their dashboard.</li><li>They review your hours and task summaries week-by-week.</li><li>Their digital approval validates the hours, updating your progress bar in real-time until you hit your 500-hour requirement.</li></ul>']
+                ['Appraisals', 'Understanding the Appraisal Rubric', 'See exactly how your supervisor will score your performance across 5 key competencies.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>At the end of your term, supervisors navigate to the Performance Appraisal section.</li><li>You are evaluated on a 5.0 rubric covering Technical Competence, Quality of Work, Attendance, and Professionalism.</li><li>Once submitted, the final score and feedback are permanently logged to your academic record.</li></ul>'],
+                ['Incidents', 'Filing an Incident Report', 'A step-by-step guide to reporting workplace issues, safety hazards, or disputes with evidence.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>If an issue occurs, open the Incident Reports tab.</li><li>Draft a secure claim detailing the issue (safety concern, workplace dispute, policy discrepancy).</li><li>Upload supporting screenshots or documents.</li><li>Submitting this claim securely alerts your university Coordinator for mediation.</li></ul>'],
+                ['Mediation', 'Coordinator Mediation & Resolution', 'How the university tracks your incidents and mediates disputes between you and the company.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Coordinators use the Incident & Compliance Hub to monitor all claims.</li><li>They investigate, add case notes, schedule mediation, and track resolutions.</li><li>If necessary, the coordinator can reassign the intern to ensure safety and compliance.</li></ul>'],
+                ['Sign-Off', 'Supervisor Approvals & Final Sign-Off', 'The review and digital approval process supervisors use to validate daily records and completed hours.', '<ul style="margin-left: 20px; margin-bottom: 16px;"><li>Supervisors review and approve submitted hours and daily task summaries.</li><li>Their digital sign-off validates your hours, updating your progress bar in real-time until you reach your required hours.</li><li>Completed records and appraisals are archived for faculty coordinator endorsement.</li></ul>']
             ]
         }
     ];
@@ -565,7 +565,7 @@ export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
 
         <div class="map-hud-bottom">
           <span class="hud-item hud-mono">DIGITAL TIME LOGGING · CLOCK IN / CLOCK OUT HUB</span>
-          <span class="hud-item">BATANGAS STATE UNIVERSITY OJT PORTAL</span>
+          <span class="hud-item">STATE UNIVERSITY OJT PORTAL</span>
         </div>
       </div>
       <div class="auth-orb auth-orb-1" aria-hidden="true"></div>

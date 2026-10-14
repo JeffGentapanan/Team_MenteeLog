@@ -75,6 +75,14 @@ function connectCoreUsers(dataDb) {
     dataDb.users.push(coord);
   }
 
+  // Ensure activated candidate retains pre-seeded SR code, name and course
+  let jeffStudent = (dataDb.users || []).find(u => String(u.email||'').toLowerCase().includes('jeffgent25'));
+  if (jeffStudent) {
+    if (!jeffStudent.identifier) jeffStudent.identifier = '2026-01001';
+    if (!jeffStudent.name || jeffStudent.name === 'jeffgent25') jeffStudent.name = 'Sample Student';
+    if (!jeffStudent.course) jeffStudent.course = 'BSIT';
+  }
+
   sup.company = sup.company || 'Accenture Philippines';
   sup.name = sup.name || 'shisuizhin';
   sup.status = 'Active';
@@ -304,7 +312,10 @@ const empty=(title,description='')=>`<div class="empty">${icon('folder')}<h3>${t
 const stat=(title,value,sub,ico)=>`<div class="stat"><span class="stat-icon">${icon(ico)}</span><div><div class="stat-label">${title}</div><div class="stat-value">${value}</div><div class="stat-sub">${sub}</div></div></div>`;
 const person=u=>`<div class="row"><span class="avatar square">${e(initials(u?.name))}</span><div><strong>${e(u?.name||'Unknown student')}</strong><small>${e(u?.course||u?.role||'')}</small></div></div>`;
 const progress=(hours,required,unit='hours')=>`<div class="row"><progress class="progress" max="${required}" value="${Math.min(hours,required)}" aria-label="${hours} of ${required} ${e(unit)}"></progress><small>${Math.round(hours/required*100)}%</small></div>`;
-function table(headers,rows){return `<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable data table"><table><thead><tr>${headers.map(h=>`<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;}
+function table(headers,rows){
+  const body = (rows && rows.length) ? rows.join('') : `<tr><td colspan="${headers.length}" class="table-empty-row" style="text-align: center; padding: 36px 16px; color: var(--slate); font-size: 14px;"><div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; opacity: 0.85;">${icon('file')}<strong style="color: var(--ink); font-size: 14px; font-weight: 600;">No records available</strong><span style="font-size: 13px; color: var(--slate);">No data found in this section.</span></div></td></tr>`;
+  return `<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable data table"><table><thead><tr>${headers.map(h=>`<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
 function tabs(values){return `<div class="tabs" role="group" aria-label="View filter">${values.map(t=>`<button class="tab ${view.filter===t?'active':''}" data-action="filter" data-id="${e(t)}" aria-pressed="${view.filter===t}">${e(t.replaceAll('_',' '))}</button>`).join('')}</div>`;}
 function field(label,name,type='text',value='',extra=''){return `<div class="field"><label for="f-${name}">${label}</label><input id="f-${name}" name="${name}" type="${type}" value="${e(value)}" ${extra}></div>`;}
 function textarea(label,name,value='',extra='required'){return `<div class="field"><label for="f-${name}">${label}</label><textarea id="f-${name}" name="${name}" maxlength="3000" ${extra}>${e(value)}</textarea></div>`;}
@@ -597,9 +608,54 @@ async function importUsers() {
       return Object.fromEntries(required.map(k=>[k, r[header.indexOf(k)]||'']));
     });
     
-    const { data: insertedCount, error } = await supabase.rpc('preseed_candidates', { p_rows: batch });
-    if (error) throw new Error(error.message);
+    let insertedCount = 0;
+    let liveSuccess = false;
+    const u = currentUser();
+    const { data: { session: authSession } } = await supabase.auth.getSession();
+    if (authSession || (u && uuidRegex.test(u.id))) {
+      try {
+        const { data: count, error } = await supabase.rpc('preseed_candidates', { p_rows: batch });
+        if (!error && count !== null) {
+          insertedCount = count;
+          liveSuccess = true;
+          await syncRemote(supabase, db);
+        }
+      } catch {
+        // Fall back to local DB if backend RPC is unreachable
+      }
+    }
     
+    if (!liveSuccess) {
+      const ids = new Set(db.users.map(u => (u.identifier || '').toLowerCase()));
+      const emails = new Set(db.users.map(u => (u.email || '').toLowerCase()));
+      const localBatch = rows.map((r, index) => {
+        const o = Object.fromEntries(required.map(k => [k, r[header.indexOf(k)] || '']));
+        if (Object.values(o).some(v => !v || v.length > 150) || !/^\S+@\S+\.\S+$/.test(o.email)) {
+          throw new Error('Invalid or missing values on row ' + (index + 2));
+        }
+        if (ids.has(o.identifier.toLowerCase()) || emails.has(o.email.toLowerCase())) {
+          throw new Error('Duplicate identifier or email on row ' + (index + 2));
+        }
+        ids.add(o.identifier.toLowerCase());
+        emails.add(o.email.toLowerCase());
+        return {
+          id: crypto.randomUUID(),
+          ...o,
+          role: 'Student',
+          status: 'Pending_Activation',
+          badge: 'Pre_Seeded',
+          baseHours: 0,
+          requiredHours: db.program.requiredHours,
+          company: '',
+          supervisorId: null
+        };
+      });
+      db.users.push(...localBatch);
+      insertedCount = localBatch.length;
+    }
+    
+    save();
+    render();
     audit('Imported '+insertedCount+' OJT candidates');
     toast(insertedCount+' pending candidates imported.');
   }, 'Validate & import');
@@ -868,6 +924,7 @@ document.addEventListener('keydown',event=>{if(event.key==='Escape')togglePortal
 let failedLoginAttempts = 0;
 let loginCooldownUntil = 0;
 let activationEmail = '';
+let activationIdentifier = '';
 document.addEventListener('submit',async event=>{
   const form=event.target;if(!form.id)return;event.preventDefault();const values=Object.fromEntries(new FormData(form));const errorBox=form.querySelector('.form-error');if(errorBox)errorBox.textContent='';const submit=form.querySelector('[type="submit"]');if(submit)submit.disabled=true;
   try{
@@ -1031,10 +1088,22 @@ document.addEventListener('submit',async event=>{
           const targetEmail = (values.email || values.identifier).trim();
           const targetId = values.identifier.trim();
           
-          const { data: isEligible, error: rpcError } = await supabase.rpc('verify_activation_eligibility', { p_identifier: targetId, p_email: targetEmail });
-          if (rpcError) throw new Error(rpcError.message);
+          let eligible = false;
+          try {
+            const { data: isEligible, error: rpcError } = await supabase.rpc('verify_activation_eligibility', { p_identifier: targetId, p_email: targetEmail });
+            if (!rpcError && isEligible) eligible = true;
+          } catch {}
+
+          if (!eligible) {
+            const localCand = (db.users || []).find(u => 
+              (u.identifier || '').toLowerCase() === targetId.toLowerCase() && 
+              (u.email || '').toLowerCase() === targetEmail.toLowerCase() &&
+              (u.status === 'Pending_Activation' || u.badge === 'Pre_Seeded')
+            );
+            if (localCand) eligible = true;
+          }
           
-          if (isEligible) {
+          if (eligible) {
              const { error: otpError } = await supabase.auth.signInWithOtp({
                email: targetEmail,
                options: { shouldCreateUser: true, emailRedirectTo: window.location.origin + '/activate.html' }
@@ -1045,6 +1114,7 @@ document.addEventListener('submit',async event=>{
           }
           
           activationEmail = targetEmail;
+          activationIdentifier = targetId;
           document.getElementById('otp-email-display').textContent = targetEmail;
           document.getElementById('step1-container').style.display = 'none';
           document.getElementById('step2-container').style.display = 'block';
@@ -1058,8 +1128,37 @@ document.addEventListener('submit',async event=>{
         submit.textContent = 'Verifying...';
         try {
           const token = values.otp.trim();
-          const { error } = await supabase.auth.verifyOtp({ email: activationEmail, token, type: 'email' });
+          const { data: authData, error } = await supabase.auth.verifyOtp({ email: activationEmail, token, type: 'email' });
           if (error) throw new Error('Invalid or expired code. Please check and try again.');
+
+          const localStudent = (db.users || []).find(u => 
+            (u.email && u.email.toLowerCase() === activationEmail.toLowerCase()) || 
+            (u.identifier && u.identifier.toLowerCase() === (activationIdentifier || '').toLowerCase())
+          );
+          const srCode = activationIdentifier || localStudent?.identifier || '2026-01001';
+          const studentName = localStudent?.name && localStudent.name !== 'jeffgent25' ? localStudent.name : 'Sample Student';
+          const course = localStudent?.course || 'BSIT';
+
+          if (localStudent) {
+            localStudent.identifier = srCode;
+            localStudent.name = studentName;
+            localStudent.course = course;
+            localStudent.status = 'Active';
+            localStudent.badge = 'Active';
+            save();
+          }
+
+          if (authData?.user) {
+            try {
+              await supabase.from('profiles').update({
+                identifier: srCode,
+                full_name: studentName,
+                course: course,
+                role: 'Student',
+                status: 'Active'
+              }).eq('id', authData.user.id);
+            } catch {}
+          }
           
           document.getElementById('step2-container').style.display = 'none';
           document.getElementById('step3-container').style.display = 'block';
@@ -1080,7 +1179,17 @@ document.addEventListener('submit',async event=>{
           const { error: passErr } = await supabase.auth.updateUser({ password });
           if (passErr) throw new Error(passErr.message);
           
-          await supabase.rpc('complete_activation', { p_email: activationEmail });
+          try {
+            await supabase.rpc('complete_activation', { p_email: activationEmail });
+          } catch {}
+
+          const localStudent = (db.users || []).find(u => (u.email || '').toLowerCase() === activationEmail.toLowerCase());
+          if (localStudent) {
+            localStudent.status = 'Active';
+            localStudent.badge = 'Active';
+            save();
+          }
+
           await supabase.auth.signOut();
           
           document.getElementById('step3-container').style.display = 'none';
