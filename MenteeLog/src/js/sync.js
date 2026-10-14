@@ -72,14 +72,6 @@ export async function syncRemote(supabase, db) {
       const name = (p.full_name && p.full_name.trim()) || existing?.name || (p.email ? p.email.split('@')[0] : 'Unnamed user');
       const course = p.course || existing?.course || (p.role === 'Student' ? 'BSIT' : '');
 
-      if (session?.user?.id === p.id && existing && (!p.identifier || !p.course || !p.full_name)) {
-        supabase.from('profiles').update({
-          identifier: identifier,
-          full_name: name,
-          course: course
-        }).eq('id', p.id).then?.(() => {}).catch?.(() => {});
-      }
-
       return {
         id: p.id,
         role: p.role,
