@@ -213,7 +213,7 @@ export async function syncRemote(supabase, db) {
           company: sup.company,
           location: 'Mandurriao, Iloilo City',
           mode: 'Hybrid',
-          courses: ['BSIT', 'BSCS'],
+          courses: ['BSIT'],
           slots: 5,
           status: 'Active',
           description: 'Hands-on enterprise software development and daily engineering operations.',
