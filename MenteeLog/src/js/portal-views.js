@@ -922,44 +922,6 @@ export function initEvalSignaturePad() {
       if (hidden) hidden.value = '';
     });
   }
-
-  const tabDraw = document.getElementById('tab-sig-draw');
-  const tabType = document.getElementById('tab-sig-type');
-  const paneDraw = document.getElementById('eval-sig-draw-pane');
-  const paneType = document.getElementById('eval-sig-type-pane');
-  const modeInput = document.getElementById('eval-sig-mode');
-
-  if (tabDraw && tabType && paneDraw && paneType) {
-    tabDraw.addEventListener('click', (e) => {
-      e.preventDefault();
-      tabDraw.classList.add('active');
-      tabType.classList.remove('active');
-      paneDraw.style.display = 'block';
-      paneType.style.display = 'none';
-      if (modeInput) modeInput.value = 'draw';
-    });
-
-    tabType.addEventListener('click', (e) => {
-      e.preventDefault();
-      tabType.classList.add('active');
-      tabDraw.classList.remove('active');
-      paneDraw.style.display = 'none';
-      paneType.style.display = 'block';
-      if (modeInput) modeInput.value = 'type';
-    });
-  }
-
-  const nameInput = document.getElementById('eval-sig-name-input');
-  const stampNamePreview = document.getElementById('eval-stamp-name-preview');
-  const cursivePreview = document.getElementById('eval-cursive-preview');
-
-  if (nameInput) {
-    nameInput.addEventListener('input', () => {
-      const val = nameInput.value.trim() || 'Supervisor Signature';
-      if (stampNamePreview) stampNamePreview.textContent = val;
-      if (cursivePreview) cursivePreview.textContent = val;
-    });
-  }
 }
 
 if (typeof window !== 'undefined') {

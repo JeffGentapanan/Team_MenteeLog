@@ -608,12 +608,9 @@ function evaluate(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
       <div>
         <h4 style="margin:0;font-size:14px;font-weight:700;color:var(--ink);letter-spacing:0.02em;">Digital Signature & Endorsement</h4>
-        <p style="margin:2px 0 0;font-size:12px;color:var(--muted);">Provide your authorized signature to finalize this performance appraisal.</p>
+        <p style="margin:2px 0 0;font-size:12px;color:var(--muted);">Draw your authorized signature below to finalize this performance appraisal.</p>
       </div>
-      <div class="eval-sig-tabs" style="display:flex;gap:4px;background:var(--sand);padding:3px;border-radius:8px;">
-        <button type="button" id="tab-sig-draw" class="eval-sig-tab active">✍️ Draw Signature</button>
-        <button type="button" id="tab-sig-type" class="eval-sig-tab">🔤 Certified Stamp</button>
-      </div>
+      <span class="badge" style="background:var(--burgundy);color:#fff;font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;">✍️ Draw Signature</span>
     </div>
     <div id="eval-sig-draw-pane" style="display:block;">
       <div class="eval-canvas-wrapper">
@@ -623,22 +620,6 @@ function evaluate(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id
           <span style="font-size:10px;color:#94a3b8;">TOUCH / MOUSE ENABLED</span>
         </div>
         <button type="button" id="eval-sig-clear-btn" style="position:absolute;top:8px;right:8px;font-size:11px;background:#f1f5f9;border:1px solid #cbd5e1;padding:3px 8px;border-radius:4px;cursor:pointer;color:#475569;">Clear</button>
-      </div>
-    </div>
-    <div id="eval-sig-type-pane" style="display:none;">
-      <div style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9;padding-bottom:10px;margin-bottom:10px;">
-          <div>
-            <span style="display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;">Authorized Signatory</span>
-            <strong id="eval-stamp-name-preview" style="font-size:14px;color:var(--ink);">${e(u.name)}</strong>
-          </div>
-          <span class="badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:10px;">HTE Supervisor Stamp</span>
-        </div>
-        <div style="text-align:center;padding:12px 0;">
-          <div id="eval-cursive-preview" class="eval-cursive-font" style="transform:rotate(-2deg);">${e(u.name)}</div>
-          <div style="height:1px;width:60%;margin:6px auto;background:#cbd5e1;"></div>
-          <small style="color:var(--muted);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;">Verified Digital Certificate ID: ML-SIG-${u.id.slice(0,8).toUpperCase()}</small>
-        </div>
       </div>
     </div>
     <div class="field" style="margin-top:12px;">
