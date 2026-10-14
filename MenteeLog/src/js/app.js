@@ -348,6 +348,7 @@ function logout(){
 function notify(userId,type,title,message){db.notifications.unshift({id:crypto.randomUUID(),userId,type,title,message,date:new Date().toISOString(),read:false});}
 function audit(action){db.audit.unshift({id:crypto.randomUUID(),actor:currentUser()?.name||'Demo',action,date:new Date().toISOString()});db.audit=db.audit.slice(0,150);}
 function toast(message){const el=$('#toast');el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,5000);}
+const initials=name=>String(name||'ML').split(' ').filter(Boolean).map(n=>n[0]).slice(0,2).join('').toUpperCase();
 const student=id=>{
   if (!id) return null;
   let s = db.users.find(u => u.id === id);
@@ -356,6 +357,7 @@ const student=id=>{
   }
   return s || db.users.find(u => u.identifier === id || u.email === id) || null;
 };
+const job=id=>db.jobs.find(j=>j.id===id);
 const date=value=>value?new Date(value.length===10?value+'T12:00:00':value).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'-';
 const time=value=>value?new Date(value).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'}):'-';
 const today=()=>new Date().toLocaleDateString('en-CA');
@@ -1443,8 +1445,8 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
   if (sessionObj?.user) {
     setTimeout(async () => {
       const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', sessionObj.user.id).single();
-      if ((profile && profile.status !== 'Active') || (error && error.code === 'PGRST116')) {
-        await supabase.auth.signOut();
+      if ((profile && profile.status !== 'Active') || error) {
+        await supabase.auth.signOut().catch(()=>{});
         if (location.hash !== '#/login') location.hash = '/login';
       } else if (profile && profile.status === 'Active') {
         const routeRole = route().role?.toLowerCase();
@@ -1534,8 +1536,8 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
       db.applications = [];
     }
     const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', initSession.user.id).single();
-    if ((profile && profile.status !== 'Active') || (error && error.code === 'PGRST116')) {
-      await supabase.auth.signOut();
+    if ((profile && profile.status !== 'Active') || error) {
+      await supabase.auth.signOut().catch(()=>{});
       if (location.hash !== '#/login') location.hash = '/login';
     } else if (profile && profile.status === 'Active') {
       const routeRole = route().role?.toLowerCase();
