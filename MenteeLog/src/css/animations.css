@@ -222,6 +222,29 @@ html, body {
     z-index: 1;
 }
 
+/* Endpoint: Short-Height Laptop Displays & Zoomed Screens (height <= 720px) */
+@media (min-width: 961px) and (max-height: 720px) {
+    .auth-reference {
+        height: 100vh !important;
+        overflow-y: auto !important;
+    }
+    .auth-reference-photo {
+        height: auto !important;
+        min-height: 100vh !important;
+        max-height: none !important;
+    }
+    .auth-reference-main {
+        height: auto !important;
+        min-height: 100vh !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+        padding: 20px 16px !important;
+    }
+    .auth-reference-card {
+        margin: 16px auto !important;
+    }
+}
+
 /* Subtle Interactive Spotlight */
 .auth-reference-main::after {
     content: '';
@@ -2134,11 +2157,7 @@ html, body {
     .about-stat-item h4 { font-size: 1.75rem; }
 }
 
-/* ── AUTH TABS MOBILE ── */
-@media (max-width: 650px) {
-    .auth-tabs { flex-wrap: wrap; gap: 4px; }
-    .auth-tabs button { font-size: 12px; padding: 8px 12px; flex: 1; min-width: 0; }
-}
+
 
 /* Push hero below fixed header on mobile */
 @media (max-width: 768px) {
@@ -2299,50 +2318,225 @@ html {
     will-change: transform;
 }
 
-/* =========================================
-   DEFINITIVE MOBILE AUTHENTICATION FIX
-   ========================================= */
-@media (max-width: 650px) {
-    /* Center the auth card correctly without cutting off the top */
-    .auth-reference-main, .auth-main {
+/* ========================================================
+   RESPONSIVE AUTHENTICATION: UNIVERSAL LAPTOP & MOBILE ENDPOINTS
+   Ensures 100% alignment, zero scroll clipping, and adaptive scale
+   ======================================================== */
+
+/* Endpoint: Tablets & Medium Viewports (width <= 960px) */
+@media (max-width: 960px) {
+    .auth-reference {
+        display: block !important;
+        grid-template-columns: 1fr !important;
+        height: auto !important;
+        min-height: 100vh !important;
+        min-height: 100dvh !important;
+        max-height: none !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        background: #FAF4E8 !important;
+    }
+    .auth-reference-photo {
+        display: none !important;
+    }
+    .auth-reference-main {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 100vh !important;
+        min-height: 100dvh !important;
+        max-height: none !important;
+        overflow-y: visible !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: center !important;
         align-items: center !important;
-        min-height: 100vh !important;
-        padding: 24px 16px !important;
+        padding: 32px 20px !important;
+        box-sizing: border-box !important;
     }
-    
-    .auth-reference-card, .auth-card {
+    .auth-reference-card {
         width: 100% !important;
-        max-width: 440px !important;
-        margin: auto !important; 
+        max-width: 395px !important;
+        margin: auto !important;
     }
+    .auth-floating-badge {
+        display: none !important;
+    }
+    .map-hud-top,
+    .map-hud-bottom {
+        display: none !important;
+    }
+}
 
-    /* Force tabs onto one single row cleanly */
+/* Endpoint: Standard Mobile Devices (width <= 650px) */
+@media (max-width: 650px) {
+    .auth-reference-main {
+        padding: 20px 14px !important;
+    }
+    .auth-reference-card {
+        width: 100% !important;
+        max-width: 395px !important;
+        border-radius: 18px !important;
+        box-shadow: 0 16px 40px -10px rgba(88, 17, 26, 0.2) !important;
+    }
+    .auth-reference-card header {
+        padding: 16px 18px 12px !important;
+    }
+    .auth-reference-card header .logo {
+        height: 32px !important;
+        max-width: 160px !important;
+    }
+    .auth-reference-card header h2 {
+        font-size: 16px !important;
+        margin: 0 0 2px !important;
+    }
+    .auth-reference-card header p {
+        font-size: 11.5px !important;
+    }
+    .auth-reference-body {
+        padding: 15px 16px 18px !important;
+    }
     .auth-tabs {
-        display: flex !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 3px !important;
+        padding: 3px !important;
+        border-radius: 12px !important;
+        margin: 0 0 8px !important;
         flex-wrap: nowrap !important;
-        gap: 2px !important;
-        overflow-x: hidden !important;
     }
-
     .auth-tabs button {
-        flex: 1 !important;
-        font-size: 11px !important;
-        padding: 10px 2px !important;
-        white-space: nowrap !important;
-        letter-spacing: -0.2px !important;
-        min-width: 0 !important; 
-        display: flex !important;
-        justify-content: center !important;
+        display: inline-flex !important;
         align-items: center !important;
+        justify-content: center !important;
+        padding: 7px 4px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
         gap: 4px !important;
+        white-space: nowrap !important;
+        min-width: 0 !important;
+        border-radius: 9px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
+    .auth-tabs button svg {
+        width: 13px !important;
+        height: 13px !important;
+        flex-shrink: 0 !important;
+    }
+    .role-badge-compact, .auth-role-banner {
+        padding: 5px 8px !important;
+        margin-bottom: 8px !important;
+        gap: 8px !important;
+    }
+    .role-badge-icon {
+        width: 24px !important;
+        height: 24px !important;
+        border-radius: 6px !important;
+    }
+    .role-badge-icon svg {
+        width: 13px !important;
+        height: 13px !important;
+    }
+    .role-badge-info strong {
+        font-size: 11px !important;
+    }
+    .role-badge-info small {
+        font-size: 8px !important;
+    }
+    .auth-reference .field {
+        margin-bottom: 8px !important;
+    }
+    .auth-reference .field label {
+        font-size: 9.5px !important;
+        margin-bottom: 2px !important;
+    }
+    .auth-reference input {
+        height: 40px !important;
+        font-size: 13px !important;
+        padding: 0 12px !important;
+        border-radius: 10px !important;
+    }
+    .auth-submit-btn {
+        height: 40px !important;
+        font-size: 13px !important;
+        border-radius: 10px !important;
+        margin-top: 4px !important;
+    }
+    .forgot-link {
+        font-size: 11px !important;
+        margin: 2px 0 6px auto !important;
+    }
+    .auth-activate-box {
+        margin: 8px 0 6px !important;
+        padding: 5px 8px !important;
+    }
+    .auth-activate-box p {
+        font-size: 11px !important;
+    }
+    .auth-card-security {
+        margin-top: 6px !important;
+        padding-top: 6px !important;
+        font-size: 9.5px !important;
+    }
+    .activation-roles {
+        gap: 8px !important;
+        margin: 8px 0 16px !important;
+    }
+    .activation-roles .btn {
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+    }
+}
 
-    @media (max-width: 360px) {
-        .auth-tabs .icon { display: none !important; }
-        .auth-tabs button { font-size: 10px !important; }
+/* Endpoint: Small Mobile Devices (width <= 380px, e.g. iPhone SE) */
+@media (max-width: 380px) {
+    .auth-reference-main {
+        padding: 14px 8px !important;
+    }
+    .auth-reference-card {
+        border-radius: 16px !important;
+    }
+    .auth-reference-card header {
+        padding: 14px 12px 10px !important;
+    }
+    .auth-reference-card header .logo {
+        height: 28px !important;
+        max-width: 140px !important;
+    }
+    .auth-reference-card header h2 {
+        font-size: 14.5px !important;
+    }
+    .auth-reference-card header p {
+        font-size: 10.5px !important;
+    }
+    .auth-reference-body {
+        padding: 12px 10px 14px !important;
+    }
+    .auth-tabs {
+        gap: 2px !important;
+        padding: 2px !important;
+    }
+    .auth-tabs button {
+        padding: 6px 2px !important;
+        font-size: 10px !important;
+        gap: 2px !important;
+    }
+    .auth-tabs button svg {
+        display: none !important; /* Hide icon so text fits on one line */
+    }
+    .auth-reference input {
+        height: 38px !important;
+        font-size: 12.5px !important;
+    }
+    .auth-submit-btn {
+        height: 38px !important;
+        font-size: 12.5px !important;
+    }
+    .auth-activate-box p {
+        font-size: 10.5px !important;
+    }
+    .auth-card-security {
+        font-size: 9px !important;
     }
 }
 
