@@ -675,12 +675,12 @@ export function authScreen(mode,role,{brand,icon,field,hasRecoverySession}){
             </form>
             ${role === "Coordinator" ? "" : `<div class="auth-activate-box"><p class="activate-link">First time here? <a href="#/activate">Activate ${role} Account &rarr;</a></p></div>`}
             <a class="auth-return" href="#/">&larr; Back to Landing Page</a>
-            <div class="auth-card-security">
-              <svg class="security-lock-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              <span>MenteeLog OJT System · 256-Bit SSL Encrypted</span>
+            <div class="auth-card-security" aria-hidden="true">
+              <span class="auth-decor-line"></span>
+              <span class="decor-dot dot-coral"></span>
+              <span class="auth-system-name">MenteeLog OJT System</span>
+              <span class="decor-dot dot-burgundy"></span>
+              <span class="auth-decor-line"></span>
             </div>`
           }
         </div>
