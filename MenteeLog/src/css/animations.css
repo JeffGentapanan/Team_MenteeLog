@@ -2271,9 +2271,15 @@ input, select, textarea {
     animation: fadeInDown 0.15s ease-out both;
 }
 
-/* Smooth sidebar mobile slide */
+/* Smooth sidebar mobile slide & desktop unscrollable fix */
 .portal-sidebar {
     transition: transform 0.25s ease !important;
+}
+@media (min-width: 1001px) {
+    .portal-sidebar {
+        overflow: hidden !important;
+        overflow-y: hidden !important;
+    }
 }
 .portal-scrim {
     transition: opacity 0.25s ease !important;
