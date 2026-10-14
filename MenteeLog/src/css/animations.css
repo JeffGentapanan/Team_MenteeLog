@@ -910,17 +910,33 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     margin-top: 6px;
     padding-top: 6px;
     border-top: 1px solid rgba(88, 17, 26, 0.08);
     font-size: 10px;
     color: #88746c;
+    letter-spacing: 0.05em;
     font-family: inherit;
 }
-.security-lock-icon {
-    color: #059669;
-    flex-shrink: 0;
+.auth-card-security .auth-decor-line {
+    flex: 1;
+    max-width: 45px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(88, 17, 26, 0.15), transparent);
+}
+.auth-card-security .decor-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.auth-card-security .dot-coral { background: #D85A63; }
+.auth-card-security .dot-burgundy { background: #58111A; }
+.auth-card-security .auth-system-name {
+    font-weight: 600;
+    font-size: 10px;
+    color: #88746c;
 }
 
 .auth-watermark {
