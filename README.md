@@ -165,6 +165,22 @@ To explore the connected portals, use the following pre-configured demonstration
 ### 9. Candidate Pre-Seeding & Sync Resilience
 * Enhanced `syncRemote` routines in `sync.js` to ingest and persist pre-seeded candidate activations from `school_registry`, preventing periodic remote sync cycles from purging pending student rosters.
 
+### 10. Interactive Draw Signature Station for Appraisals (`#/supervisor/appraisals`)
+* Replaced static demo text fields with an executive **Draw Signature** station featuring a high-DPI HTML5 canvas pad with mouse, pen, and touch-screen drawing support.
+* Includes signature guideline (`✕ SIGN ABOVE THE LINE`), quick clear button, signatory name input, and institutional certification declaration.
+* Resilient local and cloud persistence: automatically stores completed appraisals with score, comments, and the supervisor's drawn signature image into `db.appraisals` and `localStorage`, sending instant notifications to students.
+* Students can immediately view their completed evaluation, rubric breakdown, comments, and the supervisor's authentic digital signature directly in their portal.
+
+### 11. BSIT Scope Focus & Course Standardization
+* Focused the academic scope strictly on **BSIT (Bachelor of Science in Information Technology)** across the public landing page, student directory, partner listings, and portal dashboards for singular, cohesive faculty administration.
+
+### 12. Regional Partner Localization (MORE Power)
+* Updated regional utility partner branding from Meralco to **MORE Power** (Iloilo City) for accurate geographic alignment.
+
+### 13. Sidebar & Modal Layout Refinements
+* Eliminated sidebar vertical scrollbar overflow in the Coordinator and portal navigation, ensuring all navigation elements fit cleanly within the viewport.
+* Resolved modal drawer tab hover clipping and padding for seamless interactive navigation.
+
 ---
 
 ## 💻 Technology Stack
