@@ -26,32 +26,52 @@ function connectCoreUsers(dataDb) {
   dataDb.users = (dataDb.users || []).filter(u => !String(u.id).startsWith('s_dummy') && !['Alice Chen','Bob Smith','Charlie Cruz','Diana Reyes','Example Intern'].includes(u.name));
   dataDb.logs = (dataDb.logs || []).filter(l => !String(l.id).startsWith('log_dummy') && !String(l.studentId).startsWith('s_dummy'));
 
-  // 2. Identify the 3 core portal accounts
-  let stu = dataDb.users.find(u => u.role === 'Student' && (String(u.email||'').toLowerCase() === 'kenzosomes@gmail.com' || String(u.name||'').toLowerCase().includes('kenzo')));
-  let sup = dataDb.users.find(u => u.role === 'Supervisor' && (String(u.email||'').toLowerCase().includes('shisulzhin') || String(u.email||'').toLowerCase().includes('shisuizhin') || String(u.name||'').toLowerCase().includes('shisui')));
-  let coord = dataDb.users.find(u => u.role === 'Coordinator' && (String(u.email||'').toLowerCase().includes('jeff.gentapanan') || String(u.name||'').toLowerCase().includes('jeff')));
+  // 2. Identify and normalize the 3 core portal accounts
+  let stu = dataDb.users.find(u => u.role === 'Student' && (u.id === 's1' || u.identifier === '2021-00421' || (String(u.email||'').toLowerCase() === 'kenzosomes@gmail.com') || String(u.name||'').toLowerCase().includes('kenzo') || u.name === 'Maria Santos'));
+  let sup = dataDb.users.find(u => u.role === 'Supervisor' && (u.id === 'v1' || u.identifier === 'shisulzhin@gmail.com' || (String(u.email||'').toLowerCase().includes('shisui')) || String(u.name||'').toLowerCase().includes('shisui') || u.name.includes('Carlos Jose')));
+  let coord = dataDb.users.find(u => u.role === 'Coordinator' && (u.id === 'c1' || u.identifier === 'FAC-2026-001' || (String(u.email||'').toLowerCase().includes('jeff')) || String(u.name||'').toLowerCase().includes('jeff') || u.name.includes('Evelyn Ramos')));
 
-  if (!stu) {
+  if (stu) {
+    stu.id = 's1';
+    stu.identifier = '2021-00421';
+    stu.name = 'kenzosomes';
+    stu.email = 'kenzosomes@gmail.com';
+    stu.role = 'Student';
+    stu.status = 'Active';
+    stu.course = 'BSIT';
+    stu.company = 'Accenture Philippines';
+    stu.baseHours = 0;
+    stu.requiredHours = 500;
+    stu.badge = 'Active';
+  } else {
     stu = {
-      id: 'student-kenzo',
+      id: 's1',
       identifier: '2021-00421',
       name: 'kenzosomes',
       email: 'kenzosomes@gmail.com',
       role: 'Student',
       status: 'Active',
-      course: 'BS Information Technology',
+      course: 'BSIT',
       company: 'Accenture Philippines',
-      supervisorId: null,
-      baseHours: 120,
+      supervisorId: 'v1',
+      baseHours: 0,
       requiredHours: 500,
       badge: 'Active'
     };
-    dataDb.users.push(stu);
+    dataDb.users.unshift(stu);
   }
 
-  if (!sup) {
+  if (sup) {
+    sup.id = 'v1';
+    sup.identifier = 'shisulzhin@gmail.com';
+    sup.name = 'shisuizhin';
+    sup.email = 'shisulzhin@gmail.com';
+    sup.role = 'Supervisor';
+    sup.status = 'Active';
+    sup.company = 'Accenture Philippines';
+  } else {
     sup = {
-      id: 'supervisor-shisui',
+      id: 'v1',
       identifier: 'shisulzhin@gmail.com',
       name: 'shisuizhin',
       email: 'shisulzhin@gmail.com',
@@ -62,9 +82,17 @@ function connectCoreUsers(dataDb) {
     dataDb.users.push(sup);
   }
 
-  if (!coord) {
+  if (coord) {
+    coord.id = 'c1';
+    coord.identifier = 'FAC-2026-001';
+    coord.name = 'jeff.gentapanan2004525';
+    coord.email = 'jeff.gentapanan2004525@gmail.com';
+    coord.role = 'Coordinator';
+    coord.status = 'Active';
+    coord.department = 'College of Information Technology';
+  } else {
     coord = {
-      id: 'coordinator-jeff',
+      id: 'c1',
       identifier: 'FAC-2026-001',
       name: 'jeff.gentapanan2004525',
       email: 'jeff.gentapanan2004525@gmail.com',
@@ -93,7 +121,7 @@ function connectCoreUsers(dataDb) {
   stu.badge = 'Active';
   stu.status = 'Active';
   stu.requiredHours = stu.requiredHours || 500;
-  if (!stu.baseHours && stu.baseHours !== 0) stu.baseHours = 120;
+  stu.baseHours = 0;
 
   // Unassign all other students from this supervisor so ONLY kenzosomes is assigned to shisuizhin
   dataDb.users.filter(u => u.role === 'Student' && u.id !== stu.id && u.supervisorId === sup.id).forEach(other => {
@@ -177,9 +205,13 @@ if(db.incidents) db.incidents = db.incidents.filter(i => !i._pending);
 let session=null,view={search:'',filter:'All',course:'All',mode:'All'},authRole='Student',modalSubmit=null,modalOpener=null,modalUserId=null,toastTimer;
 
 try {
-  if (!localStorage.getItem('dtr_reset_guaranteed_v5')) {
-    localStorage.setItem('dtr_reset_guaranteed_v5', '1');
+  if (!localStorage.getItem('dtr_reset_guaranteed_v8')) {
+    localStorage.setItem('dtr_reset_guaranteed_v8', '1');
     localStorage.removeItem(STORAGE);
+    sessionStorage.removeItem(SESSION);
+    sessionStorage.removeItem(SESSION + '.student');
+    sessionStorage.removeItem(SESSION + '.supervisor');
+    sessionStorage.removeItem(SESSION + '.coordinator');
     db=connectCoreUsers(ensureCreatorAccounts(seedData()));
   }
 } catch(e) {}
@@ -224,8 +256,8 @@ function loadSession() {
       }
     } catch(e) {}
 
-    // Fallback: look for the active user with that role in db
-    const coreUser = db.users.find(u => u.role && u.role.toLowerCase() === routeRole && u.status === 'Active');
+    // Fallback: look for the active user with that role in db, prioritizing core team accounts
+    const coreUser = db.users.find(u => u.role && u.role.toLowerCase() === routeRole && u.status === 'Active' && (u.id === 's1' || u.id === 'v1' || u.id === 'c1' || u.name === 'kenzosomes' || u.name === 'shisuizhin' || u.name === 'jeff.gentapanan2004525')) || db.users.find(u => u.role && u.role.toLowerCase() === routeRole && u.status === 'Active');
     if (coreUser) {
       const s = { id: coreUser.id, user: coreUser };
       sessionStorage.setItem(SESSION, JSON.stringify(s));
