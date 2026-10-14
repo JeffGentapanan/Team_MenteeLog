@@ -437,3 +437,36 @@ input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
   display: none;
 }
+
+/* Drawer / Modal Header, Body & Tab Hover Spacing Fix */
+dialog .modal-head {
+    padding: 18px 24px !important;
+}
+dialog .modal-body {
+    padding: 16px 24px 24px !important;
+}
+dialog .tabs,
+.modal-body .tabs,
+.hte-modal-tabs {
+    overflow: visible !important;
+    padding-top: 4px !important;
+    margin-top: 0 !important;
+}
+dialog .tabs .btn,
+dialog .tabs button,
+.modal-body .tabs .btn,
+.modal-body .tabs button,
+.hte-modal-tabs .btn,
+.hte-modal-tabs button {
+    transform: none !important;
+    box-shadow: none !important;
+}
+dialog .tabs .btn:hover,
+dialog .tabs button:hover,
+.modal-body .tabs .btn:hover,
+.modal-body .tabs button:hover,
+.hte-modal-tabs .btn:hover,
+.hte-modal-tabs button:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
