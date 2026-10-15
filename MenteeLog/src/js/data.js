@@ -73,12 +73,8 @@ export function seedData() {
       {id:'j6',title:'Business Intelligence Intern',company:'SM Technologies',location:'Mandurriao, Iloilo City',mode:'Hybrid',courses:['BSIT'],slots:10,status:'Active',description:'Turn operational data into useful dashboards and insights for business teams.',specs:'Accredited HTE · Active MOA',skills:'SQL, spreadsheets, data visualization'}
     ],
     applications:[{id:'a1',studentId:'s1',jobId:'j1',status:'Accepted',date:'2026-08-01',note:'Endorsed by faculty coordinator.'},{id:'a2',studentId:'s2',jobId:'j1',status:'Accepted',date:'2026-08-01',note:'Training agreement complete.'},{id:'a3',studentId:'s3',jobId:'j1',status:'Accepted',date:'2026-08-04',note:''},{id:'a4',studentId:'s4',jobId:'j1',status:'Pending',date:'2026-09-24',note:''}],
-    logs: [
-      ...['2026-09-21','2026-09-22','2026-09-23','2026-09-24'].map((date,i)=>({id:'l'+i,studentId:'s1',supervisorId:'v1',date,clockIn:date+'T08:00:00+08:00',clockOut:date+'T17:00:00+08:00',breakMinutes:60,hours:8,status:'Approved',task:'Implemented responsive components, reviewed feedback, and updated project documentation.',gps:null,remarks:'Reviewed and approved.',signature:'shisuizhin'})),
-      {id:'l4',studentId:'s1',supervisorId:'v1',date:'2026-09-25',clockIn:'2026-09-25T08:00:00+08:00',clockOut:'2026-09-25T17:00:00+08:00',breakMinutes:60,hours:8,status:'Flagged',task:'Tested the application and documented accessibility improvements.',gps:null,remarks:'Location unavailable. Please provide a justification.',signature:''},
-      {id:'l5',studentId:'s2',supervisorId:'v1',date:'2026-09-25',clockIn:'2026-09-25T08:00:00+08:00',clockOut:'2026-09-25T17:00:00+08:00',breakMinutes:60,hours:8,status:'Pending',task:'Resolved network support tickets and updated the asset inventory.',gps:null,remarks:'',signature:''}
-    ],
-    incidents:[{id:'IR-048',studentId:'s1',supervisorId:'v1',category:'Student_Claim',title:'Attendance correction request',description:'My location could not be captured during an internet interruption. Please review the linked attendance record.',priority:'Medium',status:'Pending',date:'2026-09-25',logId:'l4',notes:[],meeting:null,evidence:null}],
+    logs: [],
+    incidents:[{id:'IR-048',studentId:'s1',supervisorId:'v1',category:'Student_Claim',title:'Attendance correction request',description:'My location could not be captured during an internet interruption. Please review the linked attendance record.',priority:'Medium',status:'Pending',date:'2026-09-25',logId:null,notes:[],meeting:null,evidence:null}],
     appraisals:[],
     notifications:[
       {id:'n1',userId:'s1',type:'DTR_Event',title:'DTR entry approved',message:'Your September 24 entry (8 hours) was reviewed by shisuizhin.',date:'2026-09-25T09:00:00+08:00',read:false},

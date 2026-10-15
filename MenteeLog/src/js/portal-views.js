@@ -594,7 +594,7 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
         return headerHtml + toolbarHtml + historyPanel;
     }
     // Student: clock and task draft at left, history and saved drafts at right.
-    if(sub==='history') return back('dtr') + heading('DTR History', 'Complete attendance and task records.') + `<div class="ref-alert" style="margin-bottom: 16px;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:6px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><strong>Lock Enabled:</strong> All past and submitted DTR entries are strictly READ-ONLY. Modification of timestamps is permanently restricted.</div>` + filter([['All','All'],['Approved','Approved'],['Pending','Pending'],['Flagged','Flagged'],['Rejected','Rejected']]) + panel('', c.dtrTable(logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter), u()));
+    if(sub==='history') return back('dtr') + heading('DTR History', 'Complete attendance and task records.', b('Clear Test Records', 'ref-clear-test-logs', '', 'secondary small', 'trash')) + `<div class="ref-alert" style="margin-bottom: 16px;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:6px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><strong>Lock Enabled:</strong> All past and submitted DTR entries are strictly READ-ONLY. Modification of timestamps is permanently restricted.</div>` + filter([['All','All'],['Approved','Approved'],['Pending','Pending'],['Flagged','Flagged'],['Rejected','Rejected']]) + panel('', c.dtrTable(logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter), u()));
       const activeShiftObj = (db().activeShifts || []).find(sh => sh.studentId === u().id);
       const runningLog = logs.find(sh => sh.studentId === u().id && sh.status === 'Running');
       const shift = runningLog || activeShiftObj || null;
@@ -834,6 +834,46 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
         c.toast('Task summary draft saved to Recent Saved Drafts.');
         c.render();
       }, 'Save Draft');
+      return true;
+    }
+    if(name==='ref-clear-test-logs'){
+      if(u().role!=='Student') throw new Error('Student access required.');
+      c.showModal('Clear Test DTR Records', `
+        <div style="text-align:center; padding:12px 0 16px;">
+          <div style="width:48px;height:48px;border-radius:50%;background:#fee2e2;color:#b91c1c;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </div>
+          <h3 style="margin:0 0 8px;font-size:18px;font-weight:600;color:var(--ink);">Clear all sample & test DTR records?</h3>
+          <p style="margin:0;font-size:14px;color:var(--slate);">This will remove past test clock-in/out records for your profile so you can test on a clean history. Your profile, company placement, and saved drafts will remain safe.</p>
+        </div>
+      `, async () => {
+        const sid = u().id;
+        const isKenzo = (u().email && u().email.toLowerCase() === 'kenzosomes@gmail.com') || sid === 's1' || sid === '22227dcf-933f-40a9-9340-f66cb9020e5c';
+        db().logs = (db().logs || []).filter(l => {
+          if (l.studentId === sid) return false;
+          if (isKenzo && (l.studentId === 's1' || l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || !l.studentId)) return false;
+          return true;
+        });
+        db().activeShifts = (db().activeShifts || []).filter(sh => sh.studentId !== sid && (!isKenzo || (sh.studentId !== 's1' && sh.studentId !== '22227dcf-933f-40a9-9340-f66cb9020e5c')));
+        db().shift = null;
+
+        try {
+          if (typeof supabase !== 'undefined' && supabase) {
+            const { data } = await supabase.auth.getSession();
+            const uid = data?.session?.user?.id;
+            if (uid) {
+              await supabase.from('logs').delete().eq('student_id', uid);
+            }
+          }
+        } catch(err) {
+          console.warn('Supabase delete error:', err);
+        }
+
+        c.save();
+        c.toast('Sample and test DTR records cleared successfully.');
+        document.querySelector('#modal').close();
+        c.render();
+      }, 'Clear Test Records');
       return true;
     }
     if(name==='ref-save-draft'){if(u().role!=='Student')throw new Error('Student access required.');if(!db().draft.trim())throw new Error('Enter a task summary first.');db().taskDrafts??=[];const draft=db().taskDrafts.find(d=>d.studentId===u().id&&d.date===today());if(draft)draft.task=db().draft;else db().taskDrafts.unshift({id:crypto.randomUUID(),studentId:u().id,date:today(),task:db().draft});finish('Daily log draft saved.');return true;}
