@@ -244,7 +244,8 @@ export async function syncRemote(supabase, db) {
     newLogs = (newLogs || []).filter(l => 
       !String(l.id || '').startsWith('log_') && 
       !String(l.studentId || '').startsWith('s_dummy') && 
-      !String(l.task || '').includes('Configured project development environment')
+      !String(l.task || '').includes('Configured project development environment') &&
+      !(Number(l.hours || 0) === 0 && l.clockIn && l.clockOut && l.clockIn === l.clockOut)
     );
     
     // 1. Include any pre-seeded candidates from school_registry
