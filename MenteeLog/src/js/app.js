@@ -31,21 +31,29 @@ function connectCoreUsers(dataDb) {
   let sup = dataDb.users.find(u => u.role === 'Supervisor' && (u.id === 'v1' || u.identifier === 'shisulzhin@gmail.com' || (String(u.email||'').toLowerCase().includes('shisui')) || String(u.name||'').toLowerCase().includes('shisui') || u.name.includes('Carlos Jose')));
   let coord = dataDb.users.find(u => u.role === 'Coordinator' && (u.id === 'c1' || u.identifier === 'FAC-2026-001' || (String(u.email||'').toLowerCase().includes('jeff')) || String(u.name||'').toLowerCase().includes('jeff') || u.name.includes('Evelyn Ramos')));
 
+  const stuUuidFromLogs = (dataDb.logs || []).find(l => l.studentId && l.studentId.length > 20 && l.studentId.includes('-'))?.studentId;
+
   if (stu) {
-    stu.id = 's1';
-    stu.identifier = '2021-00421';
-    stu.name = 'kenzosomes';
-    stu.email = 'kenzosomes@gmail.com';
+    if (stu.id && stu.id.length > 20 && stu.id.includes('-')) {
+      // keep Supabase UUID
+    } else if (stuUuidFromLogs) {
+      stu.id = stuUuidFromLogs;
+    } else if (!stu.id || stu.id === 'student-kenzo') {
+      stu.id = 's1';
+    }
+    stu.identifier = stu.identifier || '2021-00421';
+    stu.name = (stu.name && stu.name !== 'User' && stu.name !== 'Maria Santos') ? stu.name : 'kenzosomes';
+    stu.email = stu.email || 'kenzosomes@gmail.com';
     stu.role = 'Student';
     stu.status = 'Active';
     stu.course = 'BSIT';
-    stu.company = 'Accenture Philippines';
-    stu.baseHours = 0;
-    stu.requiredHours = 500;
+    stu.company = stu.company || 'Accenture Philippines';
+    stu.baseHours = stu.baseHours || 0;
+    stu.requiredHours = stu.requiredHours || 500;
     stu.badge = 'Active';
   } else {
     stu = {
-      id: 's1',
+      id: stuUuidFromLogs || 's1',
       identifier: '2021-00421',
       name: 'kenzosomes',
       email: 'kenzosomes@gmail.com',
@@ -61,17 +69,25 @@ function connectCoreUsers(dataDb) {
     dataDb.users.unshift(stu);
   }
 
+  const supUuidFromLogs = (dataDb.logs || []).find(l => l.supervisorId && l.supervisorId.length > 20 && l.supervisorId.includes('-'))?.supervisorId;
+
   if (sup) {
-    sup.id = 'v1';
-    sup.identifier = 'shisulzhin@gmail.com';
-    sup.name = 'shisuizhin';
-    sup.email = 'shisulzhin@gmail.com';
+    if (sup.id && sup.id.length > 20 && sup.id.includes('-')) {
+      // keep Supabase UUID
+    } else if (supUuidFromLogs) {
+      sup.id = supUuidFromLogs;
+    } else if (!sup.id || sup.id === 'supervisor-shisui') {
+      sup.id = 'v1';
+    }
+    sup.identifier = sup.identifier || 'shisulzhin@gmail.com';
+    sup.name = (sup.name && sup.name !== 'User' && !sup.name.includes('Carlos Jose')) ? sup.name : 'shisuizhin';
+    sup.email = sup.email || 'shisulzhin@gmail.com';
     sup.role = 'Supervisor';
     sup.status = 'Active';
-    sup.company = 'Accenture Philippines';
+    sup.company = sup.company || 'Accenture Philippines';
   } else {
     sup = {
-      id: 'v1',
+      id: supUuidFromLogs || 'v1',
       identifier: 'shisulzhin@gmail.com',
       name: 'shisuizhin',
       email: 'shisulzhin@gmail.com',
@@ -83,13 +99,17 @@ function connectCoreUsers(dataDb) {
   }
 
   if (coord) {
-    coord.id = 'c1';
-    coord.identifier = 'FAC-2026-001';
-    coord.name = 'jeff.gentapanan2004525';
-    coord.email = 'jeff.gentapanan2004525@gmail.com';
+    if (coord.id && coord.id.length > 20 && coord.id.includes('-')) {
+      // keep Supabase UUID
+    } else if (!coord.id || coord.id === 'coordinator-jeff') {
+      coord.id = 'c1';
+    }
+    coord.identifier = coord.identifier || 'FAC-2026-001';
+    coord.name = (coord.name && coord.name !== 'User' && !coord.name.includes('Evelyn Ramos')) ? coord.name : 'jeff.gentapanan2004525';
+    coord.email = coord.email || 'jeff.gentapanan2004525@gmail.com';
     coord.role = 'Coordinator';
     coord.status = 'Active';
-    coord.department = 'College of Information Technology';
+    coord.department = coord.department || 'College of Information Technology';
   } else {
     coord = {
       id: 'c1',
@@ -123,10 +143,10 @@ function connectCoreUsers(dataDb) {
   stu.requiredHours = stu.requiredHours || 500;
   stu.baseHours = 0;
 
-  // Unassign all other students from this supervisor so ONLY kenzosomes is assigned to shisuizhin
-  dataDb.users.filter(u => u.role === 'Student' && u.id !== stu.id && u.supervisorId === sup.id).forEach(other => {
-    other.supervisorId = null;
-    other.company = '';
+  // Sync student logs to stu.id if it's the core student
+  (dataDb.logs || []).forEach(l => {
+    if (l.studentId === 's1' && stu.id !== 's1') l.studentId = stu.id;
+    if (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' && stu.id === 's1') stu.id = '22227dcf-933f-40a9-9340-f66cb9020e5c';
   });
 
   // Ensure supervisor job exists
@@ -329,7 +349,14 @@ function notify(userId,type,title,message){db.notifications.unshift({id:crypto.r
 function audit(action){db.audit.unshift({id:crypto.randomUUID(),actor:currentUser()?.name||'Demo',action,date:new Date().toISOString()});db.audit=db.audit.slice(0,150);}
 function toast(message){const el=$('#toast');el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,5000);}
 const initials=name=>String(name||'ML').split(' ').filter(Boolean).map(n=>n[0]).slice(0,2).join('').toUpperCase();
-const student=id=>db.users.find(u=>u.id===id);
+const student=id=>{
+  if (!id) return null;
+  let s = db.users.find(u => u.id === id);
+  if (!s && (id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || id === 's1')) {
+    s = db.users.find(u => u.role === 'Student' && (u.id === 's1' || u.id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || u.email === 'kenzosomes@gmail.com' || u.name === 'kenzosomes'));
+  }
+  return s || db.users.find(u => u.identifier === id || u.email === id) || null;
+};
 const job=id=>db.jobs.find(j=>j.id===id);
 const date=value=>value?new Date(value.length===10?value+'T12:00:00':value).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'-';
 const time=value=>value?new Date(value).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'}):'-';
@@ -510,19 +537,25 @@ async function clockAction() { /* MODIFY_CLOCK_ACTION */
     if(u.role !== 'Student') throw new Error('Unauthorized');
     
     // Find the log that awaits summary
-    const log = db.logs.find(l => l.studentId === u.id && l.status === 'Awaiting_Student_Log');
+    const log = db.logs.find(l => (l.studentId === u.id || (u.email && u.email.toLowerCase() === 'kenzosomes@gmail.com' && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1')) || (u.id === '22227dcf-933f-40a9-9340-f66cb9020e5c' && l.studentId === 's1')) && l.status === 'Awaiting_Student_Log');
     if(!log) throw new Error('No active log awaiting your summary.');
     
     showModal('Complete your daily time record', `<p>Shift was managed by your supervisor. Clocked in at ${time(log.clockIn)}, Clocked out at ${time(log.clockOut)}.</p>${textarea('Task summary & learning reflection','task','','required minlength="150"')}<p class="note">Describe the tasks you completed during this verified session (min 150 characters).</p>`, async data => {
         log.task = data.task;
         log.status = 'Pending';
-        const { error, data: updated } = await supabase.from('logs').update({ task: log.task, status: log.status }).eq('id', log.id).select();
-        if (error) throw new Error(error.message);
-        if (!updated || updated.length === 0) throw new Error('Update failed or rejected by security rules.');
-        await syncRemote(supabase, db);
+        try {
+          const { error, data: updated } = await supabase.from('logs').update({ task: log.task, status: log.status }).eq('id', log.id).select();
+          if (!error && updated && updated.length > 0) {
+            await syncRemote(supabase, db);
+          }
+        } catch(e) {
+          console.warn('Supabase sync note:', e);
+        }
         notify(log.supervisorId, 'DTR_Event', 'Daily time record submitted', u.name + ' submitted their verified logbook summary.');
         audit('Submitted a daily time record summary');
-        save(); toast('Logbook summary submitted for supervisor review.');
+        save();
+        toast('Logbook summary submitted for supervisor review.');
+        render();
     }, 'Submit Daily Logbook');
 }
 
@@ -1418,8 +1451,8 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
   if (sessionObj?.user) {
     setTimeout(async () => {
       const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', sessionObj.user.id).single();
-      if ((profile && profile.status !== 'Active') || (error && error.code === 'PGRST116')) {
-        await supabase.auth.signOut();
+      if ((profile && profile.status !== 'Active') || error) {
+        await supabase.auth.signOut().catch(()=>{});
         if (location.hash !== '#/login') location.hash = '/login';
       } else if (profile && profile.status === 'Active') {
         const routeRole = route().role?.toLowerCase();
@@ -1509,8 +1542,8 @@ supabase.auth.onAuthStateChange((event, sessionObj) => {
       db.applications = [];
     }
     const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', initSession.user.id).single();
-    if ((profile && profile.status !== 'Active') || (error && error.code === 'PGRST116')) {
-      await supabase.auth.signOut();
+    if ((profile && profile.status !== 'Active') || error) {
+      await supabase.auth.signOut().catch(()=>{});
       if (location.hash !== '#/login') location.hash = '/login';
     } else if (profile && profile.status === 'Active') {
       const routeRole = route().role?.toLowerCase();

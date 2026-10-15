@@ -72,14 +72,6 @@ export async function syncRemote(supabase, db) {
       const name = (p.full_name && p.full_name.trim()) || existing?.name || (p.email ? p.email.split('@')[0] : 'Unnamed user');
       const course = p.course || existing?.course || (p.role === 'Student' ? 'BSIT' : '');
 
-      if (existing && (!p.identifier || !p.course || !p.full_name)) {
-        supabase.from('profiles').update({
-          identifier: identifier,
-          full_name: name,
-          course: course
-        }).eq('id', p.id).then?.(() => {}).catch?.(() => {});
-      }
-
       return {
         id: p.id,
         role: p.role,
@@ -192,6 +184,10 @@ export async function syncRemote(supabase, db) {
       newUsers.push(sup);
     }
     if (stu && sup) {
+      if (stu.id === 's1' && newLogs.some(l => l.studentId && l.studentId.length > 20)) {
+        const remoteUuid = newLogs.find(l => l.studentId && l.studentId.length > 20)?.studentId;
+        if (remoteUuid) stu.id = remoteUuid;
+      }
       sup.company = sup.company || 'Accenture Philippines';
       stu.supervisorId = sup.id;
       stu.company = sup.company;
@@ -201,8 +197,8 @@ export async function syncRemote(supabase, db) {
       if (!stu.baseHours && stu.baseHours !== 0) stu.baseHours = 120;
       const stuLogs = newLogs.filter(l => l.studentId === stu.id);
       if (stuLogs.length === 0 && db.logs) {
-        const existingStuLogs = db.logs.filter(l => l.studentId === stu.id);
-        if (existingStuLogs.length > 0) newLogs.push(...existingStuLogs);
+        const existingStuLogs = db.logs.filter(l => l.studentId === stu.id || (stu.email === 'kenzosomes@gmail.com' && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1')));
+        if (existingStuLogs.length > 0) newLogs.push(...existingStuLogs.map(l => ({ ...l, studentId: stu.id })));
       }
       let supJob = newJobs.find(j => j.supervisorId === sup.id);
       if (!supJob) {
