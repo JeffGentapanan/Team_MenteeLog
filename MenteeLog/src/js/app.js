@@ -534,15 +534,247 @@ function openJob(id){const u=currentUser(),j=job(id);if(!j)return;const applied=
 function editJob(id){const u=currentUser();if(!['Coordinator','Supervisor'].includes(u.role))throw new Error('This role cannot manage positions.');const j=job(id);if(j&&u.role==='Supervisor'&&j.supervisorId!==u.id)throw new Error('This position is outside your scope.');showModal(j?'Edit position':'Post a new position',field('Position title','title','text',j?.title||'','required maxlength="120"')+field('Company','company','text',j?.company||u.company||'','required maxlength="120" '+(u.role==='Supervisor'?'readonly':''))+`<div class="grid-2">${field('Location','location','text',j?.location||'','required maxlength="100"')}${select('Work arrangement','mode',['On-site','Hybrid','Remote'],j?.mode||'On-site')}</div><div class="grid-2">${field('Available slots','slots','number',j?.slots??1,'required min="0" max="1000"')}${select('Status','status',['Draft','Active','Closed'],j?.status||'Draft')}</div>`+select('Eligible program','course',['All programs','BSCS','BSIT','BSCompE','BSECE'],j?.courses?.length===1?j.courses[0]:'All programs')+textarea('Position description','description',j?.description||'')+field('Skills','skills','text',j?.skills||'','required maxlength="200"')+textarea('HTE specifications & requirements','specs',j?.specs||'')+(u.role==='Coordinator'?select('Assigned supervisor','supervisorId',[['','Unassigned'],...db.users.filter(s=>s.role==='Supervisor').map(s=>[s.id,s.name])],j?.supervisorId||''):''),async(data)=>{const values={...data,slots:Number(data.slots),courses:data.course==='All programs'?['BSCS','BSIT','BSCompE','BSECE']:[data.course],supervisor_id:u.role==='Supervisor'?u.id:data.supervisorId||null};delete values.course;delete values.supervisorId;const {error, data: result}=j?await supabase.from('listings_jobs').update(values).eq('id',id).select():await supabase.from('listings_jobs').insert(values).select();if(error)throw new Error(error.message);if(!result || result.length === 0)throw new Error('Write failed or rejected by security rules.');await syncRemote(supabase,db);audit((j?'Updated':'Created')+' position '+values.title);save();toast('Position saved.');},'Save position');}
 function applicationDetail(id){const u=currentUser(),a=visibleApplications(db,u).find(a=>a.id===id);if(!a)throw new Error('Application unavailable.');const j=job(a.jobId),s=student(a.studentId);showModal('Application details',`<h3>${e(j.title)}</h3><p>${e(j.company)} • ${e(s.name)}</p>${badge(a.status)}<div class="timeline"><div class="timeline-item"><strong>Application submitted</strong><p>${date(a.date)}</p></div><div class="timeline-item"><strong>Supervisor review</strong><p>${a.status==='Pending'?'Awaiting review':e(a.status.replaceAll('_',' '))}</p></div><div class="timeline-item"><strong>Placement & endorsement</strong><p>${a.status==='Accepted'?e(a.note||'Application accepted. Coordinator endorsement is next.'):'Follows an accepted application.'}</p></div></div>${u.role==='Supervisor'?select('Review decision','status',['Pending','Under_Review','Accepted','Rejected'],a.status)+textarea('Review note','note',a.note||''):''}`,u.role==='Supervisor'?async(data)=>{if(data.status==='Accepted'&&a.status!=='Accepted'){if(j.slots<1)throw new Error('No slots remain in this position.');if(db.applications.some(other=>other.studentId===s.id&&other.id!==a.id&&other.status==='Accepted'))throw new Error('This student already has an accepted placement.');}if(a.status==='Accepted'&&data.status!=='Accepted')throw new Error('An accepted placement must be reassigned by the coordinator.');const {error}=await supabase.rpc('review_application',{p_id:a.id,p_status:data.status,p_note:data.note||''});if(error)throw new Error(error.message);await syncRemote(supabase,db);notify(s.id,'Application_Status','Application status updated',j.title+': '+data.status.replaceAll('_',' '));audit('Reviewed application for '+s.name);save();toast('Application updated.');}:null,'Save review');}
 
-async function clockAction() { /* MODIFY_CLOCK_ACTION */
+async function studentClockIn() {
+  const u = currentUser();
+  if (u.role !== 'Student') throw new Error('Student portal required.');
+  const studentId = u.id;
+  db.activeShifts = db.activeShifts || [];
+  if (db.activeShifts.some(sh => sh.studentId === studentId) || db.logs.some(l => l.studentId === studentId && l.status === 'Running')) {
+    throw new Error('You are already clocked in.');
+  }
+  const supId = u.supervisorId || (db.users.find(x => x.role === 'Supervisor' && (x.company === u.company || !u.company))?.id) || db.users.find(x => x.role === 'Supervisor')?.id || null;
+  const nowIso = new Date().toISOString();
+  const shiftObj = {
+    id: crypto.randomUUID(),
+    studentId,
+    supervisorId: supId,
+    clockIn: nowIso,
+    clockOut: null,
+    breakMinutes: 0,
+    onBreak: null,
+    justification: null
+  };
+  db.activeShifts.push(shiftObj);
+  const logRecord = {
+    id: shiftObj.id,
+    studentId,
+    supervisorId: supId,
+    date: today(),
+    clockIn: nowIso,
+    clockOut: null,
+    breakMinutes: 0,
+    hours: 0,
+    status: 'Running',
+    task: '',
+    gps: true,
+    remarks: '',
+    justification: ''
+  };
+  const existingRunningIdx = db.logs.findIndex(l => l.studentId === studentId && l.status === 'Running');
+  if (existingRunningIdx !== -1) db.logs[existingRunningIdx] = logRecord;
+  else db.logs.unshift(logRecord);
+  db.shift = logRecord;
+
+  try {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(studentId)) {
+      const { data: ins, error } = await supabase.from('logs').insert({
+        student_id: studentId,
+        supervisor_id: supId,
+        date: today(),
+        clock_in: nowIso,
+        break_minutes: 0,
+        hours: 0,
+        status: 'Running',
+        gps: true
+      }).select();
+      if (!error && ins && ins.length > 0) {
+        shiftObj.id = ins[0].id;
+        logRecord.id = ins[0].id;
+      }
+    }
+  } catch(err) {
+    console.warn('Supabase running log sync note:', err);
+  }
+
+  audit('Student ' + u.name + ' clocked in');
+  save();
+  render();
+  toast('You are now clocked in. Shift timer started!');
+}
+
+async function studentToggleBreak() {
+  const u = currentUser();
+  if (u.role !== 'Student') throw new Error('Student portal required.');
+  const studentId = u.id;
+  db.activeShifts = db.activeShifts || [];
+  let shift = db.activeShifts.find(sh => sh.studentId === studentId);
+  let log = db.logs.find(l => l.studentId === studentId && l.status === 'Running');
+  if (!shift && log) {
+    shift = { studentId, supervisorId: log.supervisorId, clockIn: log.clockIn, breakMinutes: log.breakMinutes || 0, onBreak: log.justification || null };
+    db.activeShifts.push(shift);
+  }
+  if (!shift && !log) throw new Error('You are not currently clocked in.');
+
+  if (shift?.onBreak || log?.justification) {
+    const breakStart = shift?.onBreak || log?.justification;
+    const elapsedMinutes = Math.max(0, Math.floor((Date.now() - new Date(breakStart).getTime()) / 60000));
+    if (shift) {
+      shift.breakMinutes = (shift.breakMinutes || 0) + elapsedMinutes;
+      shift.onBreak = null;
+    }
+    if (log) {
+      log.breakMinutes = (log.breakMinutes || 0) + elapsedMinutes;
+      log.justification = '';
+    }
+    try {
+      if (log?.id) await supabase.from('logs').update({ break_minutes: log.breakMinutes, justification: '' }).eq('id', log.id);
+    } catch(e) {}
+    toast('Break ended. Resuming shift timer.');
+  } else {
+    const nowIso = new Date().toISOString();
+    if (shift) shift.onBreak = nowIso;
+    if (log) log.justification = nowIso;
+    try {
+      if (log?.id) await supabase.from('logs').update({ justification: nowIso }).eq('id', log.id);
+    } catch(e) {}
+    toast('Lunch / Break started. Shift timer paused.');
+  }
+  save();
+  render();
+}
+
+async function studentClockOut() {
+  const u = currentUser();
+  if (u.role !== 'Student') throw new Error('Student portal required.');
+  const studentId = u.id;
+  db.activeShifts = db.activeShifts || [];
+  const shiftIdx = db.activeShifts.findIndex(sh => sh.studentId === studentId);
+  const shift = shiftIdx !== -1 ? db.activeShifts[shiftIdx] : null;
+  const log = db.logs.find(l => l.studentId === studentId && l.status === 'Running');
+  if (!shift && !log) throw new Error('You do not have an active clocked-in shift.');
+
+  const clockInTime = shift?.clockIn || log?.clockIn || new Date(Date.now() - 3600000).toISOString();
+  let breakMins = (shift?.breakMinutes || log?.breakMinutes || 0);
+  const breakStart = shift?.onBreak || log?.justification;
+  if (breakStart) {
+    breakMins += Math.max(0, Math.floor((Date.now() - new Date(breakStart).getTime()) / 60000));
+  }
+  const clockOutTime = new Date().toISOString();
+  const hrs = hoursBetween(clockInTime, clockOutTime, breakMins);
+  const supId = shift?.supervisorId || log?.supervisorId || u.supervisorId;
+  const defaultDraft = db.draft || db.taskDrafts?.find(d => d.studentId === u.id && d.date === today())?.task || '';
+
+  showModal('Clock Out & Submit Daily Logbook', `
+    <div style="background:var(--cream, #fbf8f2); padding:16px; border-radius:8px; margin-bottom:16px; border:1px solid var(--line, #e2e8f0);">
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+        <span class="muted">Clock In</span>
+        <strong>${time(clockInTime)}</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+        <span class="muted">Clock Out</span>
+        <strong>${time(clockOutTime)}</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+        <span class="muted">Break Time</span>
+        <strong>${breakMins} mins</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--line, #e2e8f0); padding-top:8px; font-size:13px;">
+        <span class="muted">Estimated Shift Hours</span>
+        <strong style="color:var(--burgundy); font-size:15px;">${hrs} hrs</strong>
+      </div>
+    </div>
+    ${textarea('Task summary & learning reflection', 'task', defaultDraft, 'required minlength="150" placeholder="Describe the specific tasks completed, technical skills applied, and milestones achieved during this shift (min 150 characters)..."')}
+    <p class="note">Enter your daily task accomplishments (minimum 150 characters). This will be submitted to your supervisor for review and approval.</p>
+  `, async (data) => {
+    if (shiftIdx !== -1) db.activeShifts.splice(shiftIdx, 1);
+    let targetLog = log;
+    if (!targetLog) {
+      targetLog = {
+        id: crypto.randomUUID(),
+        studentId,
+        supervisorId: supId,
+        date: today(),
+        clockIn: clockInTime,
+        clockOut: clockOutTime,
+        breakMinutes: breakMins,
+        hours: hrs,
+        status: 'Pending',
+        task: data.task,
+        gps: true,
+        remarks: '',
+        justification: ''
+      };
+      db.logs.unshift(targetLog);
+    } else {
+      targetLog.clockOut = clockOutTime;
+      targetLog.breakMinutes = breakMins;
+      targetLog.hours = hrs;
+      targetLog.status = 'Pending';
+      targetLog.task = data.task;
+      targetLog.justification = '';
+    }
+
+    try {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(targetLog.id)) {
+        await supabase.from('logs').update({
+          clock_out: clockOutTime,
+          break_minutes: breakMins,
+          hours: hrs,
+          task: data.task,
+          status: 'Pending',
+          justification: ''
+        }).eq('id', targetLog.id);
+      } else if (uuidRegex.test(studentId)) {
+        const { data: ins } = await supabase.from('logs').insert({
+          student_id: studentId,
+          supervisor_id: supId,
+          date: today(),
+          clock_in: clockInTime,
+          clock_out: clockOutTime,
+          break_minutes: breakMins,
+          hours: hrs,
+          task: data.task,
+          status: 'Pending',
+          gps: true
+        }).select();
+        if (ins && ins.length > 0) targetLog.id = ins[0].id;
+      }
+      await syncRemote(supabase, db);
+    } catch(err) {
+      console.warn('Supabase clock out log error:', err);
+    }
+
+    if (supId) {
+      notify(supId, 'DTR_Event', 'Daily time record submitted', u.name + ' clocked out and submitted their daily logbook.');
+    }
+    audit('Student ' + u.name + ' clocked out and submitted daily log for ' + today());
+    db.draft = '';
+    db.shift = null;
+    save();
+    render();
+    toast('Clocked out successfully! Daily logbook submitted for supervisor approval.');
+  }, 'Submit & Clock Out');
+}
+
+async function clockAction() {
     const u = currentUser();
-    if(u.role !== 'Student') throw new Error('Unauthorized');
+    if(u.role !== 'Student') throw new Error('Student portal required.');
     
-    // Find the log that awaits summary
+    // Find if a log awaits summary
     const log = db.logs.find(l => (l.studentId === u.id || (u.email && u.email.toLowerCase() === 'kenzosomes@gmail.com' && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1')) || (u.id === '22227dcf-933f-40a9-9340-f66cb9020e5c' && l.studentId === 's1')) && l.status === 'Awaiting_Student_Log');
-    if(!log) throw new Error('No active log awaiting your summary.');
+    if(!log) {
+      const running = db.logs.find(sh => sh.studentId === u.id && sh.status === 'Running') || (db.activeShifts || []).find(sh => sh.studentId === u.id);
+      if (running) {
+        await studentClockOut();
+        return;
+      }
+      await studentClockIn();
+      return;
+    }
     
-    showModal('Complete your daily time record', `<p>Shift was managed by your supervisor. Clocked in at ${time(log.clockIn)}, Clocked out at ${time(log.clockOut)}.</p>${textarea('Task summary & learning reflection','task','','required minlength="150"')}<p class="note">Describe the tasks you completed during this verified session (min 150 characters).</p>`, async data => {
+    showModal('Submit Daily Summary Logbook', `<p>Shift completed: Clocked in at ${time(log.clockIn)}, Clocked out at ${time(log.clockOut)} (${log.hours || 8} hrs).</p>${textarea('Task summary & learning reflection','task','','required minlength="150" placeholder="Describe the tasks, tools, and technical learnings achieved during today\'s shift (min 150 characters)..."')}<p class="note">Describe the tasks you completed during this session (min 150 characters) for supervisor review.</p>`, async data => {
         log.task = data.task;
         log.status = 'Pending';
         try {
@@ -553,7 +785,9 @@ async function clockAction() { /* MODIFY_CLOCK_ACTION */
         } catch(e) {
           console.warn('Supabase sync note:', e);
         }
-        notify(log.supervisorId, 'DTR_Event', 'Daily time record submitted', u.name + ' submitted their verified logbook summary.');
+        if (log.supervisorId) {
+          notify(log.supervisorId, 'DTR_Event', 'Daily time record submitted', u.name + ' submitted their verified logbook summary.');
+        }
         audit('Submitted a daily time record summary');
         save();
         toast('Logbook summary submitted for supervisor review.');
@@ -948,7 +1182,7 @@ async function uploadEvidence(file, incCode) {
 const putFile=(id,file)=>fileOp('put',id,file);
 function documentUpload(){const u=currentUser();showModal('Upload a document',select('Document category','category',['Endorsement letter','Training agreement','Accomplishment report','Certificate','Other'])+field('Choose a file','file','file','','required accept="application/pdf,image/png,image/jpeg"')+'<p class="small muted">PDF, PNG, or JPEG · Up to 10 MB. Stored only in this browser.</p>',async(data,form)=>{const file=form.elements.file.files[0];validateUpload(file);const id=crypto.randomUUID();if(!uuidRegex.test(u.id))throw new Error('Demo records cannot be saved to the live database.');const ext=file.name.split('.').pop()||'';const filePath=`${u.id}/${id}_${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;const {error:storageErr}=await supabase.storage.from('documents').upload(filePath,file);if(storageErr)throw new Error('Upload failed: '+storageErr.message);const {error:dbErr,data:rows}=await supabase.from('documents').insert({id,student_id:u.id,category:data.category,name:file.name,file_path:filePath,file_size:file.size,mime_type:file.type,doc_date:today(),status:'Pending'}).select();if(dbErr||!rows||!rows.length){await supabase.storage.from('documents').remove([filePath]);throw new Error(dbErr?dbErr.message:'Insert failed.');}await syncRemote(supabase,db);audit('Uploaded a document');save();toast('Document uploaded successfully.');},'Upload document');}
 function exportReport(type){let rows;const students=db.users.filter(s=>s.role==='Student');switch(type){case 'completion':rows=[['Student','SR code','Approved hours','Required hours','Completion percent'],...students.map(s=>[s.name,s.identifier,approvedHours(db,s.id),s.requiredHours,Math.round(approvedHours(db,s.id)/s.requiredHours*100)])];break;case 'compliance':rows=[['Student','Date','Hours','Status','Location captured','Justification','Reviewer remarks'],...db.logs.map(l=>[student(l.studentId)?.name,l.date,l.hours,l.status,l.gps?'Yes (unverified)':'No',l.justification||'',l.remarks])];break;case 'hte':rows=[['Company','Industry','Accreditation','MOA expiry','Placed students'],...db.htes.map(h=>[h.name,h.industry,h.status,h.expiry,students.filter(s=>s.company===h.name).length])];break;case 'incidents':rows=[['Case','Student','Category','Priority','Status','Reported'],...db.incidents.map(i=>[i.id,student(i.studentId)?.name,i.category,i.priority,i.status,i.date])];break;default:rows=[['Student','SR code','Course','Host company','Supervisor','Accreditation','Approved hours','Required hours'],...students.map(s=>[s.name,s.identifier,s.course,s.company,student(s.supervisorId)?.name||'',s.badge,approvedHours(db,s.id),s.requiredHours])];}download('MenteeLog-'+type+'-DEMO.csv',csvText(rows));toast('Sample data report downloaded.');}
-const actionRoles={ 'job-edit':['Supervisor','Coordinator'],'student-detail':['Supervisor','Coordinator'],'evaluate':['Supervisor'],'hte-edit':['Coordinator'],'user-new':['Coordinator'],'user-status':['Coordinator'],'import-users':['Coordinator'],'csv-template':['Coordinator'],'announcement':['Supervisor','Coordinator'],'document-upload':['Student'],'document-remove':['Student'],'clock':['Student'],'incident-new':['Student','Supervisor'],'report':['Coordinator'],'export-students':['Supervisor','Coordinator'],'endorsement':['Coordinator']};
+const actionRoles={ 'job-edit':['Supervisor','Coordinator'],'student-detail':['Supervisor','Coordinator'],'evaluate':['Supervisor'],'hte-edit':['Coordinator'],'user-new':['Coordinator'],'user-status':['Coordinator'],'import-users':['Coordinator'],'csv-template':['Coordinator'],'announcement':['Supervisor','Coordinator'],'document-upload':['Student'],'document-remove':['Student'],'clock':['Student'],'student-clock-in':['Student'],'student-toggle-break':['Student'],'student-clock-out':['Student'],'ref-clock-out':['Student'],'incident-new':['Student','Supervisor'],'report':['Coordinator'],'export-students':['Supervisor','Coordinator'],'endorsement':['Coordinator']};
 async function action(name,id,el){
   const publicActions=['demo','auth-role','forgot','login','toggle-password','close','watch-demo','privacy','team-connect'];
   const u=currentUser();
@@ -1101,8 +1335,12 @@ async function action(name,id,el){
         save(); render(); toast('Simulated Supervisor Clock Out'); return;
     }
 
-    case 'clock':await clockAction();return;
-    case 'ref-submit-log':await clockAction();return;
+    case 'student-clock-in': await studentClockIn(); return;
+    case 'student-toggle-break': await studentToggleBreak(); return;
+    case 'student-clock-out':
+    case 'ref-clock-out': await studentClockOut(); return;
+    case 'clock': await clockAction(); return;
+    case 'ref-submit-log': await clockAction(); return;
     case 'log-detail':logDetail(id);return;
     case 'student-detail':studentDetail(id);return;
     case 'incident-new':incidentNew();return;
@@ -1541,7 +1779,7 @@ window.addEventListener('storage', ev => {
     } catch {}
   }, 150);
 });
-setInterval(()=>{ const timer=$('#shift-timer'); if(timer&&currentUser()?.role==='Student'){ const active = db.logs.find(sh=>sh.studentId===currentUser().id && sh.status==='Running'); timer.textContent=active?netElapsed(active):'00:00:00'; } document.querySelectorAll('.tk-timer').forEach(el => { const sid = el.getAttribute('data-student'); if(sid){ const sh=db.logs.find(x=>x.studentId===sid && x.status==='Running'); el.textContent = netElapsed(sh); return; } const start = el.getAttribute('data-start'); if(start) el.textContent = elapsed(start); }); document.querySelectorAll('.tk-break-timer').forEach(el => { const start = el.getAttribute('data-start'); if(start) el.textContent = elapsed(start); }); }, 1000);
+setInterval(()=>{ const timer=$('#shift-timer'); if(timer&&currentUser()?.role==='Student'){ const active = db.logs.find(sh=>sh.studentId===currentUser().id && sh.status==='Running') || (db.activeShifts || []).find(sh => sh.studentId === currentUser().id); timer.textContent=active?netElapsed(active):'00:00:00'; } document.querySelectorAll('.tk-timer').forEach(el => { const sid = el.getAttribute('data-student'); if(sid){ const sh=db.logs.find(x=>x.studentId===sid && x.status==='Running') || (db.activeShifts || []).find(x => x.studentId === sid); el.textContent = netElapsed(sh); return; } const start = el.getAttribute('data-start'); if(start) el.textContent = elapsed(start); }); document.querySelectorAll('.tk-break-timer').forEach(el => { const start = el.getAttribute('data-start'); if(start) el.textContent = elapsed(start); }); }, 1000);
 function userIsMidInput() {
   const el = document.activeElement;
   if (el && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) && el.id !== 'global-search') return true;

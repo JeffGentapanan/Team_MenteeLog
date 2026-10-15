@@ -574,36 +574,12 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
         ]);
 
         const headerHtml = heading('Intern Log Sheets & Summary','Review, verify, and approve daily log sheets and task summaries submitted by assigned interns.') + 
-            supervisorStatsHtml +
-            '<div class="row between" style="background: var(--cream); padding: 16px; border-radius: var(--radius); margin-bottom: 24px; margin-top: 16px;"><div class="row"><strong>On-Site Time-In Verification</strong><p class="small muted mb0">You are the designated timekeeper. Clock interns in when they arrive.</p></div></div>';
-            
-        const rosterPanel = (() => {
-            let students = visibleStudents(db(), u());
-            if(!students.length) return panel('Timekeeper: Intern Roster', empty('No Interns Assigned', 'When interns are assigned to your establishment, they will appear here for shift tracking.'));
-            let rosterRows = students.map(s => {
-                let active = db().logs.find(sh => sh.studentId === s.id && sh.status === 'Running');
-                const statusBg = active ? '#166534' : 'var(--slate)';
-                const statusDot = active ? 'background:#16a34a;animation:tk-pulse 2s infinite' : 'background:var(--slate)';
-                const statusText = active ? 'Active On-Site' : 'Clocked Out';
-                
-                const isOnBreak = active && active.onBreak;
-                const actionBtn = active
-                    ? b('Live View', 'tk-terminal', s.id, 'primary small', 'eye')
-                    : b('Open Terminal', 'tk-terminal', s.id, 'secondary small', 'monitor');
-                return '<tr>' +
-                    '<td>' + person(s) + '</td>' +
-                    '<td><div style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:' + statusBg + '"><span style="width:8px;height:8px;border-radius:50%;' + statusDot + '"></span>' + statusText + '</div></td>' +
-                    '<td>' + (active ? 'In Progress' : '--') + '</td>' +
-                    '<td>' + actionBtn + '</td>' +
-                '</tr>';
-            });
-            return panel('Timekeeper: Intern Roster', '<p class="small muted" style="margin-bottom:16px;">Select an intern to manage their current shift.</p>' + table(['Intern', 'Current Status', 'Today\'s Session', 'Action'], rosterRows) + '<style>@keyframes tk-pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }</style>');
-        })();
+            supervisorStatsHtml;
         
         const toolbarHtml = '<div class="ref-attendance-toolbar" style="margin-top: 16px; margin-bottom: 8px;">' + search('Search intern name or date.') + '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; width: 100%;">' + filter([['All','All Status'],['Pending','Pending'],['Approved','Approved'],['Flagged','Flagged']]) + '<div style="display:flex; gap:8px; flex-shrink: 0;">' + b('Approve All Pending ('+pending.length+')','ref-approve-all','primary small','check') + '</div></div></div>';
         
-        const historyPanel = panel('Recent DTR Logs & Approvals', (() => {
-            if(!list.length) return empty('No Attendance Logs', 'Submitted attendance logs from your interns will appear here for review and verification.');
+        const historyPanel = panel('Recent Log Sheets & Approvals', (() => {
+            if(!list.length) return empty('No Attendance Logs', 'Submitted log sheets and task summaries from your interns will appear here for review and verification.');
             let historyRows = list.map(l=>{
                 const st = c.student(l.studentId);
                 const sName = st?.name || (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' ? 'kenzosomes' : 'Assigned Intern');
@@ -614,15 +590,15 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
             return table(['Intern','Date','Clock In','Clock Out','Task Summary','GPS','Status','Actions'], historyRows) + '<style>.table-wrap { overflow-x: auto !important; } .table-wrap table { width: 100%; table-layout: auto; } .table-wrap td { white-space: normal !important; word-break: break-word; } .task-excerpt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 150px; max-width: 250px; } td:last-child .row { max-width: 180px !important; justify-content: flex-start; }</style>';
         })());
         
-        return headerHtml + rosterPanel + toolbarHtml + historyPanel;
+        return headerHtml + toolbarHtml + historyPanel;
     }
     // Student: clock and task draft at left, history and saved drafts at right.
     if(sub==='history') return back('dtr') + heading('DTR History', 'Complete attendance and task records.') + `<div class="ref-alert" style="margin-bottom: 16px;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:6px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><strong>Lock Enabled:</strong> All past and submitted DTR entries are strictly READ-ONLY. Modification of timestamps is permanently restricted.</div>` + filter([['All','All'],['Approved','Approved'],['Pending','Pending'],['Flagged','Flagged'],['Rejected','Rejected']]) + panel('', c.dtrTable(logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter), u()));
-      const shift=logs.find(sh=>sh.studentId===u().id && sh.status==='Running')||null,awaiting=logs.find(l=>(l.studentId===u().id || (u().email === 'kenzosomes@gmail.com' && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1')) || (u().id === '22227dcf-933f-40a9-9340-f66cb9020e5c' && l.studentId === 's1')) && l.status==='Awaiting_Student_Log'),hrs=approvedHours(db(),u().id),list=logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter),drafts=(db().taskDrafts||[]).filter(d=>d.studentId===u().id);
+      const shift=logs.find(sh=>sh.studentId===u().id && sh.status==='Running')||(db().activeShifts||[]).find(sh=>sh.studentId===u().id)||null,awaiting=logs.find(l=>(l.studentId===u().id || (u().email === 'kenzosomes@gmail.com' && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1')) || (u().id === '22227dcf-933f-40a9-9340-f66cb9020e5c' && l.studentId === 's1')) && l.status==='Awaiting_Student_Log'),hrs=approvedHours(db(),u().id),list=logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter),drafts=(db().taskDrafts||[]).filter(d=>d.studentId===u().id);
     if(sub==='drafts') return back('dtr') + heading('Saved Drafts History', 'Review all your previously saved task summary drafts.') + panel('', drafts.length?table(['Date','Task Summary','Action'],drafts.map(d=>`<tr><td>${date(d.date)}</td><td><span class="task-excerpt">${e(d.task)}</span></td><td>${b('View Draft','ref-draft-view',d.id,'secondary small')}</td></tr>`)):empty('No saved drafts','Save a task summary to continue it later.'));
     
     
-    const isBreak = shift && shift.justification;
+    const isBreak = shift && (shift.justification || shift.onBreak);
     const shiftBadgeHtml = shift ? (isBreak ? '<div class="badge" style="background:#fefce8;color:#854d0e;font-size:11px;font-weight:600;padding:2px 8px;">On Lunch Break</div>' : '<div class="badge" style="background:#dcfce7;color:#166534;font-size:11px;font-weight:600;padding:2px 8px;"><span style="display:inline-block;width:6px;height:6px;background:#16a34a;border-radius:50%;margin-right:4px;animation:tk-pulse 2s infinite;"></span>Active On-Site</div>') : '<div class="badge" style="background:#f1f5f9;color:#334155;font-size:11px;font-weight:600;padding:2px 8px;">Clocked Out</div>';
     
     // Calculate today’s rendered hours
@@ -696,9 +672,38 @@ ${panel('', `
     
     
     <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center; box-shadow: var(--shadow-sm); margin-bottom: 24px;">
-        <h3 style="margin-top: 0;">Timekeeper Status</h3>
-        <p class="muted" style="margin-bottom:24px;">Your supervisor manages your time-in and time-out.</p>
-        ${awaiting ? '<div style="background:#fefce8; color:#854d0e; padding:16px; border-radius:8px; margin-bottom:16px;"><strong>Shift Completed</strong><br>Your supervisor clocked you out. Please submit your daily logbook.</div>' + b('Submit Daily Summary Logbook', 'ref-submit-log', '', 'primary full', 'file') : (shift ? (isBreak ? '<div style="background:#fefce8; color:#854d0e; padding:16px; border-radius:8px; margin-bottom:16px; display:inline-block; width:100%;"><strong>On Lunch / Break</strong><br>Session timer is paused.</div>' : '<div style="background:#dcfce7; color:#166534; padding:16px; border-radius:8px; margin-bottom:16px; display:inline-block; width:100%;"><strong><span style="display:inline-block;width:10px;height:10px;background:#16a34a;border-radius:50%;margin-right:8px;animation:tk-pulse 2s infinite;"></span> Active On-Site</strong><br>Your supervisor clocked you in.</div>') : '<div style="background:#f1f5f9; color:#475569; padding:16px; border-radius:8px; margin-bottom:16px;"><strong>Clocked Out</strong><br>Awaiting supervisor clock-in.</div>')}
+        <h3 style="margin-top: 0; font-size: 16px;">Attendance Timekeeping & Shift Controls</h3>
+        <p class="muted small" style="margin-bottom:20px;">Log your on-site attendance, take lunch breaks, and clock out to submit your daily accomplishment summary.</p>
+        ${awaiting ? `
+          <div style="background:#fefce8; color:#854d0e; padding:16px; border-radius:8px; margin-bottom:16px; border:1px solid #fde047; text-align:center;">
+            <strong style="display:block; font-size:14px; margin-bottom:4px; color:#713f12;">Shift Clocked Out</strong>
+            Your shift hours have been recorded. Complete and submit your daily summary logbook for supervisor approval.
+          </div>
+          ${b('Submit Daily Summary Logbook', 'ref-submit-log', '', 'primary full', 'file')}
+        ` : (shift ? `
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; margin:0 auto; ${isBreak ? 'background:#fefce8; color:#854d0e; border:1px solid #fef08a;' : 'background:#dcfce7; color:#166534; border:1px solid #bbf7d0;'}">
+              <span style="width:8px; height:8px; border-radius:50%; ${isBreak ? 'background:#854d0e;' : 'background:#16a34a; animation:tk-pulse 2s infinite;'}"></span>
+              ${isBreak ? 'On Lunch / Break (Work Timer Paused)' : 'Active On-Site (Shift Timer Running)'}
+            </div>
+            <div style="display:flex; gap:12px; margin-top:8px;">
+              <button class="btn secondary" data-action="student-toggle-break" style="flex:1; padding:12px; font-weight:600;">
+                ${isBreak ? '☕ End Break & Resume' : '☕ Start Lunch / Break'}
+              </button>
+              <button class="btn primary" data-action="student-clock-out" style="flex:1; padding:12px; font-weight:700; background:#991b1b; border-color:#991b1b;">
+                Clock Out
+              </button>
+            </div>
+            <p class="small muted" style="margin:4px 0 0;">Clocked in at ${time(shift.clockIn)}${shift.breakMinutes ? ' · ' + shift.breakMinutes + 'm total break' : ''}</p>
+          </div>
+        ` : `
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <button class="btn primary full" data-action="student-clock-in" style="padding:14px; font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
+              ${icon('clock')} Clock In
+            </button>
+            <p class="small muted" style="margin:0;">Click to record your time-in and start today's shift tracking.</p>
+          </div>
+        `)}
     </div>
 
 
@@ -765,6 +770,7 @@ ${panel('', `
   }
   function elapsed(start,end){const total=Math.max(0,Math.floor(((end?new Date(end).getTime():Date.now())-new Date(start))/1000));return [Math.floor(total/3600),Math.floor(total/60)%60,total%60].map(n=>String(n).padStart(2,'0')).join(':');}
   async function attendanceAction(name,id){
+    if(['student-clock-in','student-toggle-break','student-clock-out','ref-clock-out','clock'].includes(name)) return false;
     if(name==='ref-profile-tab'){c.view.profileTab=id;c.render();return true;}
     if(name==='ref-company-interns'){if(u().role!=='Coordinator')throw new Error('Coordinator access required.');location.hash=href('candidates','company',id);return true;}
     if(name==='ref-task-view'){c.view.tasks=!c.view.tasks;c.render();return true;}
@@ -772,7 +778,6 @@ ${panel('', `
     if(['ref-approve','ref-reject','ref-approve-all'].includes(name)){if(u().role!=='Supervisor')throw new Error('Supervisor access required.');const batch=name==='ref-approve-all',reject=name==='ref-reject',logs=visibleLogs(db(),u()).filter(l=>batch?l.status==='Pending':l.id===id&&['Pending','Flagged'].includes(l.status));if(!logs.length)throw new Error('No reviewable records found.');const body=(batch?`<p>Approve all ${logs.length} pending entries for your assigned interns?</p>`:stats([['Clock In',time(logs[0].clockIn)],['Clock Out',time(logs[0].clockOut)],['Total Hours',logs[0].hours+'h']])+`<h3>Task Summary</h3><p>${e(logs[0].task)}</p>`)+ta(reject?'Reason for rejection / supervisor comments':'Supervisor remarks','remarks',reject?'':'Reviewed attendance and task summary.','required minlength="5"')+signatureFields()+f('Typed signature (frontend preview)','signature','text',u().name,'required maxlength="100"')+'<label class="row"><input type="checkbox" required> I reviewed these attendance records.</label>';c.showModal(batch?'Confirm Bulk Approval':reject?'Reject DTR Entry':'Approve DTR Entry',body,async(v,form)=>{const image=await signatureImage(form);const signatureId=image?crypto.randomUUID():null;if(image)await c.putFile(signatureId,image);const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;const uuidIds = logs.map(l=>l.id).filter(id => uuidRegex.test(id));if(!uuidIds.length)throw new Error('Demo records cannot be saved to the live database.');const { error, data } = await supabase.from('logs').update({ status: reject?'Rejected':'Approved', remarks: v.remarks, signature: v.signature }).in('id', uuidIds).select();if(error)throw new Error(error.message);if(!data || data.length !== uuidIds.length)throw new Error('Some logs were not updated. Check your permissions.');await syncRemote(supabase, db());const updated=db().logs.filter(l=>uuidIds.includes(l.id));updated.forEach(l=>{if(signatureId)l.signatureFileId=signatureId;});updated.forEach(l=>c.notify(l.studentId,'DTR_Event',reject?'DTR entry rejected':'DTR entry approved',date(l.date)+': '+v.remarks));finish(batch?'All pending DTR entries approved.':reject?'DTR entry rejected — returned for resubmission.':'DTR entry approved and signed.','dtr');},reject?'Confirm Rejection':'Confirm Approval');bindSignature(document.querySelector('#modal-form'));return true;}
     if(name==='ref-scan'){if(u().role!=='Coordinator')throw new Error('Coordinator access required.');const issues=db().logs.filter(l=>!l.gps||l.hours<=0||l.hours>16);c.showModal('Attendance Validation Results',`<p>${db().logs.length} records checked. ${issues.length} need a location or duration review.</p><p>This local check does not verify GPS authenticity or approve attendance.</p>`+table(['Student','Date','Finding'],issues.map(l=>`<tr><td>${e(c.student(l.studentId)?.name)}</td><td>${date(l.date)}</td><td>${!l.gps?'No location captured':'Unusual duration'}</td></tr>`)));return true;}
     if(name==='ref-compliance-settings'){if(u().role!=='Coordinator')throw new Error('Coordinator access required.');c.showModal('Compliance Settings',f('Required OJT hours for new candidates','requiredHours','number',db().program.requiredHours,'required min="1" max="2000"')+f('Program completion deadline','deadline','date',db().program.deadline,'required'),v=>{db().program.requiredHours=Number(v.requiredHours);db().program.deadline=v.deadline;finish('Compliance settings saved.');});return true;}
-    if(name==='ref-clock-out'){if(u().role!=='Student'||db().shift?.studentId!==u().id)throw new Error('No active shift.');c.showModal('Confirm Clock Out',`<p>Your shift started at ${time(db().shift.clockIn)}. Clock out and continue to your daily log submission?</p>`,()=>{db().shift.clockOut=new Date().toISOString();finish('Clock-out time recorded. Complete your daily log.','dtr');},'Clock Out');return true;}
     if(name==='ref-submit-log'){if(u().role!=='Student')throw new Error('Student access required.');if(!db().logs.find(l=>(l.studentId===u().id || (u().email === 'kenzosomes@gmail.com' && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1')) || (u().id === '22227dcf-933f-40a9-9340-f66cb9020e5c' && l.studentId === 's1')) && l.status==='Awaiting_Student_Log'))throw new Error('No completed shift awaits a logbook summary.');return false;}
     if(name==='ref-save-draft'){if(u().role!=='Student')throw new Error('Student access required.');if(!db().draft.trim())throw new Error('Enter a task summary first.');db().taskDrafts??=[];const draft=db().taskDrafts.find(d=>d.studentId===u().id&&d.date===today());if(draft)draft.task=db().draft;else db().taskDrafts.unshift({id:crypto.randomUUID(),studentId:u().id,date:today(),task:db().draft});finish('Daily log draft saved.');return true;}
     if(name==='ref-draft-delete'){
