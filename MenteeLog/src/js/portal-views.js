@@ -634,10 +634,13 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
       const now = new Date();
       const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())).toISOString().split('T')[0];
       const weeklyLogs = logs.filter(l => l.date >= startOfWeek && l.status === 'Approved');
-      const weeklyHours = weeklyLogs.reduce((sum, l) => sum + l.hours, 0);
-      const weeklyPct = Math.min(100, Math.round((weeklyHours / 40) * 100)) || 0;
+      const weeklyHours = weeklyLogs.reduce((sum, l) => sum + (Number(l.hours) || 0), 0);
+      const weeklyPendingLogs = logs.filter(l => l.date >= startOfWeek && (l.status === 'Pending' || l.status === 'Running' || l.status === 'Awaiting_Student_Log'));
+      const weeklyPendingHours = weeklyPendingLogs.reduce((sum, l) => sum + (Number(l.hours) || 0), 0);
+      const weeklyPct = Math.min(100, Math.round(((weeklyHours + weeklyPendingHours) / 40) * 100)) || 0;
 
-      const totalPct = Math.min(100, Math.round(((hrs + shiftHrsRendered) / u().requiredHours) * 100)) || 0;
+      const pendingTotalHours = logs.filter(l => l.status === 'Pending' || l.status === 'Running' || l.status === 'Awaiting_Student_Log').reduce((sum, l) => sum + (Number(l.hours) || 0), 0);
+      const totalPct = Math.min(100, Math.round(((hrs + pendingTotalHours + shiftHrsRendered) / u().requiredHours) * 100)) || 0;
 
       const customStatsHtml = `<div class="ref-stats">
         <div>
@@ -651,20 +654,21 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
         <div>
           <div class="row between align-start mb0" style="width: 100%; margin-bottom: 4px;">
             <span>${isBreak ? 'Lunch / Break Timer' : 'Hours Rendered This Week'}</span>
-            <div class="badge" style="background:${isBreak ? '#fefce8' : '#f1f5f9'};color:${isBreak ? '#854d0e' : '#334155'};font-size:11px;font-weight:600;padding:2px 8px;">${isBreak ? 'PAUSED' : weeklyPct+'% Done'}</div>
+            <div class="badge" style="background:${isBreak ? '#fefce8' : (weeklyPendingHours > 0 && weeklyHours === 0 ? '#fef3c7' : '#f1f5f9')};color:${isBreak ? '#854d0e' : (weeklyPendingHours > 0 && weeklyHours === 0 ? '#92400e' : '#334155')};font-size:11px;font-weight:600;padding:2px 8px;">${isBreak ? 'PAUSED' : (weeklyPendingHours > 0 && weeklyHours === 0 ? 'Pending Verification' : weeklyPct+'% Done')}</div>
           </div>
-          <strong>${isBreak ? `<span class="tk-timer tk-break-timer" style="color:#854d0e;" data-start="${breakStart}">${elapsed ? elapsed(breakStart) : '00:00:00'}</span>` : weeklyHours.toFixed(1) + ' / 40.0 Hours'}</strong>
-          ${isBreak ? `<div style="margin-top:8px; font-size:12px; color:#854d0e;">Session time is currently paused${totalBreakMinutes ? ` (${totalBreakMinutes}m previously taken)` : ''}</div>` : ''}
+          <strong>${isBreak ? `<span class="tk-timer tk-break-timer" style="color:#854d0e;" data-start="${breakStart}">${elapsed ? elapsed(breakStart) : '00:00:00'}</span>` : (weeklyHours > 0 ? weeklyHours.toFixed(1) : (weeklyPendingHours > 0 ? weeklyPendingHours.toFixed(1) + ' (Pending)' : '0.0')) + ' / 40.0 Hours'}</strong>
+          ${isBreak ? `<div style="margin-top:8px; font-size:12px; color:#854d0e;">Session time is currently paused${totalBreakMinutes ? ` (${totalBreakMinutes}m previously taken)` : ''}</div>` : (weeklyPendingHours > 0 ? `<div style="margin-top:6px; font-size:11px; color:#92400e;">${weeklyPendingHours.toFixed(1)}h submitted & awaiting supervisor verification</div>` : '')}
         </div>
         <div>
           <div class="row between align-start mb0" style="width: 100%; margin-bottom: 4px;">
             <span>Total OJT Progress Meter</span>
             <div class="badge" style="background:#FCE7F3;color:#9F1239;font-size:11px;font-weight:600;padding:2px 8px;">${totalPct}% Completed</div>
           </div>
-          <strong>${(hrs + shiftHrsRendered).toFixed(1)} / ${u().requiredHours} Hours</strong>
+          <strong>${(hrs + shiftHrsRendered + (hrs === 0 ? pendingTotalHours : 0)).toFixed(1)} / ${u().requiredHours} Hours</strong>
           <div style="background:#e2e8f0; height:6px; width:100%; border-radius:3px; margin-top:12px; position:relative;">
              <div style="background:#9F1239; height:100%; width:${totalPct}%; border-radius:3px;"></div>
           </div>
+          ${pendingTotalHours > 0 ? `<div style="margin-top:6px; font-size:11px; color:#92400e;">${pendingTotalHours.toFixed(1)}h awaiting supervisor approval</div>` : ''}
         </div>
       </div>`;
 
