@@ -551,7 +551,7 @@ ${panel('', `
     <div style="display:none;"><span id="dtr-coords"></span><span id="dtr-acc"></span><span id="dtr-status"></span><div id="dtr-map-frame"></div></div>
   </div>
 `)}
-</div><div>${panel('Recent Attendance & Clock-in History', c.dtrTable(list.slice(0, 8), u()) + '<div style="margin-top: 24px; text-align: center;">' + nav('See Complete DTR History', 'dtr', 'history', '', 'secondary full') + '</div>')}</div></div>`;
+</div><div>${panel('Recent Clock-ins', c.dtrTable(list.slice(0, 5), u()) + '<div style="margin-top: 24px; text-align: center;">' + nav('See All DTR History', 'dtr', 'history', '', 'secondary full') + '</div>')}${panel('Recent Saved Drafts', (drafts.length ? table(['Date','Task Summary','Action'], drafts.slice(0,3).map(d=>`<tr><td>${date(d.date)}</td><td><span class="task-excerpt">${e(d.task)}</span></td><td>${b('View Draft','ref-draft-view',d.id,'secondary small')}</td></tr>`)) : empty('No saved drafts','Save a task summary to continue it later.')) + '<div style="margin-top: 24px; text-align: center;">' + nav('See All Saved Drafts History', 'dtr', 'drafts', '', 'secondary full') + '</div>')}</div></div>`;
   }
   function elapsed(start,end){const total=Math.max(0,Math.floor(((end?new Date(end).getTime():Date.now())-new Date(start))/1000));return [Math.floor(total/3600),Math.floor(total/60)%60,total%60].map(n=>String(n).padStart(2,'0')).join(':');}
   async function attendanceAction(name,id){
