@@ -602,7 +602,7 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
       const hrs = approvedHours(db(), u().id);
       const list = logs.filter(l => c.view.filter === 'All' || l.status === c.view.filter);
       const drafts = (db().taskDrafts || []).filter(d => d.studentId === u().id);
-      if(sub==='drafts') return back('dtr') + heading('Saved Drafts History', 'Review all your previously saved task summary drafts.') + panel('', drafts.length?table(['Date','Task Summary','Action'],drafts.map(d=>`<tr><td>${date(d.date)}</td><td><span class="task-excerpt">${e(d.task)}</span></td><td>${b('View Draft','ref-draft-view',d.id,'secondary small')}</td></tr>`)):empty('No saved drafts','Save a task summary to continue it later.'));
+      if(sub==='drafts') return back('dtr') + heading('Saved Drafts History', 'Review all your previously saved task summary drafts.', b('+ Write New Draft', 'ref-draft-new', '', 'primary', 'file')) + panel('', drafts.length?table(['Date','Task Summary','Action'],drafts.map(d=>`<tr><td>${date(d.date)}</td><td><span class="task-excerpt">${e(d.task)}</span></td><td><div class="row" style="gap:4px;">${b('View','ref-draft-view',d.id,'secondary small')}${b('Edit','ref-draft-edit',d.id,'secondary small')}</div></td></tr>`)):empty('No saved drafts','Save a task summary draft to continue or submit it later.'));
 
       const totalBreakMinutes = Math.max(activeShiftObj?.breakMinutes || 0, runningLog?.breakMinutes || 0);
       const totalBreakMs = Math.max(activeShiftObj?.breakMs || 0, runningLog?.breakMs || 0);
@@ -798,7 +798,7 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
     <div style="display:none;"><span id="dtr-coords"></span><span id="dtr-acc"></span><span id="dtr-status"></span><div id="dtr-map-frame"></div></div>
   </div>
 `)}
-</div><div>${panel('Recent Clock-ins', c.dtrTable(list.slice(0, 5), u()) + '<div style="margin-top: 24px; text-align: center;">' + nav('See All DTR History', 'dtr', 'history', '', 'secondary full') + '</div>')}${panel('Recent Saved Drafts', (drafts.length ? table(['Date','Task Summary','Action'], drafts.slice(0,3).map(d=>`<tr><td>${date(d.date)}</td><td><span class="task-excerpt">${e(d.task)}</span></td><td>${b('View Draft','ref-draft-view',d.id,'secondary small')}</td></tr>`)) : empty('No saved drafts','Save a task summary to continue it later.')) + '<div style="margin-top: 24px; text-align: center;">' + nav('See All Saved Drafts History', 'dtr', 'drafts', '', 'secondary full') + '</div>')}</div></div>`;
+</div><div>${panel('Recent Clock-ins', c.dtrTable(list.slice(0, 5), u()) + '<div style="margin-top: 24px; text-align: center;">' + nav('See All DTR History', 'dtr', 'history', '', 'secondary full') + '</div>')}${panel('Recent Saved Drafts', '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><span class="small muted">Prepare task accomplishments in advance</span>' + b('+ Write Task Draft', 'ref-draft-new', '', 'primary small', 'file') + '</div>' + (drafts.length ? table(['Date','Task Summary','Action'], drafts.slice(0,3).map(d=>`<tr><td>${date(d.date)}</td><td><span class="task-excerpt">${e(d.task)}</span></td><td><div class="row" style="gap:4px;">${b('View','ref-draft-view',d.id,'secondary small')}${b('Edit','ref-draft-edit',d.id,'secondary small')}</div></td></tr>`)) : empty('No saved drafts','Save a task summary draft to continue or submit it later.')) + '<div style="margin-top: 24px; text-align: center;">' + nav('See All Saved Drafts History', 'dtr', 'drafts', '', 'secondary full') + '</div>')}</div></div>`;
   }
   function elapsed(start,end){if(!start)return '00:00:00';const t=new Date(start).getTime();if(isNaN(t))return '00:00:00';const total=Math.max(0,Math.floor(((end?new Date(end).getTime():Date.now())-t)/1000));return [Math.floor(total/3600),Math.floor(total/60)%60,total%60].map(n=>String(n).padStart(2,'0')).join(':');}
   async function attendanceAction(name,id){
@@ -811,6 +811,31 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
     if(name==='ref-scan'){if(u().role!=='Coordinator')throw new Error('Coordinator access required.');const issues=db().logs.filter(l=>!l.gps||l.hours<=0||l.hours>16);c.showModal('Attendance Validation Results',`<p>${db().logs.length} records checked. ${issues.length} need a location or duration review.</p><p>This local check does not verify GPS authenticity or approve attendance.</p>`+table(['Student','Date','Finding'],issues.map(l=>`<tr><td>${e(c.student(l.studentId)?.name)}</td><td>${date(l.date)}</td><td>${!l.gps?'No location captured':'Unusual duration'}</td></tr>`)));return true;}
     if(name==='ref-compliance-settings'){if(u().role!=='Coordinator')throw new Error('Coordinator access required.');c.showModal('Compliance Settings',f('Required OJT hours for new candidates','requiredHours','number',db().program.requiredHours,'required min="1" max="2000"')+f('Program completion deadline','deadline','date',db().program.deadline,'required'),v=>{db().program.requiredHours=Number(v.requiredHours);db().program.deadline=v.deadline;finish('Compliance settings saved.');});return true;}
     if(name==='ref-submit-log'){if(u().role!=='Student')throw new Error('Student access required.');if(!db().logs.find(l=>(l.studentId===u().id || (u().email === 'kenzosomes@gmail.com' && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1')) || (u().id === '22227dcf-933f-40a9-9340-f66cb9020e5c' && l.studentId === 's1')) && l.status==='Awaiting_Student_Log'))throw new Error('No completed shift awaits a logbook summary.');return false;}
+    if(name==='ref-draft-new'){
+      if(u().role!=='Student') throw new Error('Student access required.');
+      c.showModal('Write Task Summary Draft', `
+        <p class="small muted" style="margin-bottom:16px;">Draft your daily accomplishments, technical tasks, and reflections for today (${date(today())}). Saved drafts are safely stored here and will automatically pre-fill your summary logbook when you clock out.</p>
+        ${ta('Task Accomplishments & Summary', 'task', db().draft || '', 'required minlength="10" placeholder="Describe the specific tasks completed, technical skills applied, and milestones achieved during today\'s shift..." style="min-height:140px;"')}
+      `, async (v) => {
+        db().taskDrafts = db().taskDrafts || [];
+        const existing = db().taskDrafts.find(d => d.studentId === u().id && d.date === today());
+        if (existing) {
+          existing.task = v.task;
+        } else {
+          db().taskDrafts.unshift({
+            id: crypto.randomUUID(),
+            studentId: u().id,
+            date: today(),
+            task: v.task
+          });
+        }
+        db().draft = v.task;
+        c.save();
+        c.toast('Task summary draft saved to Recent Saved Drafts.');
+        c.render();
+      }, 'Save Draft');
+      return true;
+    }
     if(name==='ref-save-draft'){if(u().role!=='Student')throw new Error('Student access required.');if(!db().draft.trim())throw new Error('Enter a task summary first.');db().taskDrafts??=[];const draft=db().taskDrafts.find(d=>d.studentId===u().id&&d.date===today());if(draft)draft.task=db().draft;else db().taskDrafts.unshift({id:crypto.randomUUID(),studentId:u().id,date:today(),task:db().draft});finish('Daily log draft saved.');return true;}
     if(name==='ref-draft-delete'){
     if(confirm('Are you sure you want to delete this draft?')) {
@@ -825,12 +850,16 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
 if(name==='ref-draft-edit'){
     const d=db().taskDrafts?.find(d=>d.id===id&&d.studentId===u().id);
     if(!d)throw new Error('Draft unavailable.');
-    db().draft = d.task;
-    c.save();
-    c.toast('Draft loaded into today’s task summary.');
-    document.querySelector('#modal').close();
-    if(r().sub==='drafts') location.hash = '#/student/dtr';
-    else c.render();
+    c.showModal('Edit Task Summary Draft', `
+      <p class="small muted" style="margin-bottom:16px;">Editing draft for ${date(d.date)}</p>
+      ${ta('Task Accomplishments & Summary', 'task', d.task, 'required minlength="10" placeholder="Update your daily task accomplishments..." style="min-height:140px;"')}
+    `, async (v) => {
+      d.task = v.task;
+      db().draft = v.task;
+      c.save();
+      c.toast('Draft updated successfully.');
+      c.render();
+    }, 'Update Draft');
     return true;
 }
 if(name==='ref-draft-view'){

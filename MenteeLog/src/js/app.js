@@ -729,9 +729,16 @@ async function studentClockOut() {
       </div>
     </div>
     ${textarea('Task summary & learning reflection', 'task', defaultDraft, 'required minlength="150" placeholder="Describe the specific tasks completed, technical skills applied, and milestones achieved during this shift (min 150 characters)..."')}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin:-8px 0 16px 0;">
+      <button type="button" class="btn secondary small" data-action="save-clockout-draft" id="btn-save-clockout-draft" style="padding:6px 12px; font-size:12px;">
+        💾 Save as Draft
+      </button>
+      <span class="small muted" id="draft-save-hint">Want to finish later? Save your progress as a draft</span>
+    </div>
     <p class="note">Enter your daily task accomplishments (minimum 150 characters). This will be submitted to your supervisor for review and approval.</p>
   `, async (data) => {
     if (shiftIdx !== -1) db.activeShifts.splice(shiftIdx, 1);
+    db.taskDrafts = (db.taskDrafts || []).filter(d => !(d.studentId === studentId && d.date === today()));
     let targetLog = log;
     if (!targetLog) {
       targetLog = {
@@ -1400,6 +1407,32 @@ async function action(name,id,el){
         save(); render(); toast('Simulated Supervisor Clock Out'); return;
     }
 
+    case 'save-clockout-draft': {
+      const taskEl = document.querySelector('#modal textarea[name="task"]');
+      const taskVal = (taskEl?.value || '').trim();
+      if (!taskVal) throw new Error('Please type something in your task summary before saving as a draft.');
+      db.taskDrafts = db.taskDrafts || [];
+      const existing = db.taskDrafts.find(d => d.studentId === u.id && d.date === today());
+      if (existing) {
+        existing.task = taskVal;
+      } else {
+        db.taskDrafts.unshift({
+          id: crypto.randomUUID(),
+          studentId: u.id,
+          date: today(),
+          task: taskVal
+        });
+      }
+      db.draft = taskVal;
+      save();
+      const hint = document.querySelector('#draft-save-hint');
+      if (hint) {
+        hint.textContent = '✓ Draft saved (' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + ')';
+        hint.style.color = '#166534';
+      }
+      toast('Task summary saved to Recent Saved Drafts!');
+      return;
+    }
     case 'student-clock-in': await studentClockIn(); return;
     case 'student-toggle-break': await studentToggleBreak(); return;
     case 'student-clock-out':
