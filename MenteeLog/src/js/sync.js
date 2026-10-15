@@ -97,7 +97,7 @@ export async function syncRemote(supabase, db) {
       date: l.date,
       clockIn: l.clock_in,
       clockOut: l.clock_out,
-      breakMinutes: l.break_minutes,
+      breakMinutes: l.break_minutes || 0,
       hours: l.hours,
       status: l.status,
       task: l.task,

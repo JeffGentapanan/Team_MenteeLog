@@ -6,7 +6,7 @@ import {signatureFields,bindSignature,signatureImage} from './signature.js';
 import {reviewBatch,assignPlacement,reportRows,reportFile,candidateImport} from './portal-domain.js';
 
 export function createPortalViews(c){
-  const {e,icon,button:b,heading,field:f,textarea:ta,select:sel,badge,person,table,empty,progress,date,time,today}=c;
+  const {e,icon,button:b,heading,field:f,textarea:ta,select:sel,badge,person,table,empty,progress,date,time,today,netElapsed}=c;
   let formHandler=null,formOwner=null,formRoute='',wizard={},reportDraft=null,notice='',noticePath='',importText='',importBatch=[];
   const db=()=>c.db,u=()=>c.user,r=()=>c.route();
   const href=(page,sub='',id='')=>`#/${u().role.toLowerCase()}/${page}${sub?'/'+sub:''}${id?'/'+encodeURIComponent(id):''}`;
@@ -585,126 +585,144 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
                 const sName = st?.name || (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' ? 'kenzosomes' : 'Assigned Intern');
                 const sCourse = st?.course || 'BSIT';
                 const taskHtml = l.task ? e(l.task) : (l.status === 'Awaiting_Student_Log' ? '<span class="task-excerpt" style="color:var(--slate); font-style:italic;">Pending intern logbook submission</span>' : '<span class="task-excerpt" style="color:var(--slate); font-style:italic;">No task summary entered</span>');
-                return '<tr><td><strong>' + e(sName) + '</strong><br><small>' + e(sCourse) + '</small></td><td>' + date(l.date) + '</td><td>' + time(l.clockIn) + '</td><td>' + time(l.clockOut) + '</td><td><span class="task-excerpt">' + taskHtml + '</span></td><td>' + badge(l.gps?'Captured':'Unavailable') + '</td><td>' + badge(l.status) + '</td><td><div class="row" style="flex-wrap:wrap; gap:4px; max-width:220px;">' + (['Pending','Flagged'].includes(l.status) ? b('Verify On-Site','ref-verify',l.id,'primary small', 'pin') + b('Approve','ref-approve',l.id,'small') + b('Reject','ref-reject',l.id,'secondary small') : '') + nav('View','dtr','profile',l.studentId,'secondary small') + '</div></td></tr>';
+                const breakHtml = l.breakMinutes ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#854d0e;font-weight:600;"><span style="width:6px;height:6px;border-radius:50%;background:#854d0e;"></span>' + l.breakMinutes + 'm</span>' : '<span style="font-size:12px;color:var(--slate);">—</span>';
+                return '<tr><td><strong>' + e(sName) + '</strong><br><small>' + e(sCourse) + '</small></td><td>' + date(l.date) + '</td><td>' + time(l.clockIn) + '</td><td>' + time(l.clockOut) + '</td><td>' + breakHtml + '</td><td><span class="task-excerpt">' + taskHtml + '</span></td><td>' + badge(l.gps?'Captured':'Unavailable') + '</td><td>' + badge(l.status) + '</td><td><div class="row" style="flex-wrap:wrap; gap:4px; max-width:220px;">' + (['Pending','Flagged'].includes(l.status) ? b('Verify On-Site','ref-verify',l.id,'primary small', 'pin') + b('Approve','ref-approve',l.id,'small') + b('Reject','ref-reject',l.id,'secondary small') : '') + nav('View','dtr','profile',l.studentId,'secondary small') + '</div></td></tr>';
             });
-            return table(['Intern','Date','Clock In','Clock Out','Task Summary','GPS','Status','Actions'], historyRows) + '<style>.table-wrap { overflow-x: auto !important; } .table-wrap table { width: 100%; table-layout: auto; } .table-wrap td { white-space: normal !important; word-break: break-word; } .task-excerpt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 150px; max-width: 250px; } td:last-child .row { max-width: 180px !important; justify-content: flex-start; }</style>';
+            return table(['Intern','Date','Clock In','Clock Out','Break','Task Summary','GPS','Status','Actions'], historyRows) + '<style>.table-wrap { overflow-x: auto !important; } .table-wrap table { width: 100%; table-layout: auto; } .table-wrap td { white-space: normal !important; word-break: break-word; } .task-excerpt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 150px; max-width: 250px; } td:last-child .row { max-width: 180px !important; justify-content: flex-start; }</style>';
         })());
         
         return headerHtml + toolbarHtml + historyPanel;
     }
     // Student: clock and task draft at left, history and saved drafts at right.
     if(sub==='history') return back('dtr') + heading('DTR History', 'Complete attendance and task records.') + `<div class="ref-alert" style="margin-bottom: 16px;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:6px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><strong>Lock Enabled:</strong> All past and submitted DTR entries are strictly READ-ONLY. Modification of timestamps is permanently restricted.</div>` + filter([['All','All'],['Approved','Approved'],['Pending','Pending'],['Flagged','Flagged'],['Rejected','Rejected']]) + panel('', c.dtrTable(logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter), u()));
-      const shift=logs.find(sh=>sh.studentId===u().id && sh.status==='Running')||(db().activeShifts||[]).find(sh=>sh.studentId===u().id)||null,awaiting=logs.find(l=>(l.studentId===u().id || (u().email === 'kenzosomes@gmail.com' && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1')) || (u().id === '22227dcf-933f-40a9-9340-f66cb9020e5c' && l.studentId === 's1')) && l.status==='Awaiting_Student_Log'),hrs=approvedHours(db(),u().id),list=logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter),drafts=(db().taskDrafts||[]).filter(d=>d.studentId===u().id);
-    if(sub==='drafts') return back('dtr') + heading('Saved Drafts History', 'Review all your previously saved task summary drafts.') + panel('', drafts.length?table(['Date','Task Summary','Action'],drafts.map(d=>`<tr><td>${date(d.date)}</td><td><span class="task-excerpt">${e(d.task)}</span></td><td>${b('View Draft','ref-draft-view',d.id,'secondary small')}</td></tr>`)):empty('No saved drafts','Save a task summary to continue it later.'));
-    
-    
-    const isBreak = shift && (shift.justification || shift.onBreak);
-    const shiftBadgeHtml = shift ? (isBreak ? '<div class="badge" style="background:#fefce8;color:#854d0e;font-size:11px;font-weight:600;padding:2px 8px;">On Lunch Break</div>' : '<div class="badge" style="background:#dcfce7;color:#166534;font-size:11px;font-weight:600;padding:2px 8px;"><span style="display:inline-block;width:6px;height:6px;background:#16a34a;border-radius:50%;margin-right:4px;animation:tk-pulse 2s infinite;"></span>Active On-Site</div>') : '<div class="badge" style="background:#f1f5f9;color:#334155;font-size:11px;font-weight:600;padding:2px 8px;">Clocked Out</div>';
-    
-    // Calculate today’s rendered hours
-    let shiftHrsRendered = 0;
-    if (shift) {
-       const rawTotal = Math.max(0, (Date.now() - new Date(shift.clockIn).getTime()) / 3600000);
-       let breakHrs = (shift.breakMinutes || 0) / 60;
-       if (isBreak) breakHrs += Math.max(0, (Date.now() - new Date(shift.justification).getTime()) / 3600000);
-       shiftHrsRendered = Math.max(0, rawTotal - breakHrs);
-    }
-    const remainingHrs = Math.max(0, 8 - shiftHrsRendered);
-    const hrsRem = Math.floor(remainingHrs);
-    const minsRem = Math.floor((remainingHrs - hrsRem) * 60);
+      const activeShiftObj = (db().activeShifts || []).find(sh => sh.studentId === u().id);
+      const runningLog = logs.find(sh => sh.studentId === u().id && sh.status === 'Running');
+      const shift = runningLog || activeShiftObj || null;
+      const awaiting = logs.find(l => (l.studentId === u().id || (u().email === 'kenzosomes@gmail.com' && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1')) || (u().id === '22227dcf-933f-40a9-9340-f66cb9020e5c' && l.studentId === 's1')) && l.status === 'Awaiting_Student_Log');
+      const hrs = approvedHours(db(), u().id);
+      const list = logs.filter(l => c.view.filter === 'All' || l.status === c.view.filter);
+      const drafts = (db().taskDrafts || []).filter(d => d.studentId === u().id);
+      if(sub==='drafts') return back('dtr') + heading('Saved Drafts History', 'Review all your previously saved task summary drafts.') + panel('', drafts.length?table(['Date','Task Summary','Action'],drafts.map(d=>`<tr><td>${date(d.date)}</td><td><span class="task-excerpt">${e(d.task)}</span></td><td>${b('View Draft','ref-draft-view',d.id,'secondary small')}</td></tr>`)):empty('No saved drafts','Save a task summary to continue it later.'));
 
-    const now = new Date();
-    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())).toISOString().split('T')[0];
-    const weeklyLogs = logs.filter(l => l.date >= startOfWeek && l.status === 'Approved');
-    const weeklyHours = weeklyLogs.reduce((sum, l) => sum + l.hours, 0);
-    const weeklyPct = Math.min(100, Math.round((weeklyHours / 40) * 100)) || 0;
+      const totalBreakMinutes = Math.max(activeShiftObj?.breakMinutes || 0, runningLog?.breakMinutes || 0);
+      const breakStart = activeShiftObj?.onBreak || activeShiftObj?.justification || runningLog?.justification || runningLog?.onBreak || null;
+      const isBreak = Boolean(breakStart);
+      if (shift) {
+        shift.breakMinutes = totalBreakMinutes;
+        if (breakStart) {
+          shift.onBreak = breakStart;
+          shift.justification = breakStart;
+        }
+      }
 
-    const totalPct = Math.min(100, Math.round(((hrs + shiftHrsRendered) / u().requiredHours) * 100)) || 0;
+      const shiftBadgeHtml = shift ? (isBreak ? '<div class="badge" style="background:#fefce8;color:#854d0e;font-size:11px;font-weight:600;padding:2px 8px;">On Lunch Break</div>' : '<div class="badge" style="background:#dcfce7;color:#166534;font-size:11px;font-weight:600;padding:2px 8px;"><span style="display:inline-block;width:6px;height:6px;background:#16a34a;border-radius:50%;margin-right:4px;animation:tk-pulse 2s infinite;"></span>Active On-Site</div>') : '<div class="badge" style="background:#f1f5f9;color:#334155;font-size:11px;font-weight:600;padding:2px 8px;">Clocked Out</div>';
 
-    const customStatsHtml = `<div class="ref-stats">
-      <div>
-        <div class="row between align-start mb0" style="width: 100%; margin-bottom: 4px;">
-          <span>Current Shift Status</span>
-          ${shiftBadgeHtml}
-        </div>
-        <strong>${shift ? 'Clocked in at ' + time(shift.clockIn) : 'Not clocked in'}</strong>
-        ${shift ? `<div style="margin-top:8px; font-size:12px; color:var(--slate);">${hrsRem}h ${minsRem}m remaining until 8hr completion</div><div style="background:#e2e8f0; height:4px; width:100%; border-radius:2px; margin-top:4px;"><div style="background:var(--burgundy); height:100%; width:${Math.min(100, (shiftHrsRendered/8)*100)}%;"></div></div>` : ''}
-      </div>
-      <div>
-        <div class="row between align-start mb0" style="width: 100%; margin-bottom: 4px;">
-          <span>${isBreak ? 'Lunch / Break Timer' : 'Hours Rendered This Week'}</span>
-          <div class="badge" style="background:#f1f5f9;color:#334155;font-size:11px;font-weight:600;padding:2px 8px;">${isBreak ? 'PAUSED' : weeklyPct+'% Done'}</div>
-        </div>
-        <strong>${isBreak ? '<span class="tk-timer" style="color:#854d0e;" data-start="' + shift.justification + '">00:00:00</span>' : weeklyHours.toFixed(1) + ' / 40.0 Hours'}</strong>
-        ${isBreak ? '<div style="margin-top:8px; font-size:12px; color:#854d0e;">Session time is currently paused</div>' : ''}
-      </div>
-      <div>
-        <div class="row between align-start mb0" style="width: 100%; margin-bottom: 4px;">
-          <span>Total OJT Progress Meter</span>
-          <div class="badge" style="background:#FCE7F3;color:#9F1239;font-size:11px;font-weight:600;padding:2px 8px;">${totalPct}% Completed</div>
-        </div>
-        <strong>${(hrs + shiftHrsRendered).toFixed(1)} / ${u().requiredHours} Hours</strong>
-        <div style="background:#e2e8f0; height:6px; width:100%; border-radius:3px; margin-top:12px; position:relative;">
-           <div style="background:#9F1239; height:100%; width:${totalPct}%; border-radius:3px;"></div>
-        </div>
-      </div>
-    </div>`;
+      // Calculate today’s rendered hours
+      let shiftHrsRendered = 0;
+      if (shift) {
+         const rawTotal = Math.max(0, (Date.now() - new Date(shift.clockIn).getTime()) / 3600000);
+         let breakHrs = (totalBreakMinutes || 0) / 60;
+         if (isBreak && breakStart) {
+           breakHrs += Math.max(0, (Date.now() - new Date(breakStart).getTime()) / 3600000);
+         }
+         shiftHrsRendered = Math.max(0, rawTotal - breakHrs);
+      }
+      const remainingHrs = Math.max(0, 8 - shiftHrsRendered);
+      const hrsRem = Math.floor(remainingHrs);
+      const minsRem = Math.floor((remainingHrs - hrsRem) * 60);
 
+      const now = new Date();
+      const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())).toISOString().split('T')[0];
+      const weeklyLogs = logs.filter(l => l.date >= startOfWeek && l.status === 'Approved');
+      const weeklyHours = weeklyLogs.reduce((sum, l) => sum + l.hours, 0);
+      const weeklyPct = Math.min(100, Math.round((weeklyHours / 40) * 100)) || 0;
 
-    const studentDisclaimerHtml = `<div class="ref-alert" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:14px 18px; border-radius:10px; margin-bottom:20px; display:flex; align-items:flex-start; gap:12px; font-size:13.5px; line-height:1.5;">
-      <svg viewBox="0 0 24 24" style="width:20px;height:20px;min-width:20px;fill:none;stroke:#2563eb;stroke-width:2;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-      <div>
-        <strong style="display:block; font-size:14px; margin-bottom:3px; color:#1e3a8a;">Official OJT Policy & Timekeeping Notice</strong>
-        The time recorded within this portal represents <strong>estimated student tracking hours</strong> for academic monitoring and daily logbook documentation. In accordance with university OJT policy, students are still required to officially clock in and clock out using the timekeeping facilities (biometric, RFID, or logbook) at their assigned Host Training Establishment (HTE) in order to obtain the mandatory official Certificate of Completion.
-      </div>
-    </div>`;
+      const totalPct = Math.min(100, Math.round(((hrs + shiftHrsRendered) / u().requiredHours) * 100)) || 0;
 
-    return heading('Attendance & DTR','Log your attendance, submit daily accomplishments, and review your time records.',b('Export Log Summary','ref-export-modal','','secondary','download')) + studentDisclaimerHtml + customStatsHtml + `<div class="reference-dtr ref-student-dtr"><div>
-
-${panel('', `
-  <div style="text-align: center; padding: 12px 0; position: relative;">
-
-    <span class="eyebrow" style="display:inline-block; margin-bottom:16px;">TODAY · ${date(today())}</span>
-    <div class="timer" id="shift-timer" style="font-size: 56px; font-weight: 800; color: var(--ink); line-height: 1; margin-bottom: 8px; font-variant-numeric: tabular-nums;">
-      ${shift?(()=>{let ms=Date.now()-new Date(shift.clockIn).getTime()-(shift.breakMinutes||0)*60000;if(shift.justification)ms-=Date.now()-new Date(shift.justification).getTime();const t=Math.max(0,Math.floor(ms/1000));return [Math.floor(t/3600),Math.floor(t/60)%60,t%60].map(n=>String(n).padStart(2,'0')).join(':');})():'00:00:00'}
-    </div>
-    <p class="muted" style="margin-bottom: 24px;">${shift?.clockOut?'Clocked out — daily log ready to submit':shift?'You are currently clocked in':'Not clocked in'}</p>
-    
-    
-    <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center; box-shadow: var(--shadow-sm); margin-bottom: 24px;">
-        <h3 style="margin-top: 0; font-size: 16px;">Attendance Timekeeping & Shift Controls</h3>
-        <p class="muted small" style="margin-bottom:20px;">Log your on-site attendance, take lunch breaks, and clock out to submit your daily accomplishment summary.</p>
-        ${awaiting ? `
-          <div style="background:#fefce8; color:#854d0e; padding:16px; border-radius:8px; margin-bottom:16px; border:1px solid #fde047; text-align:center;">
-            <strong style="display:block; font-size:14px; margin-bottom:4px; color:#713f12;">Shift Clocked Out</strong>
-            Your shift hours have been recorded. Complete and submit your daily summary logbook for supervisor approval.
+      const customStatsHtml = `<div class="ref-stats">
+        <div>
+          <div class="row between align-start mb0" style="width: 100%; margin-bottom: 4px;">
+            <span>Current Shift Status</span>
+            ${shiftBadgeHtml}
           </div>
-          ${b('Submit Daily Summary Logbook', 'ref-submit-log', '', 'primary full', 'file')}
-        ` : (shift ? `
-          <div style="display:flex; flex-direction:column; gap:12px;">
-            <div style="display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; margin:0 auto; ${isBreak ? 'background:#fefce8; color:#854d0e; border:1px solid #fef08a;' : 'background:#dcfce7; color:#166534; border:1px solid #bbf7d0;'}">
-              <span style="width:8px; height:8px; border-radius:50%; ${isBreak ? 'background:#854d0e;' : 'background:#16a34a; animation:tk-pulse 2s infinite;'}"></span>
-              ${isBreak ? 'On Lunch / Break (Work Timer Paused)' : 'Active On-Site (Shift Timer Running)'}
+          <strong>${shift ? 'Clocked in at ' + time(shift.clockIn) : 'Not clocked in'}</strong>
+          ${shift ? `<div style="margin-top:8px; font-size:12px; color:var(--slate);">${hrsRem}h ${minsRem}m remaining until 8hr completion</div><div style="background:#e2e8f0; height:4px; width:100%; border-radius:2px; margin-top:4px;"><div style="background:var(--burgundy); height:100%; width:${Math.min(100, (shiftHrsRendered/8)*100)}%;"></div></div>` : ''}
+        </div>
+        <div>
+          <div class="row between align-start mb0" style="width: 100%; margin-bottom: 4px;">
+            <span>${isBreak ? 'Lunch / Break Timer' : 'Hours Rendered This Week'}</span>
+            <div class="badge" style="background:${isBreak ? '#fefce8' : '#f1f5f9'};color:${isBreak ? '#854d0e' : '#334155'};font-size:11px;font-weight:600;padding:2px 8px;">${isBreak ? 'PAUSED' : weeklyPct+'% Done'}</div>
+          </div>
+          <strong>${isBreak ? `<span class="tk-timer tk-break-timer" style="color:#854d0e;" data-start="${breakStart}">${elapsed ? elapsed(breakStart) : '00:00:00'}</span>` : weeklyHours.toFixed(1) + ' / 40.0 Hours'}</strong>
+          ${isBreak ? `<div style="margin-top:8px; font-size:12px; color:#854d0e;">Session time is currently paused${totalBreakMinutes ? ` (${totalBreakMinutes}m previously taken)` : ''}</div>` : ''}
+        </div>
+        <div>
+          <div class="row between align-start mb0" style="width: 100%; margin-bottom: 4px;">
+            <span>Total OJT Progress Meter</span>
+            <div class="badge" style="background:#FCE7F3;color:#9F1239;font-size:11px;font-weight:600;padding:2px 8px;">${totalPct}% Completed</div>
+          </div>
+          <strong>${(hrs + shiftHrsRendered).toFixed(1)} / ${u().requiredHours} Hours</strong>
+          <div style="background:#e2e8f0; height:6px; width:100%; border-radius:3px; margin-top:12px; position:relative;">
+             <div style="background:#9F1239; height:100%; width:${totalPct}%; border-radius:3px;"></div>
+          </div>
+        </div>
+      </div>`;
+
+
+      const studentDisclaimerHtml = `<div class="ref-alert" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:14px 18px; border-radius:10px; margin-bottom:20px; display:flex; align-items:flex-start; gap:12px; font-size:13.5px; line-height:1.5;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;min-width:20px;fill:none;stroke:#2563eb;stroke-width:2;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <div>
+          <strong style="display:block; font-size:14px; margin-bottom:3px; color:#1e3a8a;">Official OJT Policy & Timekeeping Notice</strong>
+          The time recorded within this portal represents <strong>estimated student tracking hours</strong> for academic monitoring and daily logbook documentation. In accordance with university OJT policy, students are still required to officially clock in and clock out using the timekeeping facilities (biometric, RFID, or logbook) at their assigned Host Training Establishment (HTE) in order to obtain the mandatory official Certificate of Completion.
+        </div>
+      </div>`;
+
+      return heading('Attendance & DTR','Log your attendance, submit daily accomplishments, and review your time records.',b('Export Log Summary','ref-export-modal','','secondary','download')) + studentDisclaimerHtml + customStatsHtml + `<div class="reference-dtr ref-student-dtr"><div>
+
+  ${panel('', `
+    <div style="text-align: center; padding: 12px 0; position: relative;">
+
+      <span class="eyebrow" style="display:inline-block; margin-bottom:16px;">TODAY · ${date(today())}</span>
+      <div class="timer" id="shift-timer" style="font-size: 56px; font-weight: 800; color: ${isBreak ? '#854d0e' : 'var(--ink)'}; line-height: 1; margin-bottom: 8px; font-variant-numeric: tabular-nums;">
+        ${shift ? (netElapsed ? netElapsed(shift) : '00:00:00') : '00:00:00'}
+      </div>
+      <p class="muted" style="margin-bottom: 24px;">${shift?.clockOut?'Clocked out — daily log ready to submit':shift?'You are currently clocked in':'Not clocked in'}</p>
+      
+      
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center; box-shadow: var(--shadow-sm); margin-bottom: 24px;">
+          <h3 style="margin-top: 0; font-size: 16px;">Attendance Timekeeping & Shift Controls</h3>
+          <p class="muted small" style="margin-bottom:20px;">Log your on-site attendance, take lunch breaks, and clock out to submit your daily accomplishment summary.</p>
+          ${awaiting ? `
+            <div style="background:#fefce8; color:#854d0e; padding:16px; border-radius:8px; margin-bottom:16px; border:1px solid #fde047; text-align:center;">
+              <strong style="display:block; font-size:14px; margin-bottom:4px; color:#713f12;">Shift Clocked Out</strong>
+              Your shift hours have been recorded. Complete and submit your daily summary logbook for supervisor approval.
             </div>
-            <div style="display:flex; gap:12px; margin-top:8px;">
-              <button class="btn secondary" data-action="student-toggle-break" style="flex:1; padding:12px; font-weight:600;">
-                ${isBreak ? '☕ End Break & Resume' : '☕ Start Lunch / Break'}
-              </button>
-              <button class="btn primary" data-action="student-clock-out" style="flex:1; padding:12px; font-weight:700; background:#991b1b; border-color:#991b1b;">
-                Clock Out
-              </button>
+            ${b('Submit Daily Summary Logbook', 'ref-submit-log', '', 'primary full', 'file')}
+          ` : (shift ? `
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div style="display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; margin:0 auto; ${isBreak ? 'background:#fefce8; color:#854d0e; border:1px solid #fef08a;' : 'background:#dcfce7; color:#166534; border:1px solid #bbf7d0;'}">
+                <span style="width:8px; height:8px; border-radius:50%; ${isBreak ? 'background:#854d0e;' : 'background:#16a34a; animation:tk-pulse 2s infinite;'}"></span>
+                ${isBreak ? 'On Lunch / Break (Work Timer Paused)' : 'Active On-Site (Shift Timer Running)'}
+              </div>
+              <div style="display:flex; gap:12px; margin-top:8px;">
+                <button class="btn secondary" data-action="student-toggle-break" style="flex:1; padding:12px; font-weight:600;">
+                  ${isBreak ? '☕ End Break & Resume' : '☕ Start Lunch / Break'}
+                </button>
+                <button class="btn primary" data-action="student-clock-out" style="flex:1; padding:12px; font-weight:700; background:#991b1b; border-color:#991b1b;">
+                  Clock Out
+                </button>
+              </div>
+              <p class="small muted" style="margin:4px 0 0;">Clocked in at ${time(shift.clockIn)}${totalBreakMinutes ? ' · ' + totalBreakMinutes + 'm break recorded' : ''}${isBreak ? ' · Break in progress' : ''}</p>
             </div>
-            <p class="small muted" style="margin:4px 0 0;">Clocked in at ${time(shift.clockIn)}${shift.breakMinutes ? ' · ' + shift.breakMinutes + 'm total break' : ''}</p>
-          </div>
-        ` : `
-          <div style="display:flex; flex-direction:column; gap:12px;">
-            <button class="btn primary full" data-action="student-clock-in" style="padding:14px; font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
-              ${icon('clock')} Clock In
-            </button>
-            <p class="small muted" style="margin:0;">Click to record your time-in and start today's shift tracking.</p>
-          </div>
-        `)}
-    </div>
+          ` : `
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <button class="btn primary full" data-action="student-clock-in" style="padding:14px; font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
+                ${icon('clock')} Clock In
+              </button>
+              <p class="small muted" style="margin:0;">Click to record your time-in and start today's shift tracking.</p>
+            </div>
+          `)}
+      </div>
 
 
     <style>
@@ -768,7 +786,7 @@ ${panel('', `
 `)}
 </div><div>${panel('Recent Clock-ins', c.dtrTable(list.slice(0, 5), u()) + '<div style="margin-top: 24px; text-align: center;">' + nav('See All DTR History', 'dtr', 'history', '', 'secondary full') + '</div>')}${panel('Recent Saved Drafts', (drafts.length ? table(['Date','Task Summary','Action'], drafts.slice(0,3).map(d=>`<tr><td>${date(d.date)}</td><td><span class="task-excerpt">${e(d.task)}</span></td><td>${b('View Draft','ref-draft-view',d.id,'secondary small')}</td></tr>`)) : empty('No saved drafts','Save a task summary to continue it later.')) + '<div style="margin-top: 24px; text-align: center;">' + nav('See All Saved Drafts History', 'dtr', 'drafts', '', 'secondary full') + '</div>')}</div></div>`;
   }
-  function elapsed(start,end){const total=Math.max(0,Math.floor(((end?new Date(end).getTime():Date.now())-new Date(start))/1000));return [Math.floor(total/3600),Math.floor(total/60)%60,total%60].map(n=>String(n).padStart(2,'0')).join(':');}
+  function elapsed(start,end){if(!start)return '00:00:00';const t=new Date(start).getTime();if(isNaN(t))return '00:00:00';const total=Math.max(0,Math.floor(((end?new Date(end).getTime():Date.now())-t)/1000));return [Math.floor(total/3600),Math.floor(total/60)%60,total%60].map(n=>String(n).padStart(2,'0')).join(':');}
   async function attendanceAction(name,id){
     if(['student-clock-in','student-toggle-break','student-clock-out','ref-clock-out','clock'].includes(name)) return false;
     if(name==='ref-profile-tab'){c.view.profileTab=id;c.render();return true;}

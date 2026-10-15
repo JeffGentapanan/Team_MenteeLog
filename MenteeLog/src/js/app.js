@@ -524,8 +524,8 @@ function studentTableable(students,u){return students.length?table(['Intern','Ho
 function searchToolbar(placeholder,extras=''){return `<form class="toolbar" id="search-form"><input type="search" name="search" aria-label="${placeholder}" placeholder="${placeholder}" value="${e(view.search)}"><button class="btn secondary" type="submit">${icon('search')} Search</button>${extras}</form>`;}
 function matches(...texts){return texts.join(' ').toLowerCase().includes(view.search.toLowerCase());}
 function applicationsPage(u){const apps=visibleApplications(db,u).filter(a=>(view.filter==='All'||a.status===view.filter)&&matches(student(a.studentId)?.name,job(a.jobId)?.title,job(a.jobId)?.company));return heading(u.role==='Student'?'My Applications Tracker':'Application Review',u.role==='Student'?'Track your internship applications and placement progress.':'Review and endorse your candidates.')+(u.role==='Student'?'':tabs(['All','Pending','Under_Review','Accepted','Rejected'])+searchToolbar('Search applications'))+(apps.length?apps.map(a=>{const j=job(a.jobId),level=a.status==='Accepted'?3:a.status==='Under_Review'?1:0;return '<section class="card application-card"><div class="row between"><div><h2>'+e(j?.company)+' - '+e(j?.title)+'</h2><small>Applied '+date(a.date)+(u.role==='Student'?'':' · '+e(student(a.studentId)?.name))+'</small></div>'+badge(a.status)+'</div><div class="application-path">'+['Submitted','Under Review','Interview','Accepted'].map((label,i)=>(i?'<span class="application-line"></span>':'')+'<div class="application-step '+(i<=level?'done':'')+'"><i></i><span>'+label+'</span></div>').join('')+'</div><div class="mt16">'+button(u.role==='Student'?'View Details':'Review Application','application-detail',a.id,'secondary small')+'</div></section>';}).join(''):empty('No applications in this view','Your application progress will appear here.'));}
-function netElapsed(sh){if(!sh)return '00:00:00';const now=Date.now();let ms=now-new Date(sh.clockIn).getTime();ms-=(sh.breakMinutes||0)*60000;const b = sh.onBreak || sh.justification; if(b)ms-=now-new Date(b).getTime();const s=Math.max(0,Math.floor(ms/1000));return [Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(v=>String(v).padStart(2,'0')).join(':');}
-function elapsed(start){const seconds=Math.max(0,Math.floor((Date.now()-new Date(start))/1000));return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(v=>String(v).padStart(2,'0')).join(':');}
+function netElapsed(sh){if(!sh||!sh.clockIn)return '00:00:00';const now=Date.now();const cIn=new Date(sh.clockIn).getTime();if(isNaN(cIn))return '00:00:00';let ms=now-cIn;ms-=(sh.breakMinutes||0)*60000;const b=sh.onBreak||sh.justification;if(b){const bTime=new Date(b).getTime();if(!isNaN(bTime))ms-=(now-bTime);}const s=Math.max(0,Math.floor(ms/1000));return [Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(v=>String(v).padStart(2,'0')).join(':');}
+function elapsed(start){if(!start)return '00:00:00';const t=new Date(start).getTime();if(isNaN(t))return '00:00:00';const seconds=Math.max(0,Math.floor((Date.now()-t)/1000));return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(v=>String(v).padStart(2,'0')).join(':');}
 function dtrTable(logs,u){const breakCol=l=>l.breakMinutes?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#854d0e;"><span style="width:6px;height:6px;border-radius:50%;background:#854d0e;"></span>'+l.breakMinutes+'m</span>':'<span style="font-size:12px;color:var(--slate);">—</span>';return logs.length?table([...(u.role==='Student'?[]:['Intern']),'Date','Clock In','Clock Out','Break',...(u.role==='Student'?['Total']:['Task Summary']),'GPS','Status','Action'],logs.slice().reverse().map(l=>'<tr>'+(u.role==='Student'?'':'<td><strong>'+e(student(l.studentId)?.name)+'</strong></td>')+'<td>'+date(l.date)+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+breakCol(l)+'</td><td>'+(u.role==='Student'?l.hours.toFixed(2)+'h':'<span class="task-excerpt">'+e(l.task)+'</span>')+'</td><td>'+badge(l.gps?'Captured':'Unavailable')+'</td><td>'+badge(l.status)+'</td><td>'+button(u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status)?'Review':'View','log-detail',l.id,'secondary small')+'</td></tr>')):empty('No DTR entries here','Submitted attendance records will appear here.');}
 function visibleIncidents(u){return db.incidents.filter(i=>u.role==='Coordinator'||(u.role==='Student'?i.studentId===u.id:i.supervisorId===u.id));}
 function profilePage(u){return `${heading('Profile Setup','Keep your contact and internship details up to date.')}<div class="narrow-wide"><section class="card sand"><div class="row">${person(u)}</div><hr class="hr"><p class="small">${e(u.identifier)}</p>${badge(u.role)} ${badge(u.badge||u.status)}<p class="small muted mt16">Your role and academic identifier are managed by your coordinator.</p></section><section class="card"><h2>Personal information</h2><form id="profile-form">${field('Full name','name','text',u.name,'required maxlength="100" autocomplete="name"')}${field('Email address','email','email',u.email,'required autocomplete="email"')}${field('Phone number (optional)','phone','tel',u.phone||'','maxlength="30" autocomplete="tel"')}${textarea('About you (optional)','bio',u.bio||'','')}<p class="form-error" role="alert"></p><button class="btn" type="submit">Save profile</button></form></section></div>`;}
@@ -611,32 +611,61 @@ async function studentToggleBreak() {
   let shift = db.activeShifts.find(sh => sh.studentId === studentId);
   let log = db.logs.find(l => l.studentId === studentId && l.status === 'Running');
   if (!shift && log) {
-    shift = { studentId, supervisorId: log.supervisorId, clockIn: log.clockIn, breakMinutes: log.breakMinutes || 0, onBreak: log.justification || null };
+    shift = { studentId, supervisorId: log.supervisorId, clockIn: log.clockIn, breakMinutes: log.breakMinutes || 0, onBreak: log.justification || null, justification: log.justification || null };
     db.activeShifts.push(shift);
   }
   if (!shift && !log) throw new Error('You are not currently clocked in.');
 
-  if (shift?.onBreak || log?.justification) {
-    const breakStart = shift?.onBreak || log?.justification;
-    const elapsedMinutes = Math.max(0, Math.floor((Date.now() - new Date(breakStart).getTime()) / 60000));
+  const isCurrentlyOnBreak = Boolean(shift?.onBreak || shift?.justification || log?.justification || log?.onBreak);
+
+  if (isCurrentlyOnBreak) {
+    const breakStart = shift?.onBreak || log?.justification || shift?.justification || log?.onBreak;
+    const elapsedMs = breakStart ? Math.max(0, Date.now() - new Date(breakStart).getTime()) : 0;
+    // Count at least 1 minute if at least 5 seconds were spent on break (for realistic testing & tracking), else round to nearest minute
+    const elapsedMinutes = elapsedMs >= 5000 ? Math.max(1, Math.round(elapsedMs / 60000)) : 0;
+    
+    const existingBreak = Math.max(shift?.breakMinutes || 0, log?.breakMinutes || 0);
+    const newTotalBreak = existingBreak + elapsedMinutes;
+
     if (shift) {
-      shift.breakMinutes = (shift.breakMinutes || 0) + elapsedMinutes;
+      shift.breakMinutes = newTotalBreak;
       shift.onBreak = null;
+      shift.justification = null;
     }
     if (log) {
-      log.breakMinutes = (log.breakMinutes || 0) + elapsedMinutes;
+      log.breakMinutes = newTotalBreak;
+      log.onBreak = null;
       log.justification = '';
     }
+    if (db.shift && db.shift.studentId === studentId) {
+      db.shift.breakMinutes = newTotalBreak;
+      db.shift.onBreak = null;
+      db.shift.justification = '';
+    }
     try {
-      if (log?.id) await supabase.from('logs').update({ break_minutes: log.breakMinutes, justification: '' }).eq('id', log.id);
+      if (log?.id) {
+        await supabase.from('logs').update({ break_minutes: newTotalBreak, justification: '' }).eq('id', log.id);
+      }
     } catch(e) {}
-    toast('Break ended. Resuming shift timer.');
+    toast(`Break ended (${elapsedMinutes}m recorded, total ${newTotalBreak}m). Resuming shift timer.`);
   } else {
     const nowIso = new Date().toISOString();
-    if (shift) shift.onBreak = nowIso;
-    if (log) log.justification = nowIso;
+    if (shift) {
+      shift.onBreak = nowIso;
+      shift.justification = nowIso;
+    }
+    if (log) {
+      log.onBreak = nowIso;
+      log.justification = nowIso;
+    }
+    if (db.shift && db.shift.studentId === studentId) {
+      db.shift.onBreak = nowIso;
+      db.shift.justification = nowIso;
+    }
     try {
-      if (log?.id) await supabase.from('logs').update({ justification: nowIso }).eq('id', log.id);
+      if (log?.id) {
+        await supabase.from('logs').update({ justification: nowIso }).eq('id', log.id);
+      }
     } catch(e) {}
     toast('Lunch / Break started. Shift timer paused.');
   }
@@ -655,13 +684,15 @@ async function studentClockOut() {
   if (!shift && !log) throw new Error('You do not have an active clocked-in shift.');
 
   const clockInTime = shift?.clockIn || log?.clockIn || new Date(Date.now() - 3600000).toISOString();
-  let breakMins = (shift?.breakMinutes || log?.breakMinutes || 0);
-  const breakStart = shift?.onBreak || log?.justification;
+  let breakMins = Math.max(shift?.breakMinutes || 0, log?.breakMinutes || 0);
+  const breakStart = shift?.onBreak || shift?.justification || log?.justification || log?.onBreak;
   if (breakStart) {
-    breakMins += Math.max(0, Math.floor((Date.now() - new Date(breakStart).getTime()) / 60000));
+    const elapsedMs = Math.max(0, Date.now() - new Date(breakStart).getTime());
+    const ongoingBreakMins = elapsedMs >= 5000 ? Math.max(1, Math.round(elapsedMs / 60000)) : 0;
+    breakMins += ongoingBreakMins;
   }
   const clockOutTime = new Date().toISOString();
-  const hrs = hoursBetween(clockInTime, clockOutTime, breakMins);
+  const hrs = Math.max(0, hoursBetween(clockInTime, clockOutTime, breakMins));
   const supId = shift?.supervisorId || log?.supervisorId || u.supervisorId;
   const defaultDraft = db.draft || db.taskDrafts?.find(d => d.studentId === u.id && d.date === today())?.task || '';
 
@@ -677,7 +708,7 @@ async function studentClockOut() {
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
         <span class="muted">Break Time</span>
-        <strong>${breakMins} mins</strong>
+        <strong style="color:#854d0e;">${breakMins} mins</strong>
       </div>
       <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--line, #e2e8f0); padding-top:8px; font-size:13px;">
         <span class="muted">Estimated Shift Hours</span>
@@ -712,6 +743,7 @@ async function studentClockOut() {
       targetLog.hours = hrs;
       targetLog.status = 'Pending';
       targetLog.task = data.task;
+      targetLog.onBreak = null;
       targetLog.justification = '';
     }
 
@@ -1798,7 +1830,7 @@ function userIsMidInput() {
 }
 setInterval(async () => { if (session && await syncRemote(supabase, db)) { save(); if (!modal.open && !userIsMidInput()) render(); } }, 20000);
 async function submitApplication(jobId, note) { const {error} = await supabase.from('applications').insert({ job_id: jobId, student_id: currentUser().id, status: 'Pending', applied_date: today(), notes: note || '' }); if (error) throw new Error(error.message); await syncRemote(supabase, db); }
-portals=createPortalViews({get db(){return db;},get view(){return view;},get user(){return currentUser();},route,e,icon,button,link,heading,field,textarea,select,badge,person,table,empty,progress,date,time,today,student,job,save,notify,audit,toast,render,showModal,download,fileOp,putFile,dtrTable,visibleIncidents,submitApplication,legacy:{uploadEvidence,applicationDetail,editJob,studentDetail,incidentNew,incidentDetail,evaluate,logDetail,editHTE,userNew,importUsers,documentUpload,assignPlacementRemote,getSignedUrl:async(p, b='documents')=>(await supabase.storage.from(b==='incident-evidence'?'incident-evidence':'documents').createSignedUrl(p,60)).data?.signedUrl},capture(fn){capturingForm=true;capturedForm=null;try{fn();return capturedForm;}finally{capturingForm=false;}}});
+portals=createPortalViews({get db(){return db;},get view(){return view;},get user(){return currentUser();},route,e,icon,button,link,heading,field,textarea,select,badge,person,table,empty,progress,date,time,today,student,job,save,notify,audit,toast,render,showModal,download,fileOp,putFile,dtrTable,visibleIncidents,submitApplication,elapsed,netElapsed,legacy:{uploadEvidence,applicationDetail,editJob,studentDetail,incidentNew,incidentDetail,evaluate,logDetail,editHTE,userNew,importUsers,documentUpload,assignPlacementRemote,getSignedUrl:async(p, b='documents')=>(await supabase.storage.from(b==='incident-evidence'?'incident-evidence':'documents').createSignedUrl(p,60)).data?.signedUrl},capture(fn){capturingForm=true;capturedForm=null;try{fn();return capturedForm;}finally{capturingForm=false;}}});
 
 document.addEventListener('change',event=>{if(!['public-course','public-location'].includes(event.target.id))return;const course=$('#public-course').value,place=$('#public-location').value;let count=0;document.querySelectorAll('.home-job').forEach(card=>{card.hidden=!((course==='All'||card.dataset.courses.includes(course))&&(place==='All'||card.dataset.location.includes(place)));if(!card.hidden)count++;});$('#public-empty').hidden=count>0;});
 
