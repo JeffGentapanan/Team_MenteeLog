@@ -524,7 +524,7 @@ function studentTableable(students,u){return students.length?table(['Intern','Ho
 function searchToolbar(placeholder,extras=''){return `<form class="toolbar" id="search-form"><input type="search" name="search" aria-label="${placeholder}" placeholder="${placeholder}" value="${e(view.search)}"><button class="btn secondary" type="submit">${icon('search')} Search</button>${extras}</form>`;}
 function matches(...texts){return texts.join(' ').toLowerCase().includes(view.search.toLowerCase());}
 function applicationsPage(u){const apps=visibleApplications(db,u).filter(a=>(view.filter==='All'||a.status===view.filter)&&matches(student(a.studentId)?.name,job(a.jobId)?.title,job(a.jobId)?.company));return heading(u.role==='Student'?'My Applications Tracker':'Application Review',u.role==='Student'?'Track your internship applications and placement progress.':'Review and endorse your candidates.')+(u.role==='Student'?'':tabs(['All','Pending','Under_Review','Accepted','Rejected'])+searchToolbar('Search applications'))+(apps.length?apps.map(a=>{const j=job(a.jobId),level=a.status==='Accepted'?3:a.status==='Under_Review'?1:0;return '<section class="card application-card"><div class="row between"><div><h2>'+e(j?.company)+' - '+e(j?.title)+'</h2><small>Applied '+date(a.date)+(u.role==='Student'?'':' · '+e(student(a.studentId)?.name))+'</small></div>'+badge(a.status)+'</div><div class="application-path">'+['Submitted','Under Review','Interview','Accepted'].map((label,i)=>(i?'<span class="application-line"></span>':'')+'<div class="application-step '+(i<=level?'done':'')+'"><i></i><span>'+label+'</span></div>').join('')+'</div><div class="mt16">'+button(u.role==='Student'?'View Details':'Review Application','application-detail',a.id,'secondary small')+'</div></section>';}).join(''):empty('No applications in this view','Your application progress will appear here.'));}
-function netElapsed(sh){if(!sh||!sh.clockIn)return '00:00:00';const now=Date.now();const cIn=new Date(sh.clockIn).getTime();if(isNaN(cIn))return '00:00:00';let ms=now-cIn;ms-=(sh.breakMinutes||0)*60000;const b=sh.onBreak||sh.justification;if(b){const bTime=new Date(b).getTime();if(!isNaN(bTime))ms-=(now-bTime);}const s=Math.max(0,Math.floor(ms/1000));return [Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(v=>String(v).padStart(2,'0')).join(':');}
+function netElapsed(sh){if(!sh||!sh.clockIn)return '00:00:00';const now=Date.now();const cIn=new Date(sh.clockIn).getTime();if(isNaN(cIn))return '00:00:00';let ms=now-cIn;if(typeof sh.breakMs==='number'&&sh.breakMs>0){ms-=Math.min(sh.breakMs,Math.max(0,ms));}else if(sh.breakMinutes){ms-=Math.min(sh.breakMinutes*60000,Math.max(0,ms));}const b=sh.onBreak||sh.justification;if(b){const bTime=new Date(b).getTime();if(!isNaN(bTime))ms-=Math.max(0,now-bTime);}const s=Math.max(0,Math.floor(ms/1000));return [Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(v=>String(v).padStart(2,'0')).join(':');}
 function elapsed(start){if(!start)return '00:00:00';const t=new Date(start).getTime();if(isNaN(t))return '00:00:00';const seconds=Math.max(0,Math.floor((Date.now()-t)/1000));return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(v=>String(v).padStart(2,'0')).join(':');}
 function dtrTable(logs,u){const breakCol=l=>l.breakMinutes?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#854d0e;"><span style="width:6px;height:6px;border-radius:50%;background:#854d0e;"></span>'+l.breakMinutes+'m</span>':'<span style="font-size:12px;color:var(--slate);">—</span>';return logs.length?table([...(u.role==='Student'?[]:['Intern']),'Date','Clock In','Clock Out','Break',...(u.role==='Student'?['Total']:['Task Summary']),'GPS','Status','Action'],logs.slice().reverse().map(l=>'<tr>'+(u.role==='Student'?'':'<td><strong>'+e(student(l.studentId)?.name)+'</strong></td>')+'<td>'+date(l.date)+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+breakCol(l)+'</td><td>'+(u.role==='Student'?(Number(l.hours)||0).toFixed(2)+'h':'<span class="task-excerpt">'+e(l.task)+'</span>')+'</td><td>'+badge(l.gps?'Captured':'Unavailable')+'</td><td>'+badge(l.status)+'</td><td>'+button(u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status)?'Review':'View','log-detail',l.id,'secondary small')+'</td></tr>')):empty('No DTR entries here','Submitted attendance records will appear here.');}
 function visibleIncidents(u){return db.incidents.filter(i=>u.role==='Coordinator'||(u.role==='Student'?i.studentId===u.id:i.supervisorId===u.id));}
@@ -614,7 +614,7 @@ async function studentToggleBreak() {
   let shift = db.activeShifts.find(sh => sh.studentId === studentId);
   let log = db.logs.find(l => l.studentId === studentId && l.status === 'Running');
   if (!shift && log) {
-    shift = { studentId, supervisorId: log.supervisorId, clockIn: log.clockIn, breakMinutes: log.breakMinutes || 0, onBreak: log.justification || null, justification: log.justification || null };
+    shift = { studentId, supervisorId: log.supervisorId, clockIn: log.clockIn, breakMinutes: log.breakMinutes || 0, breakMs: log.breakMs || 0, onBreak: log.justification || null, justification: log.justification || null };
     db.activeShifts.push(shift);
   }
   if (!shift && !log) throw new Error('You are not currently clocked in.');
@@ -624,33 +624,40 @@ async function studentToggleBreak() {
   if (isCurrentlyOnBreak) {
     const breakStart = shift?.onBreak || log?.justification || shift?.justification || log?.onBreak;
     const elapsedMs = breakStart ? Math.max(0, Date.now() - new Date(breakStart).getTime()) : 0;
-    // Count at least 1 minute if at least 5 seconds were spent on break (for realistic testing & tracking), else round to nearest minute
-    const elapsedMinutes = elapsedMs >= 5000 ? Math.max(1, Math.round(elapsedMs / 60000)) : 0;
     
-    const existingBreak = Math.max(shift?.breakMinutes || 0, log?.breakMinutes || 0);
-    const newTotalBreak = existingBreak + elapsedMinutes;
+    // Accurately accumulate actual break milliseconds
+    const currentBreakMs = Math.max(shift?.breakMs || 0, log?.breakMs || 0);
+    const newTotalBreakMs = currentBreakMs + elapsedMs;
+    const newTotalBreakMinutes = Math.round(newTotalBreakMs / 60000);
+
+    const elapsedSec = Math.round(elapsedMs / 1000);
+    const breakDisplay = elapsedMs >= 60000 ? `${Math.round(elapsedMs / 60000)}m` : `${elapsedSec}s`;
+    const totalDisplay = newTotalBreakMs >= 60000 ? `${newTotalBreakMinutes}m` : `${Math.round(newTotalBreakMs / 1000)}s`;
 
     if (shift) {
-      shift.breakMinutes = newTotalBreak;
+      shift.breakMs = newTotalBreakMs;
+      shift.breakMinutes = newTotalBreakMinutes;
       shift.onBreak = null;
       shift.justification = null;
     }
     if (log) {
-      log.breakMinutes = newTotalBreak;
+      log.breakMs = newTotalBreakMs;
+      log.breakMinutes = newTotalBreakMinutes;
       log.onBreak = null;
       log.justification = '';
     }
     if (db.shift && db.shift.studentId === studentId) {
-      db.shift.breakMinutes = newTotalBreak;
+      db.shift.breakMs = newTotalBreakMs;
+      db.shift.breakMinutes = newTotalBreakMinutes;
       db.shift.onBreak = null;
       db.shift.justification = '';
     }
     try {
       if (log?.id) {
-        await supabase.from('logs').update({ break_minutes: newTotalBreak, justification: '' }).eq('id', log.id);
+        await supabase.from('logs').update({ break_minutes: newTotalBreakMinutes, justification: '' }).eq('id', log.id);
       }
     } catch(e) {}
-    toast(`Break ended (${elapsedMinutes}m recorded, total ${newTotalBreak}m). Resuming shift timer.`);
+    toast(`Break ended (${breakDisplay} recorded, total ${totalDisplay}). Resuming shift timer.`);
   } else {
     const nowIso = new Date().toISOString();
     if (shift) {
@@ -687,12 +694,15 @@ async function studentClockOut() {
   if (!shift && !log) throw new Error('You do not have an active clocked-in shift.');
 
   const clockInTime = shift?.clockIn || log?.clockIn || new Date(Date.now() - 3600000).toISOString();
+  let breakMs = Math.max(shift?.breakMs || 0, log?.breakMs || 0);
   let breakMins = Math.max(shift?.breakMinutes || 0, log?.breakMinutes || 0);
   const breakStart = shift?.onBreak || shift?.justification || log?.justification || log?.onBreak;
   if (breakStart) {
     const elapsedMs = Math.max(0, Date.now() - new Date(breakStart).getTime());
-    const ongoingBreakMins = elapsedMs >= 5000 ? Math.max(1, Math.round(elapsedMs / 60000)) : 0;
-    breakMins += ongoingBreakMins;
+    breakMs += elapsedMs;
+    breakMins = Math.round(breakMs / 60000);
+  } else if (breakMs > 0 && !breakMins) {
+    breakMins = Math.round(breakMs / 60000);
   }
   const clockOutTime = new Date().toISOString();
   const hrs = Math.max(0, hoursBetween(clockInTime, clockOutTime, breakMins));

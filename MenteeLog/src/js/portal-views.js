@@ -605,10 +605,12 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
       if(sub==='drafts') return back('dtr') + heading('Saved Drafts History', 'Review all your previously saved task summary drafts.') + panel('', drafts.length?table(['Date','Task Summary','Action'],drafts.map(d=>`<tr><td>${date(d.date)}</td><td><span class="task-excerpt">${e(d.task)}</span></td><td>${b('View Draft','ref-draft-view',d.id,'secondary small')}</td></tr>`)):empty('No saved drafts','Save a task summary to continue it later.'));
 
       const totalBreakMinutes = Math.max(activeShiftObj?.breakMinutes || 0, runningLog?.breakMinutes || 0);
+      const totalBreakMs = Math.max(activeShiftObj?.breakMs || 0, runningLog?.breakMs || 0);
       const breakStart = activeShiftObj?.onBreak || activeShiftObj?.justification || runningLog?.justification || runningLog?.onBreak || null;
       const isBreak = Boolean(breakStart);
       if (shift) {
         shift.breakMinutes = totalBreakMinutes;
+        if (totalBreakMs) shift.breakMs = totalBreakMs;
         if (breakStart) {
           shift.onBreak = breakStart;
           shift.justification = breakStart;
@@ -621,7 +623,7 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
       let shiftHrsRendered = 0;
       if (shift) {
          const rawTotal = Math.max(0, (Date.now() - new Date(shift.clockIn).getTime()) / 3600000);
-         let breakHrs = (totalBreakMinutes || 0) / 60;
+         let breakHrs = totalBreakMs ? (totalBreakMs / 3600000) : ((totalBreakMinutes || 0) / 60);
          if (isBreak && breakStart) {
            breakHrs += Math.max(0, (Date.now() - new Date(breakStart).getTime()) / 3600000);
          }
@@ -716,7 +718,7 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
                   Clock Out
                 </button>
               </div>
-              <p class="small muted" style="margin:4px 0 0;">Clocked in at ${time(shift.clockIn)}${totalBreakMinutes ? ' · ' + totalBreakMinutes + 'm break recorded' : ''}${isBreak ? ' · Break in progress' : ''}</p>
+              <p class="small muted" style="margin:4px 0 0;">Clocked in at ${time(shift.clockIn)}${totalBreakMinutes ? ' · ' + totalBreakMinutes + 'm break recorded' : (totalBreakMs >= 1000 ? ' · ' + Math.round(totalBreakMs/1000) + 's break recorded' : '')}${isBreak ? ' · Break in progress' : ''}</p>
             </div>
           ` : `
             <div style="display:flex; flex-direction:column; gap:12px;">
