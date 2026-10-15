@@ -40,30 +40,67 @@ Developed for university OJT programs (including Batangas State University), Men
 
 ## 🔄 System Overview & Core Workflow
 
-The MenteeLog lifecycle follows a strict chronological progression:
+The MenteeLog lifecycle follows an interconnected progression across all three portals:
 
 ```mermaid
 flowchart TD
-    A[Student Intern] --> B[Browse Accredited HTE Directory]
-    B --> C[Submit Application & Clearance Documents]
-    C --> D[HTE Supervisor Screens & Accepts Intern]
-    D --> E[Faculty Coordinator Validates & Locks Placement]
-    E --> F[Intern Begins OJT Training]
-    
-    F --> G[Timekeeper Terminal: Supervisor Clocks Intern In/Out]
-    G --> H[Intern Submits Daily Task Summary: min. 150 chars]
-    H --> I{Supervisor Validates Log}
-    I -->|Reject / Flag| J[Intern Writes Justification]
-    J --> I
-    I -->|Approve & Sign| K[Net Rendered Hours Accumulated]
-    
-    K --> L{Requirement Met? e.g. 500 hrs}
-    L -->|No| G
-    L -->|Yes| M[Supervisor Completes 5-Point Performance Appraisal]
-    
-    M --> N[Automated Final Grade Calculation]
-    N --> O[Coordinator Dashboard & Incident Clearance]
-    O --> P[Export CHED CMO Compliance & Completion Reports]
+    %% Roles Styling
+    classDef student fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#1e3a8a;
+    classDef supervisor fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#78350f;
+    classDef coordinator fill:#f3e8ff,stroke:#7c3aed,stroke-width:2px,color:#4c1d95;
+    classDef decision fill:#fff1f2,stroke:#e11d48,stroke-width:2px,color:#881337;
+    classDef action fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#14532d;
+    classDef notice fill:#fdf4ff,stroke:#c026d3,stroke-width:2px,color:#701a75;
+
+    %% 1. Pre-Placement Phase
+    subgraph Phase1 ["1. OJT Discovery, Application & Placement"]
+        A["Student: Browse Accredited HTE Directory"]:::student --> B["Student: Submit Application & Clearance Documents"]:::student
+        B --> C["Supervisor: Screen in Unified Candidate Review Hub"]:::supervisor
+        C --> D{"Supervisor Review Decision"}:::decision
+        D -->|"Under Review / Interview"| C
+        D -->|"Rejected"| B
+        D -->|"Accepted"| E["Coordinator: Validate in Student Placement Hub & Lock Assignment"]:::coordinator
+        E --> F["Student Officially Placed at Host Training Establishment (HTE)"]:::action
+    end
+
+    %% 2. Daily Attendance & Timekeeping Phase
+    subgraph Phase2 ["2. Daily Timekeeping, Break Tracking & Log Sheets"]
+        F --> G["Student: Clock In on Student Portal with GPS Verification"]:::student
+        G --> H["Official Notice: Physical HTE Clock In/Out Required for Certificate"]:::notice
+        H --> I["Shift Timer Running (High-Precision Millisecond Tracking)"]:::action
+        I --> J{"Take Lunch / Personal Break?"}:::decision
+        J -->|"Yes"| K["Student: Start Lunch / Break (Work Timer Pauses, Break Timer Runs)"]:::student
+        K --> L["Student: End Break & Resume (Accurately Resumes with Zero Loss)"]:::student
+        L --> I
+        J -->|"No"| M["Student: + Write Task Draft / Save as Draft (Optional Progress Saving)"]:::student
+        M --> N["Student: Clock Out & Submit Daily Summary Reflection (Min. 150 chars)"]:::student
+        N --> O["Supervisor: Review Log Sheets & Summary (View GPS, Rendered Hours, Task)"]:::supervisor
+        O --> P{"Supervisor Verification"}:::decision
+        P -->|"Reject / Needs Correction"| Q["Returned to Student with Remarks for Revision"]:::student
+        Q --> N
+        P -->|"Approve & Sign"| R["Hours Officially Accrued to Student Training Meter"]:::action
+    end
+
+    %% 3. Performance Appraisal & Evaluation Phase
+    subgraph Phase3 ["3. 7-Criteria Performance Appraisal & Digital Signing"]
+        R --> S{"Training Hours Completed? (e.g. 500 Hours)"}:::decision
+        S -->|"No"| G
+        S -->|"Yes"| T["Supervisor: Complete 7-Criteria Evaluation Instrument (5-Point Scale + NA)"]:::supervisor
+        T --> U["Supervisor: Apply Digital Signature on High-DPI Canvas Station"]:::supervisor
+        U --> V["Student: View Signed Appraisal Breakdown & Rubric Scores"]:::student
+    end
+
+    %% 4. Governance & Completion
+    subgraph Phase4 ["4. Faculty Governance, Compliance & Graduation"]
+        V --> W["Coordinator: Verify Completion & Mediate Any Incident Reports"]:::coordinator
+        W --> X["Coordinator: Export CHED CMO 104 s. 2017 Batch Reports & Certificate"]:::coordinator
+        X --> Y["OJT Program Successfully Completed"]:::action
+    end
+
+    %% Session Security
+    Z["Any Portal: Click Sign Out"] --> AA{"Confirm Logout Dialog?"}:::decision
+    AA -->|"Cancel"| AB["Remain Logged In"]:::action
+    AA -->|"Confirm"| AC["Secure Session Termination & Return to Login"]:::action
 ```
 
 ---
@@ -72,13 +109,134 @@ flowchart TD
 
 Below are the architectural diagrams outlining the database structure, information architecture, and core system flows.
 
+### Platform Site Map (Mermaid Architecture)
+
+```mermaid
+graph TD
+    %% Styles
+    classDef root fill:#58111a,stroke:#58111a,stroke-width:2px,color:#fff;
+    classDef public fill:#f4ede7,stroke:#76696c,stroke-width:2px,color:#33292c;
+    classDef student fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#1e3a8a;
+    classDef supervisor fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#78350f;
+    classDef coordinator fill:#f3e8ff,stroke:#7c3aed,stroke-width:2px,color:#4c1d95;
+    classDef subpage fill:#ffffff,stroke:#cbd5e1,stroke-width:1.5px,color:#334155;
+
+    %% Root
+    Root["MenteeLog Platform"]:::root
+
+    %% Public Portal
+    Root --> Public["Public Access & Authentication"]:::public
+    Public --> PubHome["Landing Page (#/)"]:::subpage
+    Public --> PubLogin["Sign In Portal (#/login)"]:::subpage
+    PubLogin --> PubRole["Role Switcher (Student / Supervisor / Coordinator)"]:::subpage
+    PubLogin --> PubClock["Live Interactive DTR Clock Dial"]:::subpage
+    Public --> PubActivate["Account Activation (#/activate)"]:::subpage
+    PubActivate --> PubOTP["6-Digit OTP & Password Setup"]:::subpage
+    Public --> PubReset["Password Recovery (#/reset-password)"]:::subpage
+
+    %% Student Portal
+    Root --> StudentPortal["Student Portal (#/student)"]:::student
+    StudentPortal --> SDash["Dashboard (#/student/dashboard)"]:::subpage
+    SDash --> SProg["Progress Meter (Rendered / Required Hours)"]:::subpage
+    SDash --> SRecent["Recent Activity & Supervisor Details"]:::subpage
+    
+    StudentPortal --> SJobs["OJT Placement (#/student/jobs)"]:::subpage
+    SJobs --> SJobModal["Position Details & Application Modal"]:::subpage
+
+    StudentPortal --> SApps["My Applications (#/student/applications)"]:::subpage
+    SApps --> SAppStatus["Pipeline Tracker (Pending / Under Review / Accepted)"]:::subpage
+
+    StudentPortal --> SDTR["Attendance & DTR (#/student/dtr)"]:::subpage
+    SDTR --> SNotice["Official HTE Timekeeping Notice"]:::subpage
+    SDTR --> STimer["Live Shift Timer & Millisecond Break Resume"]:::subpage
+    SDTR --> SControls["Shift Controls (Clock In / Lunch Break / Clock Out)"]:::subpage
+    SDTR --> SOutModal["Clock Out & Daily Logbook Modal (with Save as Draft)"]:::subpage
+    SDTR --> SHistory["DTR History (#/student/dtr/history)"]:::subpage
+    SDTR --> SDrafts["Saved Drafts History (#/student/dtr/drafts)"]:::subpage
+    SDTR --> SDraftNew["Write / Edit Task Draft Modal"]:::subpage
+
+    StudentPortal --> SAppraisal["Performance Appraisal (#/student/appraisal)"]:::subpage
+    SAppraisal --> SApprScores["7-Criteria Rubric Breakdown & Drawn Signature"]:::subpage
+
+    StudentPortal --> SVault["Requirements & Vault (#/student/documents)"]:::subpage
+    SVault --> SUpModal["Document Uploader & Viewer"]:::subpage
+
+    StudentPortal --> SIncidents["Incident Reports (#/student/incidents)"]:::subpage
+    SIncidents --> SIncNew["File Incident Report Modal"]:::subpage
+
+    StudentPortal --> SProfile["Profile Settings (#/student/profile)"]:::subpage
+    StudentPortal --> SLogout["Sign Out (with Logout Confirmation Modal)"]:::subpage
+
+    %% Supervisor Portal
+    Root --> SupervisorPortal["Supervisor Portal (#/supervisor)"]:::supervisor
+    SupervisorPortal --> SupDash["Dashboard (#/supervisor/dashboard)"]:::subpage
+    SupDash --> SupStats["Active Interns & Pending Approval Counters"]:::subpage
+
+    SupervisorPortal --> SupCand["Candidate Review (#/supervisor/candidates)"]:::subpage
+    SupCand --> SupCandTabs["Pipeline Tabs (All / Pending / Under Review / Accepted / Rejected)"]:::subpage
+    SupCand --> SupCandModal["Applicant Screening & Decision Modal"]:::subpage
+
+    SupervisorPortal --> SupDTR["Log Sheets & Summary (#/supervisor/dtr)"]:::subpage
+    SupDTR --> SupCards["Summary Cards (Total Rendered / Required / Remaining Hours)"]:::subpage
+    SupDTR --> SupLogTable["Recent Log Sheets & Approvals Table"]:::subpage
+    SupDTR --> SupVerifyModal["Logbook Verification Modal (Verify On-Site / Approve / Reject)"]:::subpage
+    SupDTR --> SupProfileDTR["Intern Profile Log Sheet (#/supervisor/dtr/profile/:id)"]:::subpage
+    SupDTR --> SupExport["Export Log Summary (PDF / CSV)"]:::subpage
+
+    SupervisorPortal --> SupAppr["Performance Appraisal (#/supervisor/appraisals)"]:::subpage
+    SupAppr --> SupEvalPage["7-Criteria Evaluation Station (#/supervisor/appraisals/evaluate/:id)"]:::subpage
+    SupEvalPage --> SupRubric["5-Point Scoring Rubric (1-5 & NA)"]:::subpage
+    SupEvalPage --> SupCanvas["Draw Digital Signature Canvas Pad"]:::subpage
+
+    SupervisorPortal --> SupJobs["Slot Management (#/supervisor/jobs)"]:::subpage
+    SupJobs --> SupJobPost["Create / Edit Training Slot Modal"]:::subpage
+
+    SupervisorPortal --> SupInc["Incident Hub (#/supervisor/incidents)"]:::subpage
+    SupInc --> SupIncLog["Report Disciplinary Issue / Workplace Incident"]:::subpage
+
+    SupervisorPortal --> SupProf["Profile Settings (#/supervisor/profile)"]:::subpage
+    SupervisorPortal --> SupLogout["Sign Out (with Logout Confirmation Modal)"]:::subpage
+
+    %% Coordinator Portal
+    Root --> CoordinatorPortal["Coordinator Portal (#/coordinator)"]:::coordinator
+    CoordinatorPortal --> CoordDash["Dashboard (#/coordinator/dashboard)"]:::subpage
+    CoordDash --> CoordStats["Cohort Statistics, Placement % & Compliance Alerts"]:::subpage
+
+    CoordinatorPortal --> CoordPlac["Student Placement (#/coordinator/candidates)"]:::subpage
+    CoordPlac --> CoordPlacTabs["Roster Tabs (All / Placed / Awaiting Placement / HTE Directory)"]:::subpage
+    CoordPlac --> CoordAssign["Candidate Placement & Endorsement Modal"]:::subpage
+
+    CoordinatorPortal --> CoordComp["HTE Accreditation (#/coordinator/companies)"]:::subpage
+    CoordComp --> CoordCompModal["Accreditation Partner Directory & Verification"]:::subpage
+
+    CoordinatorPortal --> CoordDTR["DTR Compliance Queue (#/coordinator/dtr)"]:::subpage
+    CoordDTR --> CoordDTRRev["DTR Entry Compliance Review (#/coordinator/dtr/review/:id)"]:::subpage
+    CoordDTR --> CoordScanner["Attendance Anomaly & GPS Scanner"]:::subpage
+    CoordDTR --> CoordRules["Compliance Hours & Deadline Settings Modal"]:::subpage
+
+    CoordinatorPortal --> CoordInc["Incident & Compliance Hub (#/coordinator/incidents)"]:::subpage
+    CoordInc --> CoordMediate["Incident Mediation & Resolution Modal"]:::subpage
+
+    CoordinatorPortal --> CoordRep["Report Generation (#/coordinator/reports)"]:::subpage
+    CoordRep --> CoordCHED["CHED CMO 104 s. 2017 Batch Export (PDF / CSV)"]:::subpage
+
+    CoordinatorPortal --> CoordUsers["User & Access Governance (#/coordinator/users)"]:::subpage
+    CoordUsers --> CoordImport["Pre-Seed Candidate CSV Batch Import"]:::subpage
+    CoordUsers --> CoordFac["Provision Faculty Coordinator Account"]:::subpage
+    CoordUsers --> CoordRBAC["RBAC Security Summary Matrix"]:::subpage
+
+    CoordinatorPortal --> CoordJobs["Job Listings Directory (#/coordinator/jobs)"]:::subpage
+    CoordinatorPortal --> CoordProf["Profile Settings (#/coordinator/profile)"]:::subpage
+    CoordinatorPortal --> CoordLogout["Sign Out (with Logout Confirmation Modal)"]:::subpage
+```
+
 ### Database Schema (ERD)
 ![Entity-Relationship Diagram](docs/diagrams/erd_schema.png)
 
-### Platform Site Map
+### Platform Site Map Image
 ![MenteeLog Site Map](docs/diagrams/sitemap.png)
 
-### System Process Flow
+### System Process Flow Image
 ![System Flowchart](docs/diagrams/system_flow.png)
 
 ---
