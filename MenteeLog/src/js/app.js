@@ -189,13 +189,14 @@ function connectCoreUsers(dataDb) {
     app.jobId = supJob.id;
   }
 
-  // Remove any legacy auto-injected sample logs or dummy records
+  // Remove any legacy auto-injected sample logs, dummy records, or 0.00h testing remnants
   dataDb.logs = (dataDb.logs || []).filter(l => 
     !String(l.id || '').startsWith('log_') && 
-    !String(l.studentId || '').startsWith('s_dummy') &&
+    !String(l.studentId || '').startsWith('s_dummy') && 
     !String(l.task || '').includes('Configured project development environment') &&
     l.id !== 'log_' + stu.id + '_1' &&
-    l.id !== 'log_s1_1'
+    l.id !== 'log_s1_1' &&
+    !(Number(l.hours || 0) === 0 && l.clockIn && l.clockOut && l.clockIn === l.clockOut)
   );
   const stuLogs = dataDb.logs.filter(l => l.studentId === stu.id);
   stuLogs.forEach(l => { l.supervisorId = sup.id; });
@@ -225,17 +226,25 @@ try {
 
 // Automatic cleanup of sample testing records for Student DTR (preserving session, profile, and drafts)
 try {
-  const cleanupKey = 'dtr_test_cleanup_oct15_v6';
+  const cleanupKey = 'dtr_test_cleanup_oct15_v8';
   if (!localStorage.getItem(cleanupKey)) {
     localStorage.setItem(cleanupKey, '1');
     if (db && Array.isArray(db.logs)) {
+      let currentStudentId = null;
+      try {
+        const sess = JSON.parse(sessionStorage.getItem(SESSION) || localStorage.getItem(SESSION));
+        currentStudentId = sess?.id || sess?.user?.id;
+      } catch {}
+
       db.logs = db.logs.filter(l => {
         const isStudent = l.studentId === 's1' || 
                           l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || 
+                          (currentStudentId && l.studentId === currentStudentId) ||
                           !l.studentId;
         const isSample = String(l.id || '').startsWith('log_') || 
                          String(l.studentId || '').startsWith('s_dummy') || 
-                         String(l.task || '').includes('Configured project development environment');
+                         String(l.task || '').includes('Configured project development environment') ||
+                         (Number(l.hours || 0) === 0 && l.clockIn && l.clockOut && l.clockIn === l.clockOut);
         return !isStudent && !isSample;
       });
     }
@@ -250,10 +259,10 @@ try {
     save();
 
     if (typeof supabase !== 'undefined' && supabase) {
-      supabase.auth.getSession().then(({ data }) => {
+      supabase.auth.getSession().then(async ({ data }) => {
         const uid = data?.session?.user?.id;
         if (uid) {
-          supabase.from('logs').delete().eq('student_id', uid).then(() => {}).catch(() => {});
+          await supabase.from('logs').delete().eq('student_id', uid);
         }
       }).catch(() => {});
     }
