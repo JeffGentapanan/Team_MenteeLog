@@ -311,9 +311,20 @@ export function createPortalViews(c){
   }
 
   function appraisals(){const {sub,id}=r();if(u().role==='Student')return '<h1 class="sr-only">Performance Appraisal</h1><p class="ref-evaluation-period">Evaluation Period: Final Assessment</p>'+appraisalResult(u(),db().appraisals.find(a=>a.studentId===u().id));
-    if(sub==='evaluate'){const s=student(id);setTimeout(()=>{if(typeof window.initEvalSignaturePad==='function')window.initEvalSignaturePad();},60);return back('appraisals')+`<div class="ref-identity">${person(s)}<span>Final Evaluation Period</span></div>`+legacyForm(()=>c.legacy.evaluate(id),()=>finish('Evaluation submitted successfully!','appraisals','submitted',id));}
+    if(sub==='evaluate'){
+      const s=student(id);
+      const a=db().appraisals.find(a=>a.studentId===id || ((id==='s1'||id==='22227dcf-933f-40a9-9340-f66cb9020e5c'||s?.email==='kenzosomes@gmail.com')&&(a.studentId==='s1'||a.studentId==='22227dcf-933f-40a9-9340-f66cb9020e5c')));
+      setTimeout(()=>{if(typeof window.initEvalSignaturePad==='function')window.initEvalSignaturePad();},60);
+      return back('appraisals')+
+        `<div class="ref-identity">${person(s)}<span>Final Evaluation Period</span></div>`+
+        (a ? `<div style="margin-bottom:16px; padding:12px 16px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div><strong style="color:#1e40af;">Completed Evaluation on Record</strong><p style="margin:2px 0 0; font-size:12px; color:#3b82f6;">Final score: ${a.score.toFixed(1)} / 5.0. Need to update or re-evaluate?</p></div>
+          ${b('🗑️ Reset & Re-Evaluate','ref-reset-appraisal',id,'secondary small')}
+        </div>` : '') +
+        legacyForm(()=>c.legacy.evaluate(id),()=>finish('Evaluation submitted successfully!','appraisals','submitted',id));
+    }
     if(sub==='submitted'){const s=student(id),a=db().appraisals.find(a=>a.studentId===id);return `<div class="ref-success"><span class="ref-success-icon">${icon('check')}</span><h1>Evaluation Submitted Successfully!</h1><p>Appraisal rubric has been processed and archived.</p>${panel('Evaluation Summary',`<p>Student: ${e(s.name)}</p><p>Evaluation type: Final Evaluation</p><h2>${a?.score.toFixed(1)||'—'} / 5.0</h2><p style="margin-top:8px;">${e(a?.comments||'')}</p><div style="margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;"><div><span style="font-size:11px;color:var(--muted);display:block;">Digitally Signed by</span><strong>${e(a?.signature||u().name)}</strong></div>${a?.signatureImage?`<img src="${a.signatureImage}" alt="Signature" style="max-height:45px;">`:''}</div>`)}${nav('Back to Appraisals','appraisals','','','')}</div>`;}
-    const list=visibleStudents(db(),u()).filter(s=>match(s.name,s.course));return heading('Performance Appraisal','Evaluate student performance, record scores, and sign off evaluations.')+panel('',search('Search by student name or cohort')+(list.length?table(['Intern Name','Department','Evaluation Period','Score / Rating','Status','Action'],list.map(s=>{const a=db().appraisals.find(a=>a.studentId===s.id);return `<tr><td>${person(s)}</td><td>${e(s.company)}</td><td>Final Evaluation</td><td>${a?a.score.toFixed(1)+' / 5.0':'— Not evaluated'}</td><td>${badge(a?'Completed':'Pending')}</td><td>${nav(a?'Review':'Evaluate','appraisals','evaluate',s.id,'small')}</td></tr>`;})):empty('No interns found','No student records found to evaluate.')));
+    const list=visibleStudents(db(),u()).filter(s=>match(s.name,s.course));return heading('Performance Appraisal','Evaluate student performance, record scores, and sign off evaluations.')+panel('',search('Search by student name or cohort')+(list.length?table(['Intern Name','Department','Evaluation Period','Score / Rating','Status','Action'],list.map(s=>{const a=db().appraisals.find(a=>a.studentId===s.id || ((s.id==='s1'||s.id==='22227dcf-933f-40a9-9340-f66cb9020e5c'||s.email==='kenzosomes@gmail.com')&&(a.studentId==='s1'||a.studentId==='22227dcf-933f-40a9-9340-f66cb9020e5c')));return `<tr><td>${person(s)}</td><td>${e(s.company)}</td><td>Final Evaluation</td><td>${a?a.score.toFixed(1)+' / 5.0':'— Not evaluated'}</td><td>${badge(a?'Completed':'Pending')}</td><td><div class="row" style="gap:4px;">${nav(a?'Review':'Evaluate','appraisals','evaluate',s.id,'small')}${a?b('Reset','ref-reset-appraisal',s.id,'secondary small'):''}</div></td></tr>`;})):empty('No interns found','No student records found to evaluate.')));
   }
 
   function notifications(){const notes=db().notifications.filter(n=>n.userId===u().id),unread=notes.filter(n=>!n.read).length;const list=notes.filter(n=>r().sub==='unread'?!n.read:r().sub==='system'?['System','DTR_Event'].includes(n.type):r().sub==='incidents'?['Incident_Alert','Application_Status'].includes(n.type):true);
@@ -874,6 +885,43 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
         document.querySelector('#modal').close();
         c.render();
       }, 'Clear Test Records');
+      return true;
+    }
+    if(name==='ref-reset-appraisal'||name==='reset-appraisal'){
+      if(u().role!=='Supervisor'&&u().role!=='Coordinator') throw new Error('Supervisor or Coordinator access required.');
+      const s = c.student(id);
+      const studentName = s ? s.name : 'this student';
+      c.showModal('Reset Performance Appraisal', `
+        <div style="text-align:center; padding:12px 0 16px;">
+          <div style="width:48px;height:48px;border-radius:50%;background:#fee2e2;color:#b91c1c;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </div>
+          <h3 style="margin:0 0 8px;font-size:18px;font-weight:600;color:var(--ink);">Reset appraisal for ${e(studentName)}?</h3>
+          <p style="margin:0;font-size:14px;color:var(--slate);">This will remove the finalized rubric evaluation and comments so you can conduct a fresh evaluation. The student's DTR logs and placement will not be affected.</p>
+        </div>
+      `, async () => {
+        const isKenzo = id === 's1' || id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || (s?.email && s.email.toLowerCase() === 'kenzosomes@gmail.com');
+        db().appraisals = (db().appraisals || []).filter(a => {
+          if (a.studentId === id) return false;
+          if (isKenzo && (a.studentId === 's1' || a.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')) return false;
+          return true;
+        });
+
+        try {
+          if (typeof supabase !== 'undefined' && supabase) {
+            const deleteIds = isKenzo ? [id, 's1', '22227dcf-933f-40a9-9340-f66cb9020e5c'] : [id];
+            await supabase.from('appraisals').delete().in('student_id', deleteIds);
+          }
+        } catch(err) {
+          console.warn('Supabase delete appraisal error:', err);
+        }
+
+        c.save();
+        c.toast(`Appraisal for ${studentName} has been reset.`);
+        document.querySelector('#modal').close();
+        location.hash = href('appraisals', 'evaluate', id);
+        c.render();
+      }, 'Reset Appraisal');
       return true;
     }
     if(name==='ref-save-draft'){if(u().role!=='Student')throw new Error('Student access required.');if(!db().draft.trim())throw new Error('Enter a task summary first.');db().taskDrafts??=[];const draft=db().taskDrafts.find(d=>d.studentId===u().id&&d.date===today());if(draft)draft.task=db().draft;else db().taskDrafts.unshift({id:crypto.randomUUID(),studentId:u().id,date:today(),task:db().draft});finish('Daily log draft saved.');return true;}

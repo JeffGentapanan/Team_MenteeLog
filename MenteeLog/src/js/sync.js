@@ -142,17 +142,19 @@ export async function syncRemote(supabase, db) {
       newIncidents = [...pendingLocals, ...remoteIncidents];
     }
 
-    const newAppraisals = (appraisalsRes.data || []).map(a => ({
-      id: a.id,
-      applicationId: a.application_id,
-      studentId: a.student_id,
-      supervisorId: a.supervisor_id,
-      ratings: a.ratings || [],
-      score: a.score,
-      comments: a.comments,
-      signature: a.signature,
-      date: a.date
-    }));
+    const newAppraisals = (appraisalsRes.data || [])
+      .filter(a => !String(a.comments || '').includes('m y jyyyy'))
+      .map(a => ({
+        id: a.id,
+        applicationId: a.application_id,
+        studentId: a.student_id,
+        supervisorId: a.supervisor_id,
+        ratings: a.ratings || [],
+        score: a.score,
+        comments: a.comments,
+        signature: a.signature,
+        date: a.date
+      }));
 
     const newDocs = (docsRes.data || []).map(d => ({
       id: d.id,
