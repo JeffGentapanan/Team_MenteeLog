@@ -543,13 +543,19 @@ async function clockAction() { /* MODIFY_CLOCK_ACTION */
     showModal('Complete your daily time record', `<p>Shift was managed by your supervisor. Clocked in at ${time(log.clockIn)}, Clocked out at ${time(log.clockOut)}.</p>${textarea('Task summary & learning reflection','task','','required minlength="150"')}<p class="note">Describe the tasks you completed during this verified session (min 150 characters).</p>`, async data => {
         log.task = data.task;
         log.status = 'Pending';
-        const { error, data: updated } = await supabase.from('logs').update({ task: log.task, status: log.status }).eq('id', log.id).select();
-        if (error) throw new Error(error.message);
-        if (!updated || updated.length === 0) throw new Error('Update failed or rejected by security rules.');
-        await syncRemote(supabase, db);
+        try {
+          const { error, data: updated } = await supabase.from('logs').update({ task: log.task, status: log.status }).eq('id', log.id).select();
+          if (!error && updated && updated.length > 0) {
+            await syncRemote(supabase, db);
+          }
+        } catch(e) {
+          console.warn('Supabase sync note:', e);
+        }
         notify(log.supervisorId, 'DTR_Event', 'Daily time record submitted', u.name + ' submitted their verified logbook summary.');
         audit('Submitted a daily time record summary');
-        save(); toast('Logbook summary submitted for supervisor review.');
+        save();
+        toast('Logbook summary submitted for supervisor review.');
+        render();
     }, 'Submit Daily Logbook');
 }
 
