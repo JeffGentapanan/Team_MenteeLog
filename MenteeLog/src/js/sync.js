@@ -90,7 +90,7 @@ export async function syncRemote(supabase, db) {
       };
     });
 
-    const newLogs = (logsRes.data || []).map(l => ({
+    let newLogs = (logsRes.data || []).map(l => ({
       id: l.id,
       studentId: l.student_id,
       supervisorId: l.supervisor_id,
@@ -241,6 +241,11 @@ export async function syncRemote(supabase, db) {
       }
     }
     newUsers = newUsers.filter(u => !String(u.id).startsWith('s_dummy') && !['Alice Chen','Bob Smith','Charlie Cruz','Diana Reyes','Example Intern'].includes(u.name));
+    newLogs = (newLogs || []).filter(l => 
+      !String(l.id || '').startsWith('log_') && 
+      !String(l.studentId || '').startsWith('s_dummy') && 
+      !String(l.task || '').includes('Configured project development environment')
+    );
     
     // 1. Include any pre-seeded candidates from school_registry
     if (registryRes?.data && registryRes.data.length > 0) {

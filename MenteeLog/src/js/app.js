@@ -189,29 +189,16 @@ function connectCoreUsers(dataDb) {
     app.jobId = supJob.id;
   }
 
-  // Ensure attendance log exists for student with supervisorId
-  dataDb.logs = dataDb.logs || [];
+  // Remove any legacy auto-injected sample logs or dummy records
+  dataDb.logs = (dataDb.logs || []).filter(l => 
+    !String(l.id || '').startsWith('log_') && 
+    !String(l.studentId || '').startsWith('s_dummy') &&
+    !String(l.task || '').includes('Configured project development environment') &&
+    l.id !== 'log_' + stu.id + '_1' &&
+    l.id !== 'log_s1_1'
+  );
   const stuLogs = dataDb.logs.filter(l => l.studentId === stu.id);
-  if (stuLogs.length === 0) {
-    const todayStr = new Date().toLocaleDateString('en-CA');
-    dataDb.logs.push({
-      id: 'log_' + stu.id + '_1',
-      studentId: stu.id,
-      supervisorId: sup.id,
-      date: todayStr,
-      clockIn: todayStr + 'T08:00:00.000Z',
-      clockOut: todayStr + 'T17:00:00.000Z',
-      breakMinutes: 60,
-      hours: 8,
-      status: 'Pending',
-      task: 'Configured project development environment, reviewed system documentation, and attended sprint sync.',
-      gps: true,
-      remarks: '',
-      justification: ''
-    });
-  } else {
-    stuLogs.forEach(l => { l.supervisorId = sup.id; });
-  }
+  stuLogs.forEach(l => { l.supervisorId = sup.id; });
 
   // Clean active shifts: remove any dummy student active shifts
   dataDb.activeShifts = (dataDb.activeShifts || []).filter(s => !String(s.studentId).startsWith('s_dummy'));
@@ -238,7 +225,7 @@ try {
 
 // Automatic cleanup of sample testing records for Student DTR (preserving session, profile, and drafts)
 try {
-  const cleanupKey = 'dtr_test_cleanup_oct15_v2';
+  const cleanupKey = 'dtr_test_cleanup_oct15_v6';
   if (!localStorage.getItem(cleanupKey)) {
     localStorage.setItem(cleanupKey, '1');
     if (db && Array.isArray(db.logs)) {
@@ -246,13 +233,17 @@ try {
         const isStudent = l.studentId === 's1' || 
                           l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || 
                           !l.studentId;
-        return !isStudent;
+        const isSample = String(l.id || '').startsWith('log_') || 
+                         String(l.studentId || '').startsWith('s_dummy') || 
+                         String(l.task || '').includes('Configured project development environment');
+        return !isStudent && !isSample;
       });
     }
     if (db && Array.isArray(db.activeShifts)) {
       db.activeShifts = db.activeShifts.filter(sh => 
         sh.studentId !== 's1' && 
-        sh.studentId !== '22227dcf-933f-40a9-9340-f66cb9020e5c'
+        sh.studentId !== '22227dcf-933f-40a9-9340-f66cb9020e5c' &&
+        !String(sh.studentId || '').startsWith('s_dummy')
       );
     }
     db.shift = null;
