@@ -1031,7 +1031,7 @@ function evaluate(id){
           <td style="padding:8px 4px; text-align:center; vertical-align:middle; width:44px;">
             <label style="cursor:pointer; display:flex; align-items:center; justify-content:center; margin:0; min-height:24px;">
               <input type="radio" name="rating_${idx}" value="${val}" required
-                ${a ? (String(savedVal) === String(val) ? 'checked' : '') : (val === 4 ? 'checked' : '')}
+                ${a && String(savedVal) === String(val) ? 'checked' : ''}
                 ${a ? 'disabled' : ''} style="cursor:pointer; accent-color:var(--burgundy); width:16px; height:16px;">
             </label>
           </td>
