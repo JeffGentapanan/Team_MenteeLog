@@ -202,6 +202,12 @@ function connectCoreUsers(dataDb) {
   const stuLogs = dataDb.logs.filter(l => l.studentId === stu.id);
   stuLogs.forEach(l => { l.supervisorId = sup.id; });
 
+  // Remove test appraisal for kenzosomes
+  dataDb.appraisals = (dataDb.appraisals || []).filter(a => {
+    if (String(a.comments || '').includes('m y jyyyy')) return false;
+    return true;
+  });
+
   // Clean active shifts: remove any dummy student active shifts
   dataDb.activeShifts = (dataDb.activeShifts || []).filter(s => !String(s.studentId).startsWith('s_dummy'));
 
@@ -256,6 +262,23 @@ try {
           await supabase.from('logs').delete().eq('student_id', uid).in('date', ['2026-10-14', '2026-10-15']);
         }
       }).catch(() => {});
+    }
+  }
+} catch(e) {}
+
+// Automatic reset of kenzosomes test performance appraisal
+try {
+  const kenzoResetKey = 'reset_kenzo_appraisal_oct16_v1';
+  if (!localStorage.getItem(kenzoResetKey)) {
+    localStorage.setItem(kenzoResetKey, '1');
+    const kenzoIds = ['22227dcf-933f-40a9-9340-f66cb9020e5c', 's1'];
+    if (db && Array.isArray(db.appraisals)) {
+      db.appraisals = db.appraisals.filter(a => !kenzoIds.includes(a.studentId) && !String(a.comments || '').includes('m y jyyyy'));
+    }
+    save();
+
+    if (typeof supabase !== 'undefined' && supabase) {
+      supabase.from('appraisals').delete().in('student_id', kenzoIds).then(() => {}).catch(() => {});
     }
   }
 } catch(e) {}
@@ -1066,6 +1089,11 @@ function evaluate(id){
           <span style="font-size:10px;color:#059669;font-weight:600;">🔒 Certified Digital Signature</span>
         </div>
       </div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);display:flex;justify-content:flex-end;">
+        <button type="button" class="btn secondary small" data-action="ref-reset-appraisal" data-id="${id}" style="color:#b91c1c;border-color:#fca5a5;background:#fff;display:inline-flex;align-items:center;gap:6px;font-weight:600;padding:8px 14px;cursor:pointer;">
+          🗑️ Reset Appraisal & Re-Evaluate
+        </button>
+      </div>
     </div>
   ` : textarea('Additional Comments','comments','','required minlength="10" placeholder="Provide overall constructive feedback and performance summary for the student..."') + `
     <div class="eval-signature-card">
@@ -1278,7 +1306,7 @@ async function uploadEvidence(file, incCode) {
 const putFile=(id,file)=>fileOp('put',id,file);
 function documentUpload(){const u=currentUser();showModal('Upload a document',select('Document category','category',['Endorsement letter','Training agreement','Accomplishment report','Certificate','Other'])+field('Choose a file','file','file','','required accept="application/pdf,image/png,image/jpeg"')+'<p class="small muted">PDF, PNG, or JPEG · Up to 10 MB. Stored only in this browser.</p>',async(data,form)=>{const file=form.elements.file.files[0];validateUpload(file);const id=crypto.randomUUID();if(!uuidRegex.test(u.id))throw new Error('Demo records cannot be saved to the live database.');const ext=file.name.split('.').pop()||'';const filePath=`${u.id}/${id}_${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;const {error:storageErr}=await supabase.storage.from('documents').upload(filePath,file);if(storageErr)throw new Error('Upload failed: '+storageErr.message);const {error:dbErr,data:rows}=await supabase.from('documents').insert({id,student_id:u.id,category:data.category,name:file.name,file_path:filePath,file_size:file.size,mime_type:file.type,doc_date:today(),status:'Pending'}).select();if(dbErr||!rows||!rows.length){await supabase.storage.from('documents').remove([filePath]);throw new Error(dbErr?dbErr.message:'Insert failed.');}await syncRemote(supabase,db);audit('Uploaded a document');save();toast('Document uploaded successfully.');},'Upload document');}
 function exportReport(type){let rows;const students=db.users.filter(s=>s.role==='Student');switch(type){case 'completion':rows=[['Student','SR code','Approved hours','Required hours','Completion percent'],...students.map(s=>[s.name,s.identifier,approvedHours(db,s.id),s.requiredHours,Math.round(approvedHours(db,s.id)/s.requiredHours*100)])];break;case 'compliance':rows=[['Student','Date','Hours','Status','Location captured','Justification','Reviewer remarks'],...db.logs.map(l=>[student(l.studentId)?.name,l.date,l.hours,l.status,l.gps?'Yes (unverified)':'No',l.justification||'',l.remarks])];break;case 'hte':rows=[['Company','Industry','Accreditation','MOA expiry','Placed students'],...db.htes.map(h=>[h.name,h.industry,h.status,h.expiry,students.filter(s=>s.company===h.name).length])];break;case 'incidents':rows=[['Case','Student','Category','Priority','Status','Reported'],...db.incidents.map(i=>[i.id,student(i.studentId)?.name,i.category,i.priority,i.status,i.date])];break;default:rows=[['Student','SR code','Course','Host company','Supervisor','Accreditation','Approved hours','Required hours'],...students.map(s=>[s.name,s.identifier,s.course,s.company,student(s.supervisorId)?.name||'',s.badge,approvedHours(db,s.id),s.requiredHours])];}download('MenteeLog-'+type+'-DEMO.csv',csvText(rows));toast('Sample data report downloaded.');}
-const actionRoles={ 'job-edit':['Supervisor','Coordinator'],'student-detail':['Supervisor','Coordinator'],'evaluate':['Supervisor'],'hte-edit':['Coordinator'],'user-new':['Coordinator'],'user-status':['Coordinator'],'import-users':['Coordinator'],'csv-template':['Coordinator'],'announcement':['Supervisor','Coordinator'],'document-upload':['Student'],'document-remove':['Student'],'clock':['Student'],'student-clock-in':['Student'],'student-toggle-break':['Student'],'student-clock-out':['Student'],'ref-clock-out':['Student'],'incident-new':['Student','Supervisor'],'report':['Coordinator'],'export-students':['Supervisor','Coordinator'],'endorsement':['Coordinator']};
+const actionRoles={ 'job-edit':['Supervisor','Coordinator'],'student-detail':['Supervisor','Coordinator'],'evaluate':['Supervisor'],'reset-appraisal':['Supervisor','Coordinator'],'ref-reset-appraisal':['Supervisor','Coordinator'],'hte-edit':['Coordinator'],'user-new':['Coordinator'],'user-status':['Coordinator'],'import-users':['Coordinator'],'csv-template':['Coordinator'],'announcement':['Supervisor','Coordinator'],'document-upload':['Student'],'document-remove':['Student'],'clock':['Student'],'student-clock-in':['Student'],'student-toggle-break':['Student'],'student-clock-out':['Student'],'ref-clock-out':['Student'],'incident-new':['Student','Supervisor'],'report':['Coordinator'],'export-students':['Supervisor','Coordinator'],'endorsement':['Coordinator']};
 async function action(name,id,el){
   const publicActions=['demo','auth-role','forgot','login','toggle-password','close','watch-demo','privacy','team-connect'];
   const u=currentUser();
