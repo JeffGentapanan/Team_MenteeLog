@@ -189,15 +189,16 @@ function connectCoreUsers(dataDb) {
     app.jobId = supJob.id;
   }
 
-  // Remove any legacy auto-injected sample logs, dummy records, or 0.00h testing remnants
-  dataDb.logs = (dataDb.logs || []).filter(l => 
-    !String(l.id || '').startsWith('log_') && 
-    !String(l.studentId || '').startsWith('s_dummy') && 
-    !String(l.task || '').includes('Configured project development environment') &&
-    l.id !== 'log_' + stu.id + '_1' &&
-    l.id !== 'log_s1_1' &&
-    (Number(l.hours || 0) > 0.01 || l.status === 'Running' || l.status === 'Awaiting_Student_Log')
-  );
+  // Remove any legacy auto-injected sample logs, dummy records, or past test remnants
+  dataDb.logs = (dataDb.logs || []).filter(l => {
+    if (String(l.id || '').startsWith('log_')) return false;
+    if (String(l.studentId || '').startsWith('s_dummy')) return false;
+    if (String(l.task || '').includes('Configured project development environment')) return false;
+    if (l.id === 'log_' + stu.id + '_1' || l.id === 'log_s1_1') return false;
+    if (l.date === '2026-10-14' || l.date === '2026-10-15') return false;
+    if (l.date === '2026-10-16' && Number(l.hours || 0) <= 0.02 && (String(l.clockIn || '').includes('00:23') || String(l.clockIn || '').includes('12:23') || String(l.clockOut || '').includes('00:23') || String(l.clockOut || '').includes('12:23') || !l.task)) return false;
+    return true;
+  });
   const stuLogs = dataDb.logs.filter(l => l.studentId === stu.id);
   stuLogs.forEach(l => { l.supervisorId = sup.id; });
 
@@ -226,16 +227,18 @@ try {
 
 // Automatic cleanup of sample testing records for Student DTR (preserving session, profile, and drafts)
 try {
-  const cleanupKey = 'dtr_test_cleanup_oct16_v1';
+  const cleanupKey = 'dtr_test_cleanup_oct16_v35';
   if (!localStorage.getItem(cleanupKey)) {
     localStorage.setItem(cleanupKey, '1');
     if (db && Array.isArray(db.logs)) {
-      db.logs = db.logs.filter(l => 
-        (Number(l.hours || 0) > 0.01 || l.status === 'Running' || l.status === 'Awaiting_Student_Log') &&
-        !String(l.id || '').startsWith('log_') &&
-        !String(l.studentId || '').startsWith('s_dummy') &&
-        !String(l.task || '').includes('Configured project development environment')
-      );
+      db.logs = db.logs.filter(l => {
+        if (l.date === '2026-10-14' || l.date === '2026-10-15') return false;
+        if (l.date === '2026-10-16' && Number(l.hours || 0) <= 0.02 && (String(l.clockIn || '').includes('00:23') || String(l.clockIn || '').includes('12:23') || String(l.clockOut || '').includes('00:23') || String(l.clockOut || '').includes('12:23') || !l.task)) return false;
+        if (String(l.id || '').startsWith('log_')) return false;
+        if (String(l.studentId || '').startsWith('s_dummy')) return false;
+        if (String(l.task || '').includes('Configured project development environment')) return false;
+        return true;
+      });
     }
     if (db && Array.isArray(db.activeShifts)) {
       db.activeShifts = db.activeShifts.filter(sh => 
@@ -250,6 +253,7 @@ try {
         const uid = data?.session?.user?.id;
         if (uid) {
           await supabase.from('logs').delete().eq('student_id', uid).lte('hours', 0.02);
+          await supabase.from('logs').delete().eq('student_id', uid).in('date', ['2026-10-14', '2026-10-15']);
         }
       }).catch(() => {});
     }

@@ -241,12 +241,14 @@ export async function syncRemote(supabase, db) {
       }
     }
     newUsers = newUsers.filter(u => !String(u.id).startsWith('s_dummy') && !['Alice Chen','Bob Smith','Charlie Cruz','Diana Reyes','Example Intern'].includes(u.name));
-    newLogs = (newLogs || []).filter(l => 
-      !String(l.id || '').startsWith('log_') && 
-      !String(l.studentId || '').startsWith('s_dummy') && 
-      !String(l.task || '').includes('Configured project development environment') &&
-      (Number(l.hours || 0) > 0.01 || l.status === 'Running' || l.status === 'Awaiting_Student_Log')
-    );
+    newLogs = (newLogs || []).filter(l => {
+      if (String(l.id || '').startsWith('log_')) return false;
+      if (String(l.studentId || '').startsWith('s_dummy')) return false;
+      if (String(l.task || '').includes('Configured project development environment')) return false;
+      if (l.date === '2026-10-14' || l.date === '2026-10-15') return false;
+      if (l.date === '2026-10-16' && Number(l.hours || 0) <= 0.02 && (String(l.clockIn || '').includes('00:23') || String(l.clockIn || '').includes('12:23') || String(l.clockOut || '').includes('00:23') || String(l.clockOut || '').includes('12:23') || !l.task)) return false;
+      return true;
+    });
     
     // 1. Include any pre-seeded candidates from school_registry
     if (registryRes?.data && registryRes.data.length > 0) {

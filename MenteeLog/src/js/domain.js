@@ -26,12 +26,14 @@ export function visibleStudents(db,user) {
 }
 export function visibleLogs(db,user) {
   if (!user) return [];
-  const baseLogs = (db.logs || []).filter(l => 
-    !String(l.id || '').startsWith('log_dummy') && 
-    !String(l.studentId || '').startsWith('s_dummy') && 
-    !String(l.task || '').includes('Configured project development environment') &&
-    (Number(l.hours || 0) > 0.01 || l.status === 'Running' || l.status === 'Awaiting_Student_Log')
-  );
+  const baseLogs = (db.logs || []).filter(l => {
+    if (String(l.id || '').startsWith('log_dummy')) return false;
+    if (String(l.studentId || '').startsWith('s_dummy')) return false;
+    if (String(l.task || '').includes('Configured project development environment')) return false;
+    if (l.date === '2026-10-14' || l.date === '2026-10-15') return false;
+    if (l.date === '2026-10-16' && Number(l.hours || 0) <= 0.02 && (String(l.clockIn || '').includes('00:23') || String(l.clockIn || '').includes('12:23') || String(l.clockOut || '').includes('00:23') || String(l.clockOut || '').includes('12:23') || !l.task)) return false;
+    return true;
+  });
   if (user.role === 'Student') {
     const isKenzo = (user.email && user.email.toLowerCase() === 'kenzosomes@gmail.com') ||
                     user.id === 's1' ||
