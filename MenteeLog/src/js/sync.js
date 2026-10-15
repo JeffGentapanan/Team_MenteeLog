@@ -245,7 +245,7 @@ export async function syncRemote(supabase, db) {
       !String(l.id || '').startsWith('log_') && 
       !String(l.studentId || '').startsWith('s_dummy') && 
       !String(l.task || '').includes('Configured project development environment') &&
-      !(Number(l.hours || 0) === 0 && l.clockIn && l.clockOut && l.clockIn === l.clockOut)
+      (Number(l.hours || 0) > 0.01 || l.status === 'Running' || l.status === 'Awaiting_Student_Log')
     );
     
     // 1. Include any pre-seeded candidates from school_registry

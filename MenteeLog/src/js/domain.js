@@ -26,26 +26,32 @@ export function visibleStudents(db,user) {
 }
 export function visibleLogs(db,user) {
   if (!user) return [];
+  const baseLogs = (db.logs || []).filter(l => 
+    !String(l.id || '').startsWith('log_dummy') && 
+    !String(l.studentId || '').startsWith('s_dummy') && 
+    !String(l.task || '').includes('Configured project development environment') &&
+    (Number(l.hours || 0) > 0.01 || l.status === 'Running' || l.status === 'Awaiting_Student_Log')
+  );
   if (user.role === 'Student') {
     const isKenzo = (user.email && user.email.toLowerCase() === 'kenzosomes@gmail.com') ||
                     user.id === 's1' ||
                     user.id === '22227dcf-933f-40a9-9340-f66cb9020e5c' ||
                     user.name === 'kenzosomes' ||
                     user.identifier === '2021-00421';
-    return (db.logs || []).filter(l => 
+    return baseLogs.filter(l => 
       l.studentId === user.id || 
       (isKenzo && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1' || !l.studentId))
     );
   }
   if (user.role === 'Supervisor') {
-    return db.logs.filter(l => 
+    return baseLogs.filter(l => 
       l.supervisorId === user.id || 
       user.id === 'v1' || 
       (db.users && db.users.some(u => (u.id === l.studentId || (u.email === 'kenzosomes@gmail.com' && l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')) && (u.supervisorId === user.id || (user.company && u.company && user.company.trim().toLowerCase() === u.company.trim().toLowerCase())))) ||
       ((String(user.email||'').toLowerCase().includes('shisui') || user.name === 'shisuizhin' || user.name === 'Supabase User') && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1'))
     );
   }
-  return db.logs;
+  return baseLogs;
 }
 export function visibleApplications(db,user) {return db.applications.filter(a=>user.role==='Student'?a.studentId===user.id:user.role==='Supervisor'?db.jobs.some(j=>j.id===a.jobId&&j.supervisorId===user.id):true);}
 export function validateUpload(file) {
