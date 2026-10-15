@@ -1,5 +1,5 @@
 import {navigation, roles} from './data.js';
-export function canAccess(role,page) { return roles.includes(role) && ((page==='notifications'||(role==='Student'&&page==='profile'))||navigation[role].some(n=>n[0]===page)||(role==='Supervisor'&&['candidates','applications'].includes(page))||(role==='Coordinator'&&page==='jobs')); }
+export function canAccess(role,page) { return roles.includes(role) && ((page==='notifications'||(role==='Student'&&page==='profile'))||navigation[role].some(n=>n[0]===page)||(role==='Supervisor'&&['candidates','applications','dtr'].includes(page))||(role==='Coordinator'&&['candidates','applications','jobs'].includes(page))); }
 export function escapeHTML(value='') {return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 export function hoursBetween(start,end,breakMinutes=0) {
   const difference = (new Date(end)-new Date(start))/3600000;

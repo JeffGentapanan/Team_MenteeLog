@@ -4,7 +4,7 @@ const UNIVERSITY_NAME = 'Batangas State University';
 import {publicLanding,authScreen} from './public.js';
 import {ensureCreatorAccounts} from './creator.js';
 import {createPortalViews} from './portal-views.js';
-import {seedData,roles,navigation,rubric} from './data.js';
+import {seedData,roles,navigation,rubric,evaluationCriteria,scorableCriteria} from './data.js';
 import {escapeHTML as e,canAccess,approvedHours,visibleStudents,visibleLogs,visibleApplications,hoursBetween,validateUpload,csvText,parseCSV,applyToJob,reviewLog} from './domain.js';
 import { syncRemote } from './sync.js';
 import { initPublicConstellation } from './public-constellation.js';
@@ -416,8 +416,10 @@ document.title='MenteeLog | Your OJT journey, connected';return;}
   if(['login','activate','reset','forgot','reset-password'].includes(role)){app.innerHTML=authPage(role);document.title='MenteeLog | Authentication';return;}
   const user=currentUser();
   if(!user){location.hash='/login';return;}
+  if(user.role==='Supervisor'&&page==='applications'){location.hash='/supervisor/candidates';return;}
+  if(user.role==='Coordinator'&&page==='applications'){location.hash='/coordinator/candidates';return;}
   if(role!==user.role.toLowerCase()||!canAccess(user.role,page)){location.hash=`/${user.role.toLowerCase()}/dashboard`;toast('This page is not available in your portal.');return;}
-  const title=navigation[user.role].find(n=>n[0]===page)?.[1]||({profile:'Profile Setup',notifications:'Notifications',jobs:'Job Management',candidates:'Candidate Review',applications:'Application Review'}[page]);
+  const title=navigation[user.role].find(n=>n[0]===page)?.[1]||({profile:'Profile Setup',notifications:'Notifications',jobs:'Job Management',candidates:user.role==='Coordinator'?'Student Placement':'Candidate Review',applications:user.role==='Coordinator'?'Student Placement':'Candidate Review',dtr:user.role==='Supervisor'?'Log Sheets & Summary':'Attendance & DTR'}[page]);
   document.title=`${title} | MenteeLog`;
   const unread=db.notifications.filter(n=>n.userId===user.id&&!n.read).length;
   app.innerHTML=`<div class="portal-shell"><aside class="portal-sidebar" id="top-nav-menu" aria-label="Portal navigation"><div class="portal-brand">${brand(false)}<button class="icon-btn mobile-toggle" data-action="menu" aria-label="Close navigation">${icon('close')}</button></div><p class="portal-caption">${user.role} portal</p><nav aria-label="Main navigation">${navigation[user.role].map(([id,label,ico])=>`<a class="nav-link ${page===id?'active':''}" href="#/${role}/${id}" ${page===id?'aria-current="page"':''}>${icon(ico)}<span>${label}</span></a>`).join('')}</nav><div class="portal-account">${person({...user,course:user.role==='Student'?'OJT Student':user.role==='Supervisor'?'Company Supervisor':'Faculty Coordinator'})}</div></aside><button class="portal-scrim" data-action="menu" aria-label="Close navigation" tabindex="-1"></button><div class="workspace"><header class="portal-header"><div class="row"><button class="icon-btn mobile-toggle" data-action="menu" aria-controls="top-nav-menu" aria-label="Open navigation" aria-expanded="false">${icon('menu')}</button><div class="breadcrumb"><span>MenteeLog</span><span>/</span><strong>${title}</strong></div></div><div class="top-actions"><input class="top-search" id="global-search" aria-label="Search portal pages" placeholder="Search pages..." type="search"><button class="icon-btn" data-action="notifications" aria-label="Notifications, ${unread} unread">${icon('bell')}${unread?'<span class="notification-dot"></span>':''}</button><details class="profile-menu"><summary aria-label="Your account"><span class="avatar">${e(initials(user.name))}</span></summary><div class="profile-popover"><strong>${e(user.name)}</strong><small class="account-role">${e(user.role)}</small>${user.role==='Student'?`<a href="#/${role}/profile">Profile Setup</a>`:''}<button class="text-btn" data-action="logout">${icon('logout')} Sign out</button></div></details></div></header><main class="content" id="main" tabindex="-1">${pageContent(page,user)}</main></div></div>`;
@@ -640,68 +642,194 @@ if(i.supervisorId)notify(i.supervisorId,'Incident_Alert','Incident '+i.id+' upda
 audit('Updated incident '+i.id+' to '+data.status);
 toast('Case updated.');
 }:null,'Update case');}
-function evaluate(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id===id);if(u.role!=='Supervisor'||!s)throw new Error('Student outside your evaluation scope.');const a=db.appraisals.find(a=>a.studentId===id);const body=`${person(s)}<hr class="hr"><p class="small muted">1 - Needs improvement · 3 - Meets expectations · 5 - Excellent</p>${rubric.map((r,i)=>`<fieldset class="rubric-row"><legend><strong>${i+1}. ${r}</strong></legend><div class="rating">${[1,2,3,4,5].map(n=>`<label><input type="radio" name="rating${i}" value="${n}" required ${a?.ratings[i]===n?'checked':''} ${a?'disabled':''}>${n}</label>`).join('')}</div></fieldset>`).join('')}${a?`
-  <div class="evaluation-reviewed-card" style="margin-top:20px;padding:20px;border:1px solid var(--line);border-radius:12px;background:var(--cream, #FBF8F2);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-      <div>
-        <span class="badge" style="background:#e6f4ea;color:#137333;border:1px solid #ceead6;font-size:11px;padding:3px 10px;border-radius:6px;font-weight:700;">✓ Evaluation Finalized & Archived</span>
-        <h3 style="margin:8px 0 2px;font-size:18px;color:var(--ink);">Overall Rubric Score: <strong>${a.score.toFixed(1)} / 5.0</strong></h3>
-        <p class="small muted" style="margin:0;">Submitted on ${date(a.date||today())}</p>
-      </div>
-      <div style="text-align:right;">
-        <span style="font-size:32px;font-weight:800;color:var(--burgundy);">${a.score.toFixed(1)}</span>
-        <span style="font-size:14px;color:var(--muted);">/ 5.0</span>
-      </div>
-    </div>
-    <div style="margin-bottom:18px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:8px;">
-      <h4 style="margin:0 0 6px;font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;">Supervisor Evaluation Comments</h4>
-      <p style="margin:0;font-size:14px;line-height:1.6;color:var(--ink);">${e(a.comments)}</p>
-    </div>
-    <div style="padding:14px;background:#fff;border:1px solid var(--line);border-radius:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-      <div>
-        <span style="display:block;font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;">Authorized Evaluator</span>
-        <strong style="color:var(--ink);font-size:14px;">${e(a.signature||u.name)}</strong>
-        <span style="display:block;font-size:12px;color:var(--muted);">${e(u.company||'Industry Partner')} · Verified Signature</span>
-      </div>
-      <div style="text-align:right;">
-        ${a.signatureImage?`<img src="${a.signatureImage}" alt="Supervisor Digital Signature" style="max-height:55px;display:block;margin-left:auto;">`:`<div class="eval-cursive-font" style="font-size:26px;">${e(a.signature)}</div>`}
-        <span style="font-size:10px;color:#059669;font-weight:600;">🔒 Certified Digital Signature</span>
+function evaluate(id){
+  const u = currentUser(), s = visibleStudents(db, u).find(s => s.id === id);
+  if (u.role !== 'Supervisor' || !s) throw new Error('Student outside your evaluation scope.');
+  const a = db.appraisals.find(a => a.studentId === id);
+
+  const legendHtml = `
+    <div style="background: var(--cream, #fbf8f2); padding: 14px 18px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--line, #e2e8f0);">
+      <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 700; color: var(--ink);">Evaluation Instrument</h4>
+      <div style="font-size: 12px; color: var(--slate); line-height: 1.6;">
+        <strong style="color:var(--ink);">Legend:</strong>
+        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#fee2e2; border-radius:4px; font-weight:600; color:#991b1b;">1 - Very Poor</span>
+        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#ffedd5; border-radius:4px; font-weight:600; color:#9a3412;">2 - Poor</span>
+        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#fef9c3; border-radius:4px; font-weight:600; color:#854d0e;">3 - Average</span>
+        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#dbeafe; border-radius:4px; font-weight:600; color:#1e40af;">4 - Good</span>
+        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#dcfce7; border-radius:4px; font-weight:600; color:#166534;">5 - Very Good</span>
+        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#f1f5f9; border-radius:4px; font-weight:600; color:#475569;">NA - Not Applicable</span>
       </div>
     </div>
-  </div>`:textarea('Supervisor comments & observations','comments','','required minlength="20"')+`
-  <div class="eval-signature-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-      <div>
-        <h4 style="margin:0;font-size:14px;font-weight:700;color:var(--ink);letter-spacing:0.02em;">Digital Signature & Endorsement</h4>
-        <p style="margin:2px 0 0;font-size:12px;color:var(--muted);">Draw your authorized signature below to finalize this performance appraisal.</p>
-      </div>
-      <span class="badge" style="background:var(--burgundy);color:#fff;font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;">✍️ Draw Signature</span>
+  `;
+
+  let scorableIdx = 0;
+  const tableRows = evaluationCriteria.map(item => {
+    if (item.isHeader) {
+      return `<tr style="background:#f8fafc; font-weight:700; border-top:1px solid var(--line); border-bottom:1px solid var(--line);"><td colspan="7" style="padding:10px 14px; font-size:13px; color:var(--ink);"><strong>${item.num}. ${e(item.title)}</strong></td></tr>`;
+    }
+    const idx = scorableIdx++;
+    const savedVal = a?.ratings?.[idx];
+    return `
+      <tr style="border-bottom:1px solid var(--line);">
+        <td style="padding:10px 14px; font-size:13px; line-height:1.45; ${item.sub ? 'padding-left:28px;' : 'font-weight:500;'}">
+          ${item.num ? `<strong>${item.num}.</strong> ` : `<span style="font-weight:600; color:var(--burgundy);">${item.sub})</span> `}${e(item.title)}
+        </td>
+        ${[1, 2, 3, 4, 5, 'NA'].map(val => `
+          <td style="padding:8px 4px; text-align:center; vertical-align:middle; width:44px;">
+            <label style="cursor:pointer; display:flex; align-items:center; justify-content:center; margin:0; min-height:24px;">
+              <input type="radio" name="rating_${idx}" value="${val}" required
+                ${a ? (String(savedVal) === String(val) ? 'checked' : '') : (val === 4 ? 'checked' : '')}
+                ${a ? 'disabled' : ''} style="cursor:pointer; accent-color:var(--burgundy); width:16px; height:16px;">
+            </label>
+          </td>
+        `).join('')}
+      </tr>
+    `;
+  }).join('');
+
+  const tableHtml = `
+    <div class="table-wrap" style="overflow-x:auto; margin-bottom:16px; border:1px solid var(--line); border-radius:8px;">
+      <table style="width:100%; border-collapse:collapse; min-width:620px;">
+        <thead>
+          <tr style="background:#f1f5f9; border-bottom:2px solid var(--line); text-align:left;">
+            <th style="padding:10px 14px; font-weight:600; font-size:13px; color:var(--ink);">Criteria</th>
+            <th style="padding:10px 4px; text-align:center; width:44px; font-size:12px; color:var(--ink);">1</th>
+            <th style="padding:10px 4px; text-align:center; width:44px; font-size:12px; color:var(--ink);">2</th>
+            <th style="padding:10px 4px; text-align:center; width:44px; font-size:12px; color:var(--ink);">3</th>
+            <th style="padding:10px 4px; text-align:center; width:44px; font-size:12px; color:var(--ink);">4</th>
+            <th style="padding:10px 4px; text-align:center; width:44px; font-size:12px; color:var(--ink);">5</th>
+            <th style="padding:10px 4px; text-align:center; width:48px; font-size:12px; color:var(--ink);">NA</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+        </tbody>
+      </table>
     </div>
-    <div id="eval-sig-draw-pane" style="display:block;">
-      <div class="eval-canvas-wrapper">
-        <canvas id="eval-signature-canvas" width="460" height="130"></canvas>
-        <div style="position:absolute;bottom:8px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center;pointer-events:none;">
-          <span style="font-size:10px;color:#94a3b8;font-family:monospace;letter-spacing:0.05em;">✕ SIGN ABOVE THE LINE</span>
-          <span style="font-size:10px;color:#94a3b8;">TOUCH / MOUSE ENABLED</span>
+  `;
+
+  const body = `${person(s)}<hr class="hr">${legendHtml}${tableHtml}${a ? `
+    <div class="evaluation-reviewed-card" style="margin-top:20px;padding:20px;border:1px solid var(--line);border-radius:12px;background:var(--cream, #FBF8F2);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <span class="badge" style="background:#e6f4ea;color:#137333;border:1px solid #ceead6;font-size:11px;padding:3px 10px;border-radius:6px;font-weight:700;">✓ Evaluation Finalized & Archived</span>
+          <h3 style="margin:8px 0 2px;font-size:18px;color:var(--ink);">Overall Rubric Score: <strong>${a.score.toFixed(1)} / 5.0</strong></h3>
+          <p class="small muted" style="margin:0;">Submitted on ${date(a.date||today())}</p>
         </div>
-        <button type="button" id="eval-sig-clear-btn" style="position:absolute;top:8px;right:8px;font-size:11px;background:#f1f5f9;border:1px solid #cbd5e1;padding:3px 8px;border-radius:4px;cursor:pointer;color:#475569;">Clear</button>
+        <div style="text-align:right;">
+          <span style="font-size:32px;font-weight:800;color:var(--burgundy);">${a.score.toFixed(1)}</span>
+          <span style="font-size:14px;color:var(--muted);">/ 5.0</span>
+        </div>
+      </div>
+      <div style="margin-bottom:18px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:8px;">
+        <h4 style="margin:0 0 6px;font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;">Additional Comments</h4>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--ink);">${e(a.comments)}</p>
+      </div>
+      <div style="padding:14px;background:#fff;border:1px solid var(--line);border-radius:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+          <span style="display:block;font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;">Authorized Evaluator</span>
+          <strong style="color:var(--ink);font-size:14px;">${e(a.signature||u.name)}</strong>
+          <span style="display:block;font-size:12px;color:var(--muted);">${e(u.company||'Industry Partner')} · Verified Signature</span>
+        </div>
+        <div style="text-align:right;">
+          ${a.signatureImage?`<img src="${a.signatureImage}" alt="Supervisor Digital Signature" style="max-height:55px;display:block;margin-left:auto;">`:`<div class="eval-cursive-font" style="font-size:26px;">${e(a.signature)}</div>`}
+          <span style="font-size:10px;color:#059669;font-weight:600;">🔒 Certified Digital Signature</span>
+        </div>
       </div>
     </div>
-    <div class="field" style="margin-top:12px;">
-      <label style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:4px;display:block;">Signatory Full Name</label>
-      <input type="text" name="signature" id="eval-sig-name-input" value="${e(u.name)}" required maxlength="100" class="input" style="width:100%;font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;" placeholder="Enter your full legal name">
+  ` : textarea('Additional Comments','comments','','required minlength="10" placeholder="Provide overall constructive feedback and performance summary for the student..."') + `
+    <div class="eval-signature-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <h4 style="margin:0;font-size:14px;font-weight:700;color:var(--ink);letter-spacing:0.02em;">Digital Signature & Endorsement</h4>
+          <p style="margin:2px 0 0;font-size:12px;color:var(--muted);">Draw your authorized signature below to finalize this performance appraisal.</p>
+        </div>
+        <span class="badge" style="background:var(--burgundy);color:#fff;font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;">✍️ Draw Signature</span>
+      </div>
+      <div id="eval-sig-draw-pane" style="display:block;">
+        <div class="eval-canvas-wrapper">
+          <canvas id="eval-signature-canvas" width="460" height="130"></canvas>
+          <div style="position:absolute;bottom:8px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center;pointer-events:none;">
+            <span style="font-size:10px;color:#94a3b8;font-family:monospace;letter-spacing:0.05em;">✕ SIGN ABOVE THE LINE</span>
+            <span style="font-size:10px;color:#94a3b8;">TOUCH / MOUSE ENABLED</span>
+          </div>
+          <button type="button" id="eval-sig-clear-btn" style="position:absolute;top:8px;right:8px;font-size:11px;background:#f1f5f9;border:1px solid #cbd5e1;padding:3px 8px;border-radius:4px;cursor:pointer;color:#475569;">Clear</button>
+        </div>
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <label style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:4px;display:block;">Signatory Full Name</label>
+        <input type="text" name="signature" id="eval-sig-name-input" value="${e(u.name)}" required maxlength="100" class="input" style="width:100%;font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;" placeholder="Enter your full legal name">
+      </div>
+      <input type="hidden" name="signatureImage" id="eval-sig-image-data" value="">
+      <input type="hidden" name="signatureMode" id="eval-sig-mode" value="draw">
+      <div class="eval-cert-card">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin:0;">
+          <input type="checkbox" name="certified" required style="margin-top:3px;accent-color:var(--burgundy);width:16px;height:16px;cursor:pointer;">
+          <span style="font-size:12px;line-height:1.45;color:var(--ink);">
+            <strong>Supervisor Certification:</strong> I formally certify under penalty of institutional review that this evaluation reflects my genuine assessment of the student's work performance, competency milestones, and attendance.
+          </span>
+        </label>
+      </div>
     </div>
-    <input type="hidden" name="signatureImage" id="eval-sig-image-data" value="">
-    <input type="hidden" name="signatureMode" id="eval-sig-mode" value="draw">
-    <div class="eval-cert-card">
-      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin:0;">
-        <input type="checkbox" name="certified" required style="margin-top:3px;accent-color:var(--burgundy);width:16px;height:16px;cursor:pointer;">
-        <span style="font-size:12px;line-height:1.45;color:var(--ink);">
-          <strong>Supervisor Certification:</strong> I formally certify under penalty of institutional review that this evaluation reflects my genuine assessment of the student's work performance, competency milestones, and attendance.
-        </span>
-      </label>
-    </div>
-  </div>`}`;showModal(a?'Submitted appraisal':'Performance appraisal rubric',body,a?null:async data=>{let application=db.applications.find(a=>a.studentId===id&&a.status==='Accepted');if(!application){application=db.applications.find(a=>a.studentId===id)||{id:crypto.randomUUID(),studentId:id,supervisorId:u.id,jobId:s.company||'OJT-Placement',status:'Accepted',appliedDate:today()};if(!db.applications.some(a=>a.id===application.id))db.applications.push(application);}const ratings=rubric.map((r,i)=>Number(data['rating'+i]));if(ratings.some(n=>!Number.isInteger(n)||n<1||n>5))throw new Error('Complete every rubric criterion (1-5).');if(!data.signature||!data.signature.trim())throw new Error('Please provide your signatory name.');const avgScore=Number((ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1));const sigImage=data.signatureImage||'';const appraisalRecord={id:crypto.randomUUID(),applicationId:application.id,studentId:id,supervisorId:u.id,ratings,score:avgScore,comments:data.comments,signature:data.signature.trim(),signatureImage:sigImage,date:today()};try{const uuidRegex=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;const validAppId=uuidRegex.test(application.id)?application.id:null;const {error,data:inserted}=await supabase.from('appraisals').insert({application_id:validAppId,student_id:id,supervisor_id:u.id,ratings,score:avgScore,comments:data.comments,signature:data.signature.trim()}).select();if(!error&&inserted&&inserted.length>0){appraisalRecord.id=inserted[0].id;}}catch(err){console.warn('Supabase appraisal sync (stored locally):',err);}const existingIdx=db.appraisals.findIndex(a=>a.studentId===id);if(existingIdx!==-1){db.appraisals[existingIdx]=appraisalRecord;}else{db.appraisals.push(appraisalRecord);}save();notify(id,'System','Your performance appraisal is ready','View your supervisor\'s rubric scores and feedback.');audit('Submitted appraisal for '+s.name);toast('Evaluation submitted. The student can now view it.');},'Submit evaluation');setTimeout(()=>{if(typeof window.initEvalSignaturePad==='function')window.initEvalSignaturePad();},60);}
+  `}`;
+
+  showModal(a ? 'Submitted Appraisal' : 'Performance Appraisal Rubric', body, a ? null : async data => {
+    let application = db.applications.find(a => a.studentId === id && a.status === 'Accepted');
+    if (!application) {
+      application = db.applications.find(a => a.studentId === id) || {
+        id: crypto.randomUUID(),
+        studentId: id,
+        supervisorId: u.id,
+        jobId: s.company || 'OJT-Placement',
+        status: 'Accepted',
+        appliedDate: today()
+      };
+      if (!db.applications.some(a => a.id === application.id)) db.applications.push(application);
+    }
+    const ratings = scorableCriteria.map((_, i) => data['rating_' + i]);
+    const numRatings = ratings.map(r => Number(r)).filter(n => Number.isInteger(n) && n >= 1 && n <= 5);
+    const avgScore = numRatings.length > 0 ? Number((numRatings.reduce((x, y) => x + y, 0) / numRatings.length).toFixed(1)) : 5.0;
+
+    if (!data.signature || !data.signature.trim()) throw new Error('Please provide your signatory name.');
+    const sigImage = data.signatureImage || '';
+    const appraisalRecord = {
+      id: crypto.randomUUID(),
+      applicationId: application.id,
+      studentId: id,
+      supervisorId: u.id,
+      ratings,
+      score: avgScore,
+      comments: data.comments,
+      signature: data.signature.trim(),
+      signatureImage: sigImage,
+      date: today()
+    };
+    try {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const validAppId = uuidRegex.test(application.id) ? application.id : null;
+      const { error, data: inserted } = await supabase.from('appraisals').insert({
+        application_id: validAppId,
+        student_id: id,
+        supervisor_id: u.id,
+        ratings,
+        score: avgScore,
+        comments: data.comments,
+        signature: data.signature.trim()
+      }).select();
+      if (!error && inserted && inserted.length > 0) appraisalRecord.id = inserted[0].id;
+    } catch(err) {
+      console.warn('Supabase appraisal sync (stored locally):', err);
+    }
+    const existingIdx = db.appraisals.findIndex(a => a.studentId === id);
+    if (existingIdx !== -1) db.appraisals[existingIdx] = appraisalRecord;
+    else db.appraisals.push(appraisalRecord);
+    save();
+    notify(id, 'System', 'Your performance appraisal is ready', 'View your supervisor\'s rubric scores and feedback.');
+    audit('Submitted appraisal for ' + s.name);
+    toast('Evaluation submitted. The student can now view it.');
+  }, 'Submit Evaluation');
+  setTimeout(() => { if (typeof window.initEvalSignaturePad === 'function') window.initEvalSignaturePad(); }, 60);
+}
 function editHTE(id){const h=db.htes.find(h=>h.id===id);showModal(h?'Host training establishment':'Add new HTE',field('Company name','name','text',h?.name||'','required maxlength="120"')+field('Industry','industry','text',h?.industry||'','required maxlength="100"')+field('Location','location','text',h?.location||'','required maxlength="100"')+field('Contact email','contact','email',h?.contact||'','required')+field('MOA expiry','expiry','date',h?.expiry||'','required')+select('Accreditation status','status',['Pending','Accredited','Expired'],h?.status||'Pending'),data=>{if(data.status==='Accredited'&&new Date(data.expiry+'T23:59:59')<new Date())throw new Error('An accredited HTE must have a valid MOA expiry date.');if(db.htes.some(other=>other.id!==id&&other.name.toLowerCase()===data.name.toLowerCase()))throw new Error('This HTE already exists.');if(h){const oldName=h.name;Object.assign(h,data);db.jobs.filter(j=>j.company===oldName).forEach(j=>j.company=data.name);db.users.filter(u=>u.company===oldName).forEach(u=>u.company=data.name);}else db.htes.push({id:crypto.randomUUID(),...data});audit('Updated HTE accreditation: '+data.name);save();toast('HTE details saved.');},'Save HTE');}
 function userNew(){showModal('Provision a user',select('Role','role',roles)+field('Full name','name','text','','required maxlength="100"')+field('SR code / faculty ID / corporate email','identifier','text','','required maxlength="100"')+field('Email address','email','email','','required')+select('Course (students)','course',['BSIT'])+field('Company (supervisors)','company','text','','maxlength="120"')+'<p class="note">The demo creates a pending account. Production provisioning must send a server-generated activation link.</p>',data=>{if(db.users.some(u=>u.identifier.toLowerCase()===data.identifier.toLowerCase()||u.email.toLowerCase()===data.email.toLowerCase()))throw new Error('The identifier or email is already registered.');if(data.role==='Supervisor'&&!data.company.trim())throw new Error('A supervisor needs a company.');db.users.push({id:crypto.randomUUID(),...data,status:'Pending_Activation',badge:'Pre_Seeded',baseHours:0,requiredHours:db.program.requiredHours,supervisorId:null});audit('Provisioned '+data.role+' account for '+data.name);save();toast('Pending demo account created.');},'Create pending account');}
 async function importUsers() {
@@ -837,7 +965,20 @@ async function action(name,id,el){
     case 'toggle-password':{const byId=el.dataset.id?document.getElementById(el.dataset.id):null;const input=(byId instanceof HTMLInputElement?byId:null)||el.parentElement?.querySelector('input')||$('#password');if(!input)return;input.type=input.type==='password'?'text':'password';el.setAttribute('aria-label',input.type==='password'?'Show password':'Hide password');return;}
     case 'forgot': recoveryActive = false; location.hash = '/forgot'; return;
       case 'login': recoveryActive = false; location.hash = '/login'; return;
-    case 'logout':logout();return;
+    case 'logout':
+      showModal('Confirm Sign Out', `
+        <div style="text-align:center; padding:12px 0 16px;">
+          <div style="width:48px;height:48px;border-radius:50%;background:#fee2e2;color:#b91c1c;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M9 3H3v18h6 M9 12h12 m-5-5 5 5-5 5"/></svg>
+          </div>
+          <h3 style="margin:0 0 8px;font-size:18px;font-weight:600;color:var(--ink);">Are you sure you want to sign out?</h3>
+          <p style="margin:0;font-size:14px;color:var(--slate);">You will be returned to the public portal. Make sure you have saved any current work.</p>
+        </div>
+      `, () => {
+        logout();
+        toast('You have successfully signed out.');
+      }, 'Sign Out');
+      return;
     case 'switch-role':showModal('Explore another portal',`<p>Use the sample accounts to see how the three roles work together.</p><div class="stack">${roles.map(r=>button('Open '+r+' demo','demo',r,'secondary full')).join('')}</div>`);return;
     case 'menu':togglePortalMenu();return;
     case 'filter':view.filter=id;render();return;

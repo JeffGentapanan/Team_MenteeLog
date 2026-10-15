@@ -1,7 +1,7 @@
 import { supabase } from '../supabaseClient.js';
 import { syncRemote } from './sync.js';
 import {approvedHours,visibleStudents,visibleLogs,visibleApplications,applyToJob,validateUpload,csvText} from './domain.js';
-import {rubric,roles,navigation} from './data.js';
+import {rubric,roles,navigation,evaluationCriteria,scorableCriteria} from './data.js';
 import {signatureFields,bindSignature,signatureImage} from './signature.js';
 import {reviewBatch,assignPlacement,reportRows,reportFile,candidateImport} from './portal-domain.js';
 
@@ -45,7 +45,100 @@ export function createPortalViews(c){
   const incident=(id)=>{const i=c.visibleIncidents(u()).find(i=>i.id===id);if(!i)throw new Error('This case is outside your portal scope.');return i;};
   const job=(id)=>{const j=db().jobs.find(j=>j.id===id&&(u().role!=='Supervisor'||j.supervisorId===u().id)&&(u().role!=='Student'||j.status==='Active'));if(!j)throw new Error('Position unavailable.');return j;};
   const descriptors=['Executes project milestones efficiently with minimal oversight. Maintains industry standards in code and documentation.','Adheres closely to the OJT schedule and communicates attendance changes.','Demonstrates capacity to propose engineering solutions and seeks feedback.','Proficiency in tools, software, and technical tasks.','Expresses complex software concepts clearly to non-technical stakeholders.'];
-  function appraisalResult(s,a){return `<div class="ref-appraisal-result"><div class="ref-identity"><div class="row"><span class="avatar">${e(s.name.split(' ').map(n=>n[0]).slice(0,2).join(''))}</span><div><h2>${e(s.name)}</h2><small>${e(s.course)} · ${e(s.company||'OJT Student')}</small></div></div><div class="ref-overall"><small>OVERALL SCORE</small><strong>${a?a.score.toFixed(1)+'<small> / 5.0</small>':'Pending'}</strong></div></div><h2 class="ref-rubric-heading">Performance Appraisal Rubric</h2>`+(a?rubric.map((label,i)=>panel('',`<div class="ref-rubric"><div><h3>${i+1}. ${e(label)}</h3><p>${descriptors[i]}</p></div><div class="ref-scores">${[1,2,3,4,5].map(n=>`<span class="${a.ratings[i]===n?'selected':''}">${n}</span>`).join('')}</div></div>`)).join('')+panel('Supervisor Comments & Official Endorsement',`<blockquote>${e(a.comments)}</blockquote><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);"><div><small style="display:block;color:var(--muted);font-size:12px;">Evaluated & Signed by</small><strong style="color:var(--ink);">${e(c.student(a.supervisorId)?.name||a.signature||'Supervisor')}</strong><span style="display:block;font-size:11px;color:var(--muted);">${e(s.company||'Industry Partner')} · ${date(a.date||today())}</span></div><div style="text-align:right;">${a.signatureImage?`<img src="${a.signatureImage}" alt="Supervisor Digital Signature" style="max-height:50px;display:block;margin-left:auto;">`:`<div style="font-family:'Brush Script MT','Caveat',cursive,sans-serif;font-size:22px;color:var(--burgundy);">${e(a.signature)}</div>`}<span class="badge" style="background:#e6f4ea;color:#137333;border:1px solid #ceead6;font-size:10px;padding:2px 8px;border-radius:4px;">✓ Authenticated Digital Signature</span></div></div>`):panel('',empty('Your appraisal is not available yet','Your supervisor’s submitted rubric and comments will appear here.')) )+'</div>';}
+  function appraisalResult(s,a){
+    const legendHtml = `
+      <div style="background: var(--cream, #fbf8f2); padding: 14px 18px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--line, #e2e8f0);">
+        <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 700; color: var(--ink);">Evaluation Instrument</h4>
+        <div style="font-size: 12px; color: var(--slate); line-height: 1.6;">
+          <strong style="color:var(--ink);">Legend:</strong>
+          <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#fee2e2; border-radius:4px; font-weight:600; color:#991b1b;">1 - Very Poor</span>
+          <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#ffedd5; border-radius:4px; font-weight:600; color:#9a3412;">2 - Poor</span>
+          <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#fef9c3; border-radius:4px; font-weight:600; color:#854d0e;">3 - Average</span>
+          <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#dbeafe; border-radius:4px; font-weight:600; color:#1e40af;">4 - Good</span>
+          <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#dcfce7; border-radius:4px; font-weight:600; color:#166534;">5 - Very Good</span>
+          <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#f1f5f9; border-radius:4px; font-weight:600; color:#475569;">NA - Not Applicable</span>
+        </div>
+      </div>
+    `;
+
+    let scorableIdx = 0;
+    const tableRows = evaluationCriteria.map(item => {
+      if (item.isHeader) {
+        return `<tr style="background:#f8fafc; font-weight:700; border-top:1px solid var(--line); border-bottom:1px solid var(--line);"><td colspan="7" style="padding:10px 14px; font-size:13px; color:var(--ink);"><strong>${item.num}. ${e(item.title)}</strong></td></tr>`;
+      }
+      const idx = scorableIdx++;
+      const ratingVal = a?.ratings?.[idx];
+      return `
+        <tr style="border-bottom:1px solid var(--line);">
+          <td style="padding:10px 14px; font-size:13px; line-height:1.45; ${item.sub ? 'padding-left:28px;' : 'font-weight:500;'}">
+            ${item.num ? `<strong>${item.num}.</strong> ` : `<span style="font-weight:600; color:var(--burgundy);">${item.sub})</span> `}${e(item.title)}
+          </td>
+          ${[1, 2, 3, 4, 5, 'NA'].map(val => {
+            const isSelected = String(ratingVal) === String(val);
+            return `
+              <td style="padding:8px 4px; text-align:center; vertical-align:middle; width:44px;">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; font-size:12px; font-weight:700; ${isSelected ? 'background:var(--burgundy); color:#fff; box-shadow:0 2px 6px rgba(88,17,26,0.3);' : 'color:var(--slate); opacity:0.35;'}">
+                  ${isSelected ? (val === 'NA' ? 'NA' : val) : '·'}
+                </span>
+              </td>
+            `;
+          }).join('')}
+        </tr>
+      `;
+    }).join('');
+
+    const tableHtml = `
+      <div class="table-wrap" style="overflow-x:auto; margin-bottom:16px; border:1px solid var(--line); border-radius:8px;">
+        <table style="width:100%; border-collapse:collapse; min-width:620px;">
+          <thead>
+            <tr style="background:#f1f5f9; border-bottom:2px solid var(--line); text-align:left;">
+              <th style="padding:10px 14px; font-weight:600; font-size:13px; color:var(--ink);">Criteria</th>
+              <th style="padding:10px 4px; text-align:center; width:44px; font-size:12px; color:var(--ink);">1</th>
+              <th style="padding:10px 4px; text-align:center; width:44px; font-size:12px; color:var(--ink);">2</th>
+              <th style="padding:10px 4px; text-align:center; width:44px; font-size:12px; color:var(--ink);">3</th>
+              <th style="padding:10px 4px; text-align:center; width:44px; font-size:12px; color:var(--ink);">4</th>
+              <th style="padding:10px 4px; text-align:center; width:44px; font-size:12px; color:var(--ink);">5</th>
+              <th style="padding:10px 4px; text-align:center; width:48px; font-size:12px; color:var(--ink);">NA</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    return `<div class="ref-appraisal-result">
+      <div class="ref-identity">
+        <div class="row">
+          <span class="avatar">${e(s.name.split(' ').map(n=>n[0]).slice(0,2).join(''))}</span>
+          <div>
+            <h2>${e(s.name)}</h2>
+            <small>${e(s.course)} · ${e(s.company||'OJT Student')}</small>
+          </div>
+        </div>
+        <div class="ref-overall">
+          <small>OVERALL SCORE</small>
+          <strong>${a ? a.score.toFixed(1) + '<small> / 5.0</small>' : 'Pending'}</strong>
+        </div>
+      </div>
+      <h2 class="ref-rubric-heading">Performance Appraisal Rubric</h2>` +
+      (a ? panel('', legendHtml + tableHtml) + panel('Additional Comments & Official Endorsement', `
+        <blockquote>${e(a.comments)}</blockquote>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);">
+          <div>
+            <small style="display:block;color:var(--muted);font-size:12px;">Evaluated & Signed by</small>
+            <strong style="color:var(--ink);">${e(c.student(a.supervisorId)?.name||a.signature||'Supervisor')}</strong>
+            <span style="display:block;font-size:11px;color:var(--muted);">${e(s.company||'Industry Partner')} · ${date(a.date||today())}</span>
+          </div>
+          <div style="text-align:right;">
+            ${a.signatureImage?`<img src="${a.signatureImage}" alt="Supervisor Digital Signature" style="max-height:50px;display:block;margin-left:auto;">`:`<div style="font-family:'Brush Script MT','Caveat',cursive,sans-serif;font-size:22px;color:var(--burgundy);">${e(a.signature)}</div>`}
+            <span class="badge" style="background:#e6f4ea;color:#137333;border:1px solid #ceead6;font-size:10px;padding:2px 8px;border-radius:4px;">✓ Authenticated Digital Signature</span>
+          </div>
+        </div>
+      `) : panel('', empty('Your appraisal is not available yet', 'Your supervisor\'s submitted rubric and comments will appear here.'))) +
+    '</div>';
+  }
 
 
   function jobs(){const {sub,id}=r();const isStudent=u().role==='Student';
@@ -341,9 +434,107 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
     if(sub==='edit'){student(id);return back('candidates')+heading('Placement & Clearance','Update the intern’s assignment and verify completion requirements.')+legacyForm(()=>c.legacy.studentDetail(id));}
     if(sub==='assign'||sub==='batch'){const list=sub==='assign'&&id?[student(id)]:unassigned;return back('candidates')+heading(sub==='batch'?'Bulk Student Assignment':'Assign Student Placement','Choose an active position and assign eligible, unplaced students.')+panel('Placement Details',form(`<div class="grid-2">${sel('HTE / internship position','jobId',db().jobs.filter(j=>j.status==='Active'&&j.supervisorId&&j.slots>0).map(j=>[j.id,j.company+' - '+j.title+' ('+j.slots+' slots)']))}${f('Required OJT hours','requiredHours','number',db().program.requiredHours,'required min="1" max="2000"')}</div>${list.length?table(['Select','Student','SR Code','Program','Status'],list.map(s=>`<tr><td><input aria-label="Select ${e(s.name)}" type="checkbox" name="students" value="${e(s.id)}" ${sub==='assign'?'checked':''}></td><td>${e(s.name)}</td><td>${e(s.identifier)}</td><td>${e(s.course)}</td><td>${badge(s.badge)}</td></tr>`)):empty('All Students Placed','There are currently no unassigned students in this cohort waiting for placement.')}`, async (v,el)=>{const ids=new FormData(el).getAll('students');const placed=assignPlacement(db(),u(),ids,v.jobId,v.requiredHours);await c.legacy.assignPlacementRemote(placed, db().jobs.find(j=>j.id===v.jobId), v.requiredHours);placed.forEach(s=>c.notify(s.id,'Application_Status','Placement confirmed','You are assigned to '+s.company+'.'));finish(placed.length+' students assigned successfully.','candidates');},'Assign Placement'));}
     if(sub==='exports')return back('candidates')+heading('Reports & Exports','Generate placement reports and review previously generated documents.')+`<div class="grid-2">${['deployment','completion','hte','compliance'].map(type=>panel(reportNames[type],`<p>Generate a report from the current cohort records.</p><div style="margin-top: 16px;">${nav('Generate Report','reports','configure',type,'')}</div>`)).join('')}</div>`+`<div style="margin-top: 24px;">${nav('Exported Files Repository','reports','history')}</div>`;
-    const availableViews=[['','Table View'],['grid','Grid View'],['companies','HTE Breakdown'],['unassigned',`Unassigned Pool (${unassigned.length})`],['cohort','Cohort Overview'],['exports','Reports & Exports'],['performance','Track Performance']];
+    if(!co){
+      // SUPERVISOR PORTAL: Combined Candidate Review & Application Review
+      const apps = visibleApplications(db(), u());
+      const underReviewCount = apps.filter(a => ['Pending', 'Under_Review'].includes(a.status)).length;
+      const acceptedCount = apps.filter(a => a.status === 'Accepted').length;
+      const supervisorIntro = heading('Candidate Review & Applications', 'Review candidate applications for your posted slots and manage assigned interns.') +
+        tabs([['', `Assigned Interns (${all.length})`], ['applications', `Application Review (${apps.length})`]]) +
+        stats([['Assigned Interns', all.length, 'users'], ['Total Applications', apps.length, 'file'], ['Under Review', underReviewCount, 'clock'], ['Accepted', acceptedCount, 'check']]);
+
+      if(sub === 'applications') {
+        const fStatus = c.view.filter || 'All';
+        const filteredApps = apps.filter(a => {
+          if (fStatus === 'Under_Review') return ['Pending', 'Under_Review'].includes(a.status);
+          if (fStatus === 'All') return true;
+          return a.status === fStatus;
+        }).filter(a => {
+          const st = c.student(a.studentId);
+          const j = db().jobs.find(j => j.id === a.jobId);
+          return match(st?.name, st?.identifier, st?.course, j?.title, j?.company);
+        });
+
+        const appToolbar = '<div class="ref-attendance-toolbar" style="margin-top:16px; margin-bottom:12px;">' +
+          search('Search applicant name, SR code, or job…') +
+          filter([['All','All Applications'],['Under_Review','Under Review (' + underReviewCount + ')'],['Accepted','Accepted (' + acceptedCount + ')'],['Rejected','Rejected']]) +
+          '</div>';
+
+        const appRows = filteredApps.map(a => {
+          const st = c.student(a.studentId);
+          const j = db().jobs.find(j => j.id === a.jobId);
+          const displayStatus = (a.status === 'Pending') ? 'Under_Review' : a.status;
+          return `<tr>
+            <td>${person(st)}</td>
+            <td>${e(st?.course || 'BSIT')}</td>
+            <td><strong>${e(j?.title || 'OJT Placement')}</strong><br><small>${e(j?.company || u().company)}</small></td>
+            <td>${date(a.date)}</td>
+            <td>${a.resumeId ? b('Preview','ref-file-preview',a.resumeId,'secondary small','file') : '<span class="muted small">—</span>'}</td>
+            <td>${badge(displayStatus)}</td>
+            <td>${b('Review Application','application-detail',a.id,'small')}</td>
+          </tr>`;
+        });
+
+        const appPanel = panel('Candidate Applications', filteredApps.length ? table(['Applicant','Course','Applied Position','Applied Date','Resume','Status','Action'], appRows) : empty('No applications found', 'No candidate applications match the selected filter.'));
+        return supervisorIntro + appToolbar + appPanel;
+      }
+
+      // sub === '' (Assigned Interns)
+      const rosterRows = all.filter(s => match(s.name, s.identifier, s.course, s.company)).map(s => {
+        return `<tr>
+          <td><strong>${e(s.name)}</strong><br><small>${e(s.identifier)}</small></td>
+          <td>${e(s.course)}</td>
+          <td>${progress(approvedHours(db(), s.id), s.requiredHours)}</td>
+          <td>${approvedHours(db(), s.id)} / ${s.requiredHours} hrs</td>
+          <td>${badge(s.badge)}</td>
+          <td><div class="row" style="gap:4px;">${nav('View Profile','candidates','profile',s.id,'secondary small')}${nav('Log Sheets','dtr','profile',s.id,'secondary small')}</div></td>
+        </tr>`;
+      });
+
+      return supervisorIntro + search('Search assigned interns…') + panel('Assigned Interns Directory', all.length ? table(['Intern Name','Program','Hours Progress','Hours Rendered','Status','Action'], rosterRows) : empty('No assigned interns', 'When candidates are accepted and assigned, they will appear in your intern roster.'));
+    }
+
+    // COORDINATOR PORTAL: Student Placement (Combined with Application Review)
+    const allApps = db().applications || [];
+    const underReviewCount = allApps.filter(a => ['Pending', 'Under_Review'].includes(a.status)).length;
+    const availableViews=[['','Placement Directory'],['applications',`Application Review (${allApps.length})`],['unassigned',`Unassigned Pool (${unassigned.length})`],['companies','HTE Breakdown'],['cohort','Cohort Overview'],['exports','Reports & Exports'],['performance','Track Performance']];
     const list=(sub==='unassigned'?unassigned:all).filter(s=>match(s.name,s.identifier,s.course,s.company)&&(sub==='company'?s.company===decodeURIComponent(id):true));
-    const intro=heading(co?'Student Placement Directory':'Candidate Review & Roster','Manage student placements, company assignments, and training progress.',co?b('Bulk Import CSV','import-users','','secondary','upload')+nav('Bulk Assignment','candidates','batch')+nav('+ Assign Placement','candidates','assign','',''):c.link('Application Review','applications'))+(co?tabs(availableViews):'')+stats([['Total Placed',all.filter(s=>s.company).length],['Pending Placement',unassigned.length],['Active Internships',all.filter(s=>s.company&&s.badge!=='Cleared').length],['Completed',all.filter(s=>s.badge==='Cleared').length]]);
+    const intro=heading('Student Placement Directory','Manage student placements, company assignments, application reviews, and training progress.',b('Bulk Import CSV','import-users','','secondary','upload')+nav('Bulk Assignment','candidates','batch')+nav('+ Assign Placement','candidates','assign','',''))+(tabs(availableViews))+stats([['Total Placed',all.filter(s=>s.company).length],['Applications',allApps.length],['Pending Placement',unassigned.length],['Active Internships',all.filter(s=>s.company&&s.badge!=='Cleared').length]]);
+
+    if(sub==='applications'){
+      const fStatus = c.view.filter || 'All';
+      const filteredApps = allApps.filter(a => {
+        if (fStatus === 'Under_Review') return ['Pending', 'Under_Review'].includes(a.status);
+        if (fStatus === 'All') return true;
+        return a.status === fStatus;
+      }).filter(a => {
+        const st = c.student(a.studentId);
+        const j = db().jobs.find(j => j.id === a.jobId);
+        return match(st?.name, st?.identifier, st?.course, j?.title, j?.company);
+      });
+
+      const appToolbar = '<div class="ref-attendance-toolbar" style="margin-top:16px; margin-bottom:12px;">' +
+        search('Search student, SR code, or company…') +
+        filter([['All','All Applications'],['Under_Review','Under Review (' + underReviewCount + ')'],['Accepted','Accepted'],['Rejected','Rejected']]) +
+        '</div>';
+
+      const appRows = filteredApps.map(a => {
+        const st = c.student(a.studentId);
+        const j = db().jobs.find(j => j.id === a.jobId);
+        const displayStatus = (a.status === 'Pending') ? 'Under_Review' : a.status;
+        return `<tr>
+          <td><strong>${e(st?.name)}</strong><br><small>${e(st?.identifier)}</small></td>
+          <td>${e(st?.course || 'BSIT')}</td>
+          <td><strong>${e(j?.company || 'Unassigned')}</strong><br><small>${e(j?.title || 'Position')}</small></td>
+          <td>${date(a.date)}</td>
+          <td>${a.resumeId ? b('Preview','ref-file-preview',a.resumeId,'secondary small','file') : '<span class="muted small">—</span>'}</td>
+          <td>${badge(displayStatus)}</td>
+          <td>${b('Review / Endorse','application-detail',a.id,'secondary small')}</td>
+        </tr>`;
+      });
+
+      return intro + appToolbar + panel('Student Applications Overview', filteredApps.length ? table(['Student','Program','Host Establishment / Position','Applied Date','Resume','Status','Action'], appRows) : empty('No applications found', 'No student applications match this filter.'));
+    }
     if(sub==='companies')return intro+(db().htes.length?`<div class="grid-3">${db().htes.map(h=>{const interns=all.filter(s=>(s.company || '').trim().toLowerCase() === (h.name || '').trim().toLowerCase()),slots=db().jobs.filter(j=>j.company===h.name&&j.status==='Active').reduce((n,j)=>n+j.slots,0);return panel(e(h.name),`<p>${e(h.industry)}</p><dl class="ref-facts"><dt>Active interns</dt><dd>${interns.length}</dd><dt>Available slots</dt><dd>${slots}</dd><dt>Status</dt><dd>${badge(h.status)}</dd></dl>${b('View Company Interns','ref-company-interns',h.name,'secondary full')}`);}).join('')}</div>`:panel('',empty('No HTE partners registered','Partner companies will appear here once accredited.')));
     if(sub==='grid')return intro+search('Search student, SR code or HTE')+(list.length?`<div class="grid-3">${list.map(s=>panel('',`${person(s)}<p>${badge(s.badge)}</p><div class="ref-readonly"><strong>${e(s.company||'Unassigned')}</strong><p>${e(c.student(s.supervisorId)?.name||'No supervisor assigned')}</p></div><p>Hours Rendered</p>${progress(approvedHours(db(),s.id),s.requiredHours)}${nav('Open Intern Profile','candidates','profile',s.id,'secondary full')}`)).join('')}</div>`:panel('',empty('No students found','No student records match this filter or search query.')));
     if(sub==='performance')return intro+panel('Track Student Performance',search('Search student or HTE')+(list.length?table(['Student','HTE','Hours Rendered','Supervisor Rating','Attendance','Status','Action'],list.map(s=>{const a=db().appraisals.find(a=>a.studentId===s.id),logs=db().logs.filter(l=>l.studentId===s.id);return `<tr><td>${person(s)}</td><td>${e(s.company||'Unassigned')}</td><td>${approvedHours(db(),s.id)} / ${s.requiredHours}</td><td>${a?a.score.toFixed(1)+' / 5':'Pending'}</td><td>${logs.filter(l=>l.status==='Approved').length} approved entries</td><td>${badge(s.badge)}</td><td>${nav('View Details','candidates','profile',s.id,'secondary small')}</td></tr>`;})):empty('No students found','No student records match this search query.')));
@@ -372,8 +563,19 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
         const list=logs.filter(l=>match(c.student(l.studentId)?.name,l.date,l.task)&&(c.view.filter==='All'||l.status===c.view.filter));
         const pending=logs.filter(l=>l.status==='Pending');
         
-        const headerHtml = heading('Intern Attendance & DTR Management','Review, approve, and sign off on daily time records.') + 
-            '<div class="row between" style="background: var(--cream); padding: 16px; border-radius: var(--radius); margin-bottom: 24px;"><div class="row"><strong>On-Site Time-In Verification</strong><p class="small muted mb0">You are the designated timekeeper. Clock interns in when they arrive.</p></div></div>';
+        const myStudents = visibleStudents(db(), u());
+        const totalRendered = myStudents.reduce((sum, s) => sum + approvedHours(db(), s.id), 0);
+        const totalRequired = myStudents.reduce((sum, s) => sum + (s.requiredHours || 500), 0);
+        const totalRemaining = Math.max(0, totalRequired - totalRendered);
+        const supervisorStatsHtml = stats([
+          ['Total Rendered Hours', totalRendered + ' Hours', 'clock'],
+          ['Required Hours', totalRequired + ' Hours', 'target'],
+          ['Remaining Hours', totalRemaining + ' Hours', 'chart']
+        ]);
+
+        const headerHtml = heading('Intern Log Sheets & Summary','Review, verify, and approve daily log sheets and task summaries submitted by assigned interns.') + 
+            supervisorStatsHtml +
+            '<div class="row between" style="background: var(--cream); padding: 16px; border-radius: var(--radius); margin-bottom: 24px; margin-top: 16px;"><div class="row"><strong>On-Site Time-In Verification</strong><p class="small muted mb0">You are the designated timekeeper. Clock interns in when they arrive.</p></div></div>';
             
         const rosterPanel = (() => {
             let students = visibleStudents(db(), u());
@@ -473,7 +675,15 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
     </div>`;
 
 
-    return heading('Daily Time Record Hub','Log your attendance, submit daily accomplishments, and review your time records.',b('Export Log Summary','ref-export-modal','','secondary','download')) + customStatsHtml + `<div class="reference-dtr ref-student-dtr"><div>
+    const studentDisclaimerHtml = `<div class="ref-alert" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:14px 18px; border-radius:10px; margin-bottom:20px; display:flex; align-items:flex-start; gap:12px; font-size:13.5px; line-height:1.5;">
+      <svg viewBox="0 0 24 24" style="width:20px;height:20px;min-width:20px;fill:none;stroke:#2563eb;stroke-width:2;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <div>
+        <strong style="display:block; font-size:14px; margin-bottom:3px; color:#1e3a8a;">Official OJT Policy & Timekeeping Notice</strong>
+        The time recorded within this portal represents <strong>estimated student tracking hours</strong> for academic monitoring and daily logbook documentation. In accordance with university OJT policy, students are still required to officially clock in and clock out using the timekeeping facilities (biometric, RFID, or logbook) at their assigned Host Training Establishment (HTE) in order to obtain the mandatory official Certificate of Completion.
+      </div>
+    </div>`;
+
+    return heading('Attendance & DTR','Log your attendance, submit daily accomplishments, and review your time records.',b('Export Log Summary','ref-export-modal','','secondary','download')) + studentDisclaimerHtml + customStatsHtml + `<div class="reference-dtr ref-student-dtr"><div>
 
 ${panel('', `
   <div style="text-align: center; padding: 12px 0; position: relative;">
