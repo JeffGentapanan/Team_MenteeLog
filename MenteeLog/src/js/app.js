@@ -526,7 +526,7 @@ function matches(...texts){return texts.join(' ').toLowerCase().includes(view.se
 function applicationsPage(u){const apps=visibleApplications(db,u).filter(a=>(view.filter==='All'||a.status===view.filter)&&matches(student(a.studentId)?.name,job(a.jobId)?.title,job(a.jobId)?.company));return heading(u.role==='Student'?'My Applications Tracker':'Application Review',u.role==='Student'?'Track your internship applications and placement progress.':'Review and endorse your candidates.')+(u.role==='Student'?'':tabs(['All','Pending','Under_Review','Accepted','Rejected'])+searchToolbar('Search applications'))+(apps.length?apps.map(a=>{const j=job(a.jobId),level=a.status==='Accepted'?3:a.status==='Under_Review'?1:0;return '<section class="card application-card"><div class="row between"><div><h2>'+e(j?.company)+' - '+e(j?.title)+'</h2><small>Applied '+date(a.date)+(u.role==='Student'?'':' · '+e(student(a.studentId)?.name))+'</small></div>'+badge(a.status)+'</div><div class="application-path">'+['Submitted','Under Review','Interview','Accepted'].map((label,i)=>(i?'<span class="application-line"></span>':'')+'<div class="application-step '+(i<=level?'done':'')+'"><i></i><span>'+label+'</span></div>').join('')+'</div><div class="mt16">'+button(u.role==='Student'?'View Details':'Review Application','application-detail',a.id,'secondary small')+'</div></section>';}).join(''):empty('No applications in this view','Your application progress will appear here.'));}
 function netElapsed(sh){if(!sh||!sh.clockIn)return '00:00:00';const now=Date.now();const cIn=new Date(sh.clockIn).getTime();if(isNaN(cIn))return '00:00:00';let ms=now-cIn;ms-=(sh.breakMinutes||0)*60000;const b=sh.onBreak||sh.justification;if(b){const bTime=new Date(b).getTime();if(!isNaN(bTime))ms-=(now-bTime);}const s=Math.max(0,Math.floor(ms/1000));return [Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(v=>String(v).padStart(2,'0')).join(':');}
 function elapsed(start){if(!start)return '00:00:00';const t=new Date(start).getTime();if(isNaN(t))return '00:00:00';const seconds=Math.max(0,Math.floor((Date.now()-t)/1000));return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(v=>String(v).padStart(2,'0')).join(':');}
-function dtrTable(logs,u){const breakCol=l=>l.breakMinutes?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#854d0e;"><span style="width:6px;height:6px;border-radius:50%;background:#854d0e;"></span>'+l.breakMinutes+'m</span>':'<span style="font-size:12px;color:var(--slate);">—</span>';return logs.length?table([...(u.role==='Student'?[]:['Intern']),'Date','Clock In','Clock Out','Break',...(u.role==='Student'?['Total']:['Task Summary']),'GPS','Status','Action'],logs.slice().reverse().map(l=>'<tr>'+(u.role==='Student'?'':'<td><strong>'+e(student(l.studentId)?.name)+'</strong></td>')+'<td>'+date(l.date)+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+breakCol(l)+'</td><td>'+(u.role==='Student'?l.hours.toFixed(2)+'h':'<span class="task-excerpt">'+e(l.task)+'</span>')+'</td><td>'+badge(l.gps?'Captured':'Unavailable')+'</td><td>'+badge(l.status)+'</td><td>'+button(u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status)?'Review':'View','log-detail',l.id,'secondary small')+'</td></tr>')):empty('No DTR entries here','Submitted attendance records will appear here.');}
+function dtrTable(logs,u){const breakCol=l=>l.breakMinutes?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#854d0e;"><span style="width:6px;height:6px;border-radius:50%;background:#854d0e;"></span>'+l.breakMinutes+'m</span>':'<span style="font-size:12px;color:var(--slate);">—</span>';return logs.length?table([...(u.role==='Student'?[]:['Intern']),'Date','Clock In','Clock Out','Break',...(u.role==='Student'?['Total']:['Task Summary']),'GPS','Status','Action'],logs.slice().reverse().map(l=>'<tr>'+(u.role==='Student'?'':'<td><strong>'+e(student(l.studentId)?.name)+'</strong></td>')+'<td>'+date(l.date)+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+breakCol(l)+'</td><td>'+(u.role==='Student'?(Number(l.hours)||0).toFixed(2)+'h':'<span class="task-excerpt">'+e(l.task)+'</span>')+'</td><td>'+badge(l.gps?'Captured':'Unavailable')+'</td><td>'+badge(l.status)+'</td><td>'+button(u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status)?'Review':'View','log-detail',l.id,'secondary small')+'</td></tr>')):empty('No DTR entries here','Submitted attendance records will appear here.');}
 function visibleIncidents(u){return db.incidents.filter(i=>u.role==='Coordinator'||(u.role==='Student'?i.studentId===u.id:i.supervisorId===u.id));}
 function profilePage(u){return `${heading('Profile Setup','Keep your contact and internship details up to date.')}<div class="narrow-wide"><section class="card sand"><div class="row">${person(u)}</div><hr class="hr"><p class="small">${e(u.identifier)}</p>${badge(u.role)} ${badge(u.badge||u.status)}<p class="small muted mt16">Your role and academic identifier are managed by your coordinator.</p></section><section class="card"><h2>Personal information</h2><form id="profile-form">${field('Full name','name','text',u.name,'required maxlength="100" autocomplete="name"')}${field('Email address','email','email',u.email,'required autocomplete="email"')}${field('Phone number (optional)','phone','tel',u.phone||'','maxlength="30" autocomplete="tel"')}${textarea('About you (optional)','bio',u.bio||'','')}<p class="form-error" role="alert"></p><button class="btn" type="submit">Save profile</button></form></section></div>`;}
 function safeMeetingURL(value){const url=new URL(value);if(url.protocol!=='https:'||!['meet.google.com','teams.microsoft.com','teams.live.com','zoom.us','www.zoom.us'].some(h=>url.hostname===h||url.hostname.endsWith('.'+h)))throw new Error('Use an HTTPS Google Meet, Microsoft Teams, or Zoom link.');return url.href;}
@@ -577,17 +577,20 @@ async function studentClockIn() {
 
   try {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (uuidRegex.test(studentId)) {
-      const { data: ins, error } = await supabase.from('logs').insert({
-        student_id: studentId,
-        supervisor_id: supId,
+    const validStudentUuid = uuidRegex.test(studentId) ? studentId : (uuidRegex.test(u.id) ? u.id : null);
+    const validSupervisorUuid = (supId && uuidRegex.test(supId)) ? supId : null;
+    if (validStudentUuid) {
+      const payload = {
+        student_id: validStudentUuid,
         date: today(),
         clock_in: nowIso,
         break_minutes: 0,
         hours: 0,
         status: 'Running',
         gps: true
-      }).select();
+      };
+      if (validSupervisorUuid) payload.supervisor_id = validSupervisorUuid;
+      const { data: ins, error } = await supabase.from('logs').insert(payload).select();
       if (!error && ins && ins.length > 0) {
         shiftObj.id = ins[0].id;
         logRecord.id = ins[0].id;
@@ -749,19 +752,28 @@ async function studentClockOut() {
 
     try {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const validStudentUuid = uuidRegex.test(studentId) ? studentId : (uuidRegex.test(u.id) ? u.id : null);
+      const validSupervisorUuid = (supId && uuidRegex.test(supId)) ? supId : null;
+
+      let savedRemote = false;
       if (uuidRegex.test(targetLog.id)) {
-        await supabase.from('logs').update({
+        const { data: updated, error: updErr } = await supabase.from('logs').update({
           clock_out: clockOutTime,
           break_minutes: breakMins,
           hours: hrs,
           task: data.task,
           status: 'Pending',
           justification: ''
-        }).eq('id', targetLog.id);
-      } else if (uuidRegex.test(studentId)) {
-        const { data: ins } = await supabase.from('logs').insert({
-          student_id: studentId,
-          supervisor_id: supId,
+        }).eq('id', targetLog.id).select();
+
+        if (!updErr && updated && updated.length > 0) {
+          savedRemote = true;
+        }
+      }
+
+      if (!savedRemote && validStudentUuid) {
+        const insertPayload = {
+          student_id: validStudentUuid,
           date: today(),
           clock_in: clockInTime,
           clock_out: clockOutTime,
@@ -770,12 +782,23 @@ async function studentClockOut() {
           task: data.task,
           status: 'Pending',
           gps: true
-        }).select();
-        if (ins && ins.length > 0) targetLog.id = ins[0].id;
+        };
+        if (validSupervisorUuid) insertPayload.supervisor_id = validSupervisorUuid;
+        const { data: ins, error: insErr } = await supabase.from('logs').insert(insertPayload).select();
+        if (!insErr && ins && ins.length > 0) {
+          targetLog.id = ins[0].id;
+          savedRemote = true;
+        } else if (insErr) {
+          console.warn('Supabase insert clock-out error:', insErr.message);
+        }
       }
       await syncRemote(supabase, db);
     } catch(err) {
       console.warn('Supabase clock out log error:', err);
+    }
+
+    if (!db.logs.some(l => l.id === targetLog.id)) {
+      db.logs.unshift(targetLog);
     }
 
     if (supId) {

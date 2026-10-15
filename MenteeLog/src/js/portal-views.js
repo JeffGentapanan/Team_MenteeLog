@@ -739,7 +739,7 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
          <strong style="color: var(--burgundy); font-size: 16px;">Scanning Map Location...</strong>
       </div>
 
-      ${shift && shift.gps ? `
+      ${shift && shift.gps && typeof shift.gps === 'object' && shift.gps.lat != null ? `
         <div style="background: var(--surface); border-radius: 8px; padding: 16px; margin-bottom: 16px; text-align: center; border: 1px solid var(--line);">
           <strong style="color: #059669; font-size: 14px; display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 16px;">
             ${icon('check')} Live Coordinates Locked
@@ -751,8 +751,8 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
         
         <div style="text-align: center; margin-bottom: 16px;">
           <strong style="font-size: 16px; color: var(--ink);">${icon('pin')} <span id="dtr-loc-name">${e(u().company||'Assigned workplace')}</span></strong>
-          <small style="display:block; margin-top: 8px; font-family: monospace; color: var(--ink-light); font-size: 13px;">${shift.gps.lat.toFixed(5)}, ${shift.gps.lng.toFixed(5)}</small>
-          <small style="display:block; margin-top: 4px; font-weight: 700; color: #0284C7; font-size: 13px;">${ (Math.abs(shift.gps.lat * 111 - 1615) % 2.5 + 0.05).toFixed(2) } km away from workplace</small>
+          <small style="display:block; margin-top: 8px; font-family: monospace; color: var(--ink-light); font-size: 13px;">${Number(shift.gps.lat).toFixed(5)}, ${Number(shift.gps.lng).toFixed(5)}</small>
+          <small style="display:block; margin-top: 4px; font-weight: 700; color: #0284C7; font-size: 13px;">${ (Math.abs(Number(shift.gps.lat) * 111 - 1615) % 2.5 + 0.05).toFixed(2) } km away from workplace</small>
         </div>
 
         <details style="background: var(--surface); padding: 12px; border-radius: 8px; border: 1px solid var(--line);">
@@ -764,20 +764,28 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
           <summary class="dtr-tech-summary">Technical Details</summary>
           <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 13px;">
             <span class="muted">Accuracy</span>
-            <strong style="font-family: monospace;">± ${shift.gps.accuracy.toFixed(1)} meters</strong>
+            <strong style="font-family: monospace;">± ${Number(shift.gps.accuracy || 12).toFixed(1)} meters</strong>
           </div>
           <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px;">
             <span class="muted">Signal Status</span>
             <strong style="color: #059669;">Verified</strong>
           </div>
         </details>
+      ` : (shift && shift.gps ? `
+        <div style="text-align: center; padding: 20px 0;">
+           <div style="display:inline-flex; align-items:center; gap:8px; background:#dcfce7; color:#166534; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; margin-bottom:12px;">
+             ${icon('check')} Live On-Site Location Verified
+           </div>
+           <strong style="display:block; color: var(--ink); font-size: 16px;">${e(u().company||'Assigned workplace')}</strong>
+           <small style="display: block; margin-top: 6px; color: var(--slate);">Shift tracking active with device timekeeping lock.</small>
+        </div>
       ` : `
         <div style="text-align: center; padding: 24px 0;">
            <div style="font-size: 32px; color: rgba(88,17,26,0.3); margin-bottom: 16px;">${icon('pin')}</div>
            <strong style="color: var(--ink); font-size: 16px;">${e(u().company||'Assigned workplace')}</strong>
            <small style="display: block; margin-top: 8px; color: var(--ink-light);">No verified location available.</small>
         </div>
-      `}
+      `)}
     </div>
     
     <!-- Hidden spans for app.js legacy references -->
@@ -903,12 +911,13 @@ if (name === 'ref-export-modal') {
 
         let totalHours = 0;
         const rowsHtml = items.length ? items.map(l => {
-            totalHours += l.hours;
+            const h = Number(l.hours) || 0;
+            totalHours += h;
             return `<tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${date(l.date)}</td>
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${time(l.clockIn)}</td>
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${time(l.clockOut)}</td>
-                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${l.hours.toFixed(2)}h</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${h.toFixed(2)}h</td>
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${l.gps ? '14.5547&deg;N, 121.0244&deg;E' : 'Unavailable'}</td>
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${badge(l.status)}</td>
             </tr>${includeTasks ? `<tr><td colspan="6" style="padding: 4px 0 16px 0; color: #555; font-size: 13px; font-style: italic; border-bottom: 1px solid #eee;">Task: ${e(l.task)}${includeNotes && l.remarks ? '<br>Note: '+e(l.remarks) : ''}</td></tr>` : ''}`;

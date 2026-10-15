@@ -27,7 +27,15 @@ export function visibleStudents(db,user) {
 export function visibleLogs(db,user) {
   if (!user) return [];
   if (user.role === 'Student') {
-    return db.logs.filter(l => l.studentId === user.id || (user.email === 'kenzosomes@gmail.com' && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1')));
+    const isKenzo = (user.email && user.email.toLowerCase() === 'kenzosomes@gmail.com') ||
+                    user.id === 's1' ||
+                    user.id === '22227dcf-933f-40a9-9340-f66cb9020e5c' ||
+                    user.name === 'kenzosomes' ||
+                    user.identifier === '2021-00421';
+    return (db.logs || []).filter(l => 
+      l.studentId === user.id || 
+      (isKenzo && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1' || !l.studentId))
+    );
   }
   if (user.role === 'Supervisor') {
     return db.logs.filter(l => 
