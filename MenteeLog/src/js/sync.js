@@ -97,8 +97,8 @@ export async function syncRemote(supabase, db) {
       date: l.date,
       clockIn: l.clock_in,
       clockOut: l.clock_out,
-      breakMinutes: l.break_minutes,
-      hours: l.hours,
+      breakMinutes: Number(l.break_minutes) || 0,
+      hours: Number(l.hours) || 0,
       status: l.status,
       task: l.task,
       gps: l.gps,
@@ -195,10 +195,17 @@ export async function syncRemote(supabase, db) {
       stu.badge = 'Active';
       stu.requiredHours = stu.requiredHours || 500;
       if (!stu.baseHours && stu.baseHours !== 0) stu.baseHours = 120;
-      const stuLogs = newLogs.filter(l => l.studentId === stu.id);
-      if (stuLogs.length === 0 && db.logs) {
-        const existingStuLogs = db.logs.filter(l => l.studentId === stu.id || (stu.email === 'kenzosomes@gmail.com' && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1')));
-        if (existingStuLogs.length > 0) newLogs.push(...existingStuLogs.map(l => ({ ...l, studentId: stu.id })));
+      if (db.logs && db.logs.length > 0) {
+        for (const localLog of db.logs) {
+          const remoteMatch = newLogs.find(nl => nl.id === localLog.id || (nl.studentId === localLog.studentId && nl.date === localLog.date && nl.clockIn === localLog.clockIn));
+          if (!remoteMatch) {
+            newLogs.unshift(localLog);
+          } else {
+            if (localLog.clockOut && !remoteMatch.clockOut) {
+              Object.assign(remoteMatch, localLog);
+            }
+          }
+        }
       }
       let supJob = newJobs.find(j => j.supervisorId === sup.id);
       if (!supJob) {

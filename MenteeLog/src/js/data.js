@@ -1,9 +1,57 @@
 export const roles = ['Student', 'Supervisor', 'Coordinator'];
-export const rubric = ['Work quality & accuracy', 'Attendance & punctuality', 'Initiative & proactivity', 'Technical skills', 'Communication skills'];
+
+export const evaluationCriteria = [
+  { id: 'c1', num: '1', title: 'Demonstrated the ability to integrate theories learned in school and the practical work in your company.' },
+  { id: 'c2', num: '2', title: 'Demonstrated evidence of growth as a result of his apprenticeship.' },
+  { id: 'c3', num: '3', title: 'Demonstrated assertiveness and cleaving to new endeavors in the course of his training.' },
+  { id: 'c4_header', num: '4', title: 'Demonstrated a knowledge of work done.', isHeader: true },
+  { id: 'c4a', sub: 'a', title: 'Identified the different phases of the work.' },
+  { id: 'c4b', sub: 'b', title: 'Is work neat and accurate regardless of its quantity.' },
+  { id: 'c4c', sub: 'c', title: 'Demonstrated the ability to grasp instructions speedily, accept criticisms gracefully, and show enthusiasm towards learning.' },
+  { id: 'c5_header', num: '5', title: 'Demonstrated promptness and active attendance.', isHeader: true },
+  { id: 'c5a', sub: 'a', title: 'Did assigned tasks and handing them in on time.' },
+  { id: 'c5b', sub: 'b', title: 'Contributed, developed and implemented new ideas and/or methods.' },
+  { id: 'c6_header', num: '6', title: 'Demonstrated skills in interpersonal relations.', isHeader: true },
+  { id: 'c6a', sub: 'a', title: 'Showed tact and concern in dealing with supervisors and peers.' },
+  { id: 'c6b', sub: 'b', title: 'Practical courtesy and professional ethics.' },
+  { id: 'c7_header', num: '7', title: 'Demonstrated overall performance proficiency.', isHeader: true },
+  { id: 'c7a', sub: 'a', title: 'Showed sound judgment and common sense on the job.' },
+  { id: 'c7b', sub: 'b', title: 'Showed the ability to learn new duties - quick in absorbing and retaining knowledge as well as learning, and adjusting to changes.' },
+  { id: 'c7c', sub: 'c', title: 'Demonstrated communication skills such as the ability to express oneself in both written and oral work as well as the ability to listen and emphasize.' },
+  { id: 'c7d', sub: 'd', title: 'Showed dependability through the ability to deal with emergency situations, the ability to keep confidential matters, and stay disciplined in the implementation of duties as called for on the job.' }
+];
+
+export const scorableCriteria = evaluationCriteria.filter(c => !c.isHeader);
+export const rubric = scorableCriteria.map(c => (c.num ? `${c.num}. ${c.title}` : `   ${c.sub}) ${c.title}`));
+
 export const navigation = {
-  Student: [['dashboard','Dashboard','grid'],['jobs','OJT Placement','briefcase'],['applications','My Applications','file'],['appraisals','Performance appraisal','star'],['dtr','DTR Hub','clock'],['documents','Documents','folder'],['incidents','Incident Reports','alert']],
-  Supervisor: [['dashboard','Dashboard','grid'],['candidates','Candidate Review','users'],['applications','Application Review','file'],['dtr','Attendance & DTR','clock'],['appraisals','Performance Appraisal','file'],['jobs','Slot Management','briefcase'],['incidents','Incident Reports','alert']],
-  Coordinator: [['dashboard','Dashboard','grid'],['jobs','Job Management','briefcase'],['applications','Application Review','file'],['hte','HTE Accreditation','building'],['candidates','Student Placement','users'],['dtr','DTR Compliance','file'],['reports','Report Generation','chart'],['users','User Management','users'],['incidents','Incident Reports','alert']]
+  Student: [
+    ['dashboard','Dashboard','grid'],
+    ['jobs','OJT Placement','briefcase'],
+    ['applications','My Applications','file'],
+    ['appraisals','Performance Appraisal','star'],
+    ['dtr','Attendance & DTR','clock'],
+    ['documents','Documents','folder'],
+    ['incidents','Incident Reports','alert']
+  ],
+  Supervisor: [
+    ['dashboard','Dashboard','grid'],
+    ['candidates','Candidate Review','users'],
+    ['dtr','Log Sheets & Summary','clock'],
+    ['appraisals','Performance Appraisal','file'],
+    ['jobs','Slot Management','briefcase'],
+    ['incidents','Incident Reports','alert']
+  ],
+  Coordinator: [
+    ['dashboard','Dashboard','grid'],
+    ['jobs','Job Management','briefcase'],
+    ['hte','HTE Accreditation','building'],
+    ['candidates','Student Placement','users'],
+    ['dtr','DTR Compliance','file'],
+    ['reports','Report Generation','chart'],
+    ['users','User Management','users'],
+    ['incidents','Incident Reports','alert']
+  ]
 };
 export function seedData() {
   return {
