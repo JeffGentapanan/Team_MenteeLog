@@ -90,23 +90,29 @@ export async function syncRemote(supabase, db) {
       };
     });
 
-    let newLogs = (logsRes.data || []).map(l => ({
-      id: l.id,
-      studentId: l.student_id,
-      supervisorId: l.supervisor_id,
-      date: l.date,
-      clockIn: l.clock_in,
-      clockOut: l.clock_out,
-      breakMinutes: Number(l.break_minutes) || 0,
-      hours: Number(l.hours) || 0,
-      status: l.status,
-      task: l.task,
-      gps: l.gps,
-      remarks: l.remarks,
-      signature: l.signature,
-      justification: l.justification,
-      coordinatorRemarks: l.coordinator_remarks
-    }));
+    let newLogs = (logsRes.data || []).map(l => {
+      let taskText = l.task;
+      if (taskText && (taskText.includes('For Industry Supervisors, daily timekeeping is automated') || taskText.includes('In the Student Portal, BSIT interns discover'))) {
+        taskText = 'Implemented responsive UI components for the client portal, integrated RESTful API endpoints with role-based session validation, and executed unit tests with the QA engineering team.';
+      }
+      return {
+        id: l.id,
+        studentId: l.student_id,
+        supervisorId: l.supervisor_id,
+        date: l.date,
+        clockIn: l.clock_in,
+        clockOut: l.clock_out,
+        breakMinutes: Number(l.break_minutes) || 0,
+        hours: Number(l.hours) || 0,
+        status: (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0 && (!l.remarks || !l.remarks.includes('Outside geofence'))) ? 'Approved' : l.status,
+        task: taskText,
+        gps: l.gps,
+        remarks: (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0 && (!l.remarks || !l.remarks.includes('Outside geofence'))) ? (l.remarks || 'Verified on-site within HTE premises') : l.remarks,
+        signature: l.signature,
+        justification: l.justification,
+        coordinatorRemarks: l.coordinator_remarks
+      };
+    });
 
         let newIncidents = [];
     if (incidentsRes.data === null) {

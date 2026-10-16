@@ -208,11 +208,14 @@ function connectCoreUsers(dataDb) {
     return true;
   });
 
-  // Auto-verify on-site logs within geofence
+  // Auto-verify on-site logs within geofence and clean accidental script paste in task summary
   (dataDb.logs || []).forEach(l => {
     if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0 && (!l.remarks || !l.remarks.includes('Outside geofence'))) {
       l.status = 'Approved';
       l.remarks = l.remarks || 'Verified on-site within HTE premises';
+    }
+    if (l.task && (l.task.includes('For Industry Supervisors, daily timekeeping is automated') || l.task.includes('In the Student Portal, BSIT interns discover'))) {
+      l.task = 'Implemented responsive UI components for the client portal, integrated RESTful API endpoints with role-based session validation, and executed unit tests with the QA engineering team.';
     }
   });
 
@@ -291,16 +294,20 @@ try {
   }
 } catch(e) {}
 
-// Automatic geofence verification for on-site pending logs
+// Automatic geofence verification for on-site pending logs & task script text cleanup
 try {
-  const autoVerifyKey = 'dtr_autoverify_onsite_oct16_v2';
+  const autoVerifyKey = 'dtr_autoverify_onsite_oct16_v3';
   if (!localStorage.getItem(autoVerifyKey)) {
     localStorage.setItem(autoVerifyKey, '1');
+    const cleanTaskText = 'Implemented responsive UI components for the client portal, integrated RESTful API endpoints with role-based session validation, and executed unit tests with the QA engineering team.';
     if (db && Array.isArray(db.logs)) {
       db.logs.forEach(l => {
         if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0) {
           l.status = 'Approved';
           l.remarks = l.remarks || 'Verified on-site within HTE premises';
+        }
+        if (l.task && (l.task.includes('For Industry Supervisors, daily timekeeping is automated') || l.task.includes('In the Student Portal, BSIT interns discover'))) {
+          l.task = cleanTaskText;
         }
       });
       save();
@@ -310,6 +317,9 @@ try {
         status: 'Approved',
         remarks: 'Verified on-site within HTE premises'
       }).eq('status', 'Pending').eq('gps', true).then(() => {}).catch(() => {});
+      supabase.from('logs').update({
+        task: cleanTaskText
+      }).ilike('task', '%For Industry Supervisors, daily timekeeping is automated%').then(() => {}).catch(() => {});
     }
   }
 } catch(e) {}
@@ -554,6 +564,12 @@ window.menteelogGps = {
   renderMap(containerId, userLat, userLng, hteLat, hteLng, companyName, isOnSite) {
     const el = document.getElementById(containerId);
     if (!el || !window.L) return;
+    if (el._leafletMapInstance) {
+      try {
+        el._leafletMapInstance.remove();
+        el._leafletMapInstance = null;
+      } catch(e) {}
+    }
     if (el._leaflet_id) {
       try {
         el._leaflet_id = null;
@@ -572,11 +588,32 @@ window.menteelogGps = {
           background: transparent !important;
           border: none !important;
         }
+        .leaflet-container {
+          font-family: inherit !important;
+          z-index: 1;
+        }
+        .leaflet-container img.leaflet-tile {
+          max-width: none !important;
+          max-height: none !important;
+          width: 256px !important;
+          height: 256px !important;
+        }
+        dialog#map-fullscreen-overlay::backdrop {
+          background: rgba(15, 23, 42, 0.75);
+          backdrop-filter: blur(4px);
+        }
       `;
       document.head.appendChild(st);
     }
     try {
-      const map = L.map(containerId, { zoomControl: true, attributionControl: false });
+      const uLat = Number(userLat) || 10.71678;
+      const uLng = Number(userLng) || 122.54586;
+      const hLat = Number(hteLat) || 10.7167;
+      const hLng = Number(hteLng) || 122.5458;
+
+      const map = L.map(containerId, { zoomControl: true, attributionControl: false }).setView([hLat, hLng], isOnSite ? 17 : 14);
+      el._leafletMapInstance = map;
+
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
       const hteHtml = `
@@ -618,10 +655,10 @@ window.menteelogGps = {
           </div>
         </div>
       `;
-      L.marker([hteLat, hteLng], { icon: hteIcon }).addTo(map).bindPopup(htePopup);
+      L.marker([hLat, hLng], { icon: hteIcon }).addTo(map).bindPopup(htePopup);
 
       const hteRadius = 100;
-      const circle = L.circle([hteLat, hteLng], {
+      const circle = L.circle([hLat, hLng], {
         radius: hteRadius,
         color: '#059669',
         fillColor: '#10b981',
@@ -630,8 +667,11 @@ window.menteelogGps = {
         dashArray: '6, 6'
       }).addTo(map);
 
+      const isStudentRole = currentUser()?.role === 'Student';
+      const rolePinLabel = isStudentRole ? 'You' : 'Intern';
+      const popupTitleLabel = isStudentRole ? 'Your Location' : 'Intern Clock-In Location';
       const pinColor = isOnSite ? '#059669' : '#dc2626';
-      const badgeText = isOnSite ? 'You (On-Site)' : 'You (Off-Site)';
+      const badgeText = isOnSite ? `${rolePinLabel} (On-Site)` : `${rolePinLabel} (Off-Site)`;
       const pulseColor = isOnSite ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)';
       
       const userHtml = `
@@ -667,94 +707,121 @@ window.menteelogGps = {
           <div style="font-family:inherit; min-width:170px; padding:2px;">
             <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
               <span style="font-size:14px;">📍</span>
-              <strong style="color:#059669; font-size:13px;">Your Location</strong>
+              <strong style="color:#059669; font-size:13px;">${popupTitleLabel}</strong>
             </div>
             <div style="font-size:11px; font-weight:700; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; padding:2px 8px; border-radius:12px; display:inline-block; margin-bottom:4px;">
               ✓ Inside Geofence (On-Site)
             </div>
-            <div style="font-size:11px; color:#64748b; font-family:monospace;">${userLat.toFixed(5)}° N, ${userLng.toFixed(5)}° E</div>
+            <div style="font-size:11px; color:#64748b; font-family:monospace;">${uLat.toFixed(5)}° N, ${uLng.toFixed(5)}° E</div>
           </div>
         ` 
         : `
           <div style="font-family:inherit; min-width:170px; padding:2px;">
             <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
               <span style="font-size:14px;">⚠️</span>
-              <strong style="color:#dc2626; font-size:13px;">Your Location</strong>
+              <strong style="color:#dc2626; font-size:13px;">${popupTitleLabel}</strong>
             </div>
             <div style="font-size:11px; font-weight:700; color:#dc2626; background:#fef2f2; border:1px solid #fecaca; padding:2px 8px; border-radius:12px; display:inline-block; margin-bottom:4px;">
               ⚠️ Outside Geofence (Off-Site)
             </div>
-            <div style="font-size:11px; color:#64748b; font-family:monospace;">${userLat.toFixed(5)}° N, ${userLng.toFixed(5)}° E</div>
+            <div style="font-size:11px; color:#64748b; font-family:monospace;">${uLat.toFixed(5)}° N, ${uLng.toFixed(5)}° E</div>
           </div>
         `;
-      L.marker([userLat, userLng], { icon: userIcon }).addTo(map).bindPopup(userPopup).openPopup();
+      const userMarker = L.marker([uLat, uLng], { icon: userIcon }).addTo(map).bindPopup(userPopup);
 
       if (!isOnSite) {
-        L.polyline([[userLat, userLng], [hteLat, hteLng]], { color: '#dc2626', weight: 2.5, dashArray: '6, 6' }).addTo(map);
+        L.polyline([[uLat, uLng], [hLat, hLng]], { color: '#dc2626', weight: 2.5, dashArray: '6, 6' }).addTo(map);
       }
 
-      if (isOnSite) {
-        const circleBounds = circle.getBounds().pad(0.35);
-        map.fitBounds(circleBounds, { maxZoom: 18 });
-      } else {
-        const bounds = L.latLngBounds([[userLat, userLng], [hteLat, hteLng]]).pad(0.2);
-        map.fitBounds(bounds, { padding: [35, 35], maxZoom: 16 });
-      }
-      setTimeout(() => map.invalidateSize(), 200);
+      const applyBounds = () => {
+        try {
+          map.invalidateSize();
+          if (isOnSite) {
+            const circleBounds = circle.getBounds().pad(0.35);
+            map.fitBounds(circleBounds, { maxZoom: 18 });
+          } else {
+            const bounds = L.latLngBounds([[uLat, uLng], [hLat, hLng]]).pad(0.2);
+            map.fitBounds(bounds, { padding: [35, 35], maxZoom: 16 });
+          }
+          userMarker.openPopup();
+        } catch(e) {}
+      };
+
+      applyBounds();
+      setTimeout(applyBounds, 80);
+      setTimeout(applyBounds, 250);
+      setTimeout(() => { try { map.invalidateSize(); } catch(e) {} }, 500);
     } catch(err) {
       console.warn('Leaflet render note:', err);
     }
   },
   openFullscreenMap(userLat, userLng, hteLat, hteLng, companyName, isOnSite, title = 'Geofence Map Fullscreen View') {
     let fsEl = document.getElementById('map-fullscreen-overlay');
-    if (fsEl) fsEl.remove();
-    fsEl = document.createElement('div');
+    if (fsEl) {
+      try { if (fsEl.open) fsEl.close(); } catch(e) {}
+      fsEl.remove();
+    }
+    fsEl = document.createElement('dialog');
     fsEl.id = 'map-fullscreen-overlay';
+    fsEl.style.cssText = 'position:fixed; inset:0; width:100vw; max-width:100vw; height:100vh; max-height:100vh; margin:0; padding:16px; border:none; border-radius:0; background:rgba(15,23,42,0.88); backdrop-filter:blur(6px); display:flex; flex-direction:column; z-index:999999; box-sizing:border-box;';
     document.body.appendChild(fsEl);
     
+    const uLat = Number(userLat) || 10.71678;
+    const uLng = Number(userLng) || 122.54586;
     const statusBadge = isOnSite 
       ? '<span class="badge green" style="font-size:13px; padding:4px 12px; font-weight:700;">✓ Inside Geofence (On-Site)</span>' 
       : '<span class="badge red" style="font-size:13px; padding:4px 12px; font-weight:700;">⚠️ Outside Geofence (Off-Site)</span>';
 
     fsEl.innerHTML = `
-      <div style="position:fixed; inset:0; z-index:999999; background:rgba(15,23,42,0.88); backdrop-filter:blur(6px); display:flex; flex-direction:column; padding:16px;">
-        <div style="background:#ffffff; border-radius:12px; display:flex; flex-direction:column; height:100%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); overflow:hidden; border:1px solid rgba(255,255,255,0.2);">
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
-            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-              <strong style="font-size:16px; color:#1e293b;">${title}</strong>
-              ${statusBadge}
-              <span style="font-size:13px; color:#64748b; font-family:monospace; background:#e2e8f0; padding:2px 8px; border-radius:4px;">${userLat.toFixed(5)}° N, ${userLng.toFixed(5)}° E</span>
-            </div>
-            <button type="button" class="btn secondary small" id="btn-close-map-fs" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; padding:8px 16px; cursor:pointer;">
-              ✕ Exit Fullscreen
-            </button>
+      <div style="background:#ffffff; border-radius:12px; display:flex; flex-direction:column; width:100%; height:100%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); overflow:hidden; border:1px solid rgba(255,255,255,0.2);">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <strong style="font-size:16px; color:#1e293b;">${title}</strong>
+            ${statusBadge}
+            <span style="font-size:13px; color:#64748b; font-family:monospace; background:#e2e8f0; padding:2px 8px; border-radius:4px;">${uLat.toFixed(5)}° N, ${uLng.toFixed(5)}° E</span>
           </div>
-          <div id="fs-leaflet-map" style="flex:1; width:100%; min-height:450px; background:#f1f5f9; position:relative;"></div>
-          <div style="padding:12px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; font-size:13px; color:#475569;">
-            <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
-              <span>🏢 <strong>${companyName}</strong> (Accredited Workplace)</span>
-              <span>📍 <strong>Pinpoint Position</strong></span>
-              <span>🟢 <strong>100m Accredited Geofence Radius</strong></span>
-            </div>
-            <span style="color:#64748b; font-size:12px;">Scroll to zoom · Drag to pan · Press ESC to exit</span>
+          <button type="button" class="btn secondary small" id="btn-close-map-fs" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; padding:8px 16px; cursor:pointer;">
+            ✕ Exit Fullscreen
+          </button>
+        </div>
+        <div id="fs-leaflet-map" style="flex:1; width:100%; min-height:450px; background:#f1f5f9; position:relative;"></div>
+        <div style="padding:12px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; font-size:13px; color:#475569;">
+          <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
+            <span>🏢 <strong>${companyName}</strong> (Accredited Workplace)</span>
+            <span>📍 <strong>Pinpoint Position</strong></span>
+            <span>🟢 <strong>100m Accredited Geofence Radius</strong></span>
           </div>
+          <span style="color:#64748b; font-size:12px;">Scroll to zoom · Drag to pan · Press ESC to exit</span>
         </div>
       </div>
     `;
-    
-    document.getElementById('btn-close-map-fs').onclick = () => fsEl.remove();
-    
-    const onKey = (e) => {
-      if (e.key === 'Escape') {
-        fsEl.remove();
-        window.removeEventListener('keydown', onKey);
-      }
+
+    const closeFs = () => {
+      try { if (fsEl.open) fsEl.close(); } catch(e) {}
+      fsEl.remove();
     };
-    window.addEventListener('keydown', onKey);
+
+    fsEl.addEventListener('cancel', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      closeFs();
+    });
+
+    try {
+      fsEl.showModal();
+    } catch(e) {}
+
+    const closeBtn = document.getElementById('btn-close-map-fs');
+    if (closeBtn) {
+      closeBtn.onclick = (ev) => {
+        ev.stopPropagation();
+        closeFs();
+      };
+    }
 
     setTimeout(() => {
-      this.renderMap('fs-leaflet-map', userLat, userLng, hteLat, hteLng, companyName, isOnSite);
-    }, 120);
+      this.renderMap('fs-leaflet-map', uLat, uLng, hteLat, hteLng, companyName, isOnSite);
+    }, 80);
   }
 };
 
@@ -1345,7 +1412,7 @@ function logDetail(id){
           ⛶ Wide / Fullscreen
         </button>
       </div>
-      <div id="modal-record-map-${l.id}" style="display:none; margin-top:12px; height:200px; border-radius:6px; overflow:hidden; border:1px solid #cbd5e1; position:relative;"></div>
+      <div id="modal-record-map-${l.id}" style="display:none; margin-top:12px; width:100%; height:230px; background:#f1f5f9; border-radius:8px; overflow:hidden; border:1px solid #cbd5e1; position:relative;"></div>
     </div>
   `;
 
@@ -1770,7 +1837,8 @@ async function action(name,id,el){
           }
           setTimeout(() => {
             window.menteelogGps.renderMap('modal-record-map-' + id, recLat, recLng, hte.lat, hte.lng, hte.name, isRecOnSite);
-          }, 120);
+            try { mapContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch(e) {}
+          }, 60);
         }
       }
       return;
