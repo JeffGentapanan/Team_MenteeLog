@@ -885,9 +885,7 @@ function landing(){return publicLanding(route().role==='public'?route().page:'ho
 function authPage(mode){return authScreen(mode,authRole,{brand,icon,field,hasRecoverySession: Boolean(recoveryActive || currentUser())});}
 function pageContent(page,u){try{return portals.page(page,u)??({dashboard,applications:applicationsPage,profile:profilePage}[page]||dashboard)(u);}catch(error){return heading('Page unavailable',e(error.message))+link('Back to dashboard','dashboard');}}
 function notificationsMini(u){
-  const allNotes = db.notifications.filter(n => isUserNotif(n, u)).sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
-  const unread = allNotes.filter(n => !n.read);
-  const recent = (unread.length ? unread : allNotes).slice(0, 6);
+  const unread = db.notifications.filter(n => isUserNotif(n, u) && !n.read).sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 6);
   return `
     <div class="drawer-header">
       <h3>
@@ -898,17 +896,18 @@ function notificationsMini(u){
       ${unread.length ? '<button class="text-btn small" data-action="read-all">Mark all read</button>' : ''}
     </div>
     <div class="drawer-notes-list">
-      ${recent.length ? recent.map(n=>`
-        <button type="button" class="notification-card" data-action="read" data-id="${e(n.id)}" style="width:100%;text-align:left;cursor:pointer;display:block;border:1px solid var(--line);background:${n.read ? 'var(--cream)' : 'var(--sand)'};opacity:${n.read ? '0.88' : '1'};transition:background 0.15s ease;">
+      ${unread.length ? unread.map(n=>`
+        <div class="notification-card" style="border:1px solid var(--line);background:var(--sand);transition:background 0.15s ease;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
-            <strong style="color:var(--burgundy);font-size:13px;font-weight:700;">${n.read ? '' : '● '}${e(n.title)}</strong>
+            <button type="button" data-action="read" data-id="${e(n.id)}" style="background:none;border:0;padding:0;text-align:left;cursor:pointer;color:var(--burgundy);font-size:13px;font-weight:700;">● ${e(n.title)}</button>
             <small style="color:var(--muted);font-size:11px;white-space:nowrap;">${date(n.date)}</small>
           </div>
-          <p style="margin:5px 0 6px;font-size:12px;color:var(--ink);line-height:1.45;">${e(n.message)}</p>
-          <div style="display:flex;justify-content:flex-end;align-items:center;">
-            <span style="font-size:11px;font-weight:700;color:var(--burgundy);">Click to open &rarr;</span>
+          <button type="button" data-action="read" data-id="${e(n.id)}" style="background:none;border:0;padding:0;width:100%;text-align:left;cursor:pointer;margin:5px 0 8px;font-size:12px;color:var(--ink);line-height:1.45;display:block;">${e(n.message)}</button>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid rgba(88,17,26,0.1);">
+            <button type="button" class="text-btn small" data-action="dismiss-notif" data-id="${e(n.id)}" style="font-size:11px;padding:0;color:var(--muted);">✓ Mark as read</button>
+            <button type="button" class="text-btn small" data-action="read" data-id="${e(n.id)}" style="font-size:11px;padding:0;font-weight:700;color:var(--burgundy);">Click to open &rarr;</button>
           </div>
-        </button>
+        </div>
       `).join('') : `
         <div class="drawer-empty">
           <div class="drawer-empty-icon">
@@ -918,7 +917,7 @@ function notificationsMini(u){
             </svg>
           </div>
           <p class="drawer-empty-title">You're all caught up!</p>
-          <p class="drawer-empty-sub">No notifications at the moment.</p>
+          <p class="drawer-empty-sub">No unread notifications at the moment.</p>
         </div>
       `}
     </div>
@@ -2024,8 +2023,17 @@ async function action(name,id,el){
       render();
       return;
     }
+    case 'dismiss-notif':{
+      const n=db.notifications.find(n=>n.id===id&&isUserNotif(n,u))||db.notifications.find(n=>n.id===id);
+      if(n){n.read=true;try{localStorage.setItem('menteelog.notif_read.'+n.id,'1');}catch(e){}}
+      save();
+      render();
+      const drawer=$('#notice-drawer');
+      if(drawer)drawer.innerHTML=notificationsMini(u);
+      return;
+    }
     case 'read-all':db.notifications.filter(n=>isUserNotif(n,u)).forEach(n=>{n.read=true;try{localStorage.setItem('menteelog.notif_read.'+n.id,'1');}catch(e){}});toast('All notifications marked as read.');const drawer=$('#notice-drawer');if(drawer)drawer.innerHTML=notificationsMini(u);break;
-    case 'clear-read':db.notifications=db.notifications.filter(n=>!isUserNotif(n,u)||!n.read);toast('Read notifications cleared.');break;
+    case 'clear-read':db.notifications.filter(n=>isUserNotif(n,u)&&n.read).forEach(n=>{try{localStorage.setItem('menteelog.notif_cleared.'+n.id,'1');}catch(e){}});db.notifications=db.notifications.filter(n=>!isUserNotif(n,u)||!n.read);toast('Read notifications cleared.');break;
     case 'job-detail':openJob(id);return;
     case 'tk-terminal':tkTerminal(id);return;
     case 'dummy-action':toast('This is a visual preview. Assign real interns to use this.');return;

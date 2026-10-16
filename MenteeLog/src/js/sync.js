@@ -296,6 +296,12 @@ export async function syncRemote(supabase, db) {
     // Synchronize live actionable notifications across portals for DTR exceptions, Coordinator reviews, and Appraisals
     db.notifications = db.notifications || [];
     const ensureNotif = (notifObj) => {
+      try {
+        if (localStorage.getItem('menteelog.notif_cleared.' + notifObj.id) === '1') {
+          db.notifications = db.notifications.filter(n => n.id !== notifObj.id);
+          return;
+        }
+      } catch(e) {}
       let isRead = false;
       try { isRead = localStorage.getItem('menteelog.notif_read.' + notifObj.id) === '1'; } catch(e) {}
       const existing = db.notifications.find(n => n.id === notifObj.id);
