@@ -446,7 +446,7 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
   function governance(){return governancePages();}
 
   function supervisorDashboard(){
-    const students=visibleStudents(db(),u()),logs=visibleLogs(db(),u()),flaggedCount=logs.filter(l=>['Flagged','Pending'].includes(l.status)).length,verifiedCount=logs.filter(l=>l.status==='Approved').length,evalsDue=students.filter(s=>!db().appraisals.some(a=>a.studentId===s.id)).length;
+    const students=visibleStudents(db(),u()),logs=visibleLogs(db(),u()),flaggedCount=logs.filter(l=>['Flagged','Pending'].includes(l.status)).length,verifiedCount=logs.filter(l=>l.status==='Approved').length,evalsDue=students.filter(s=>approvedHours(db(),s.id)>=(s.requiredHours||500)&&!db().appraisals.some(a=>a.studentId===s.id)).length;
     return heading('Supervisor Dashboard',e(u().company)+' · Automated Geofence Oversight & Intern Evaluation')+
       stats([
         ['Active Interns',students.length,'users'],
@@ -454,14 +454,15 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
         ['Exception Queue (Flagged)',flaggedCount,'alert'],
         ['Evaluations Due',evalsDue,'star']
       ])+
-      panel('',`<div class="row wrap" style="align-items:center; gap:10px;"><strong>Oversight & High-Value Actions:</strong>${nav('Read Task Summaries','dtr','','','small')}${nav('Performance Appraisal Rubric','appraisals','','','secondary small')}${b('+ Add Intern Slot','job-edit','','secondary small')}<span class="push-right">${b('Send Emergency Alert','announcement','','secondary small','alert')}</span></div>`)+
+      panel('',`<div class="row wrap" style="align-items:center; gap:10px;"><strong>Quick Actions:</strong>${nav('Log Sheets & Summary','dtr','','','small')}${b('+ Add Intern Slot','job-edit','','secondary small')}<span class="push-right">${b('Send Emergency Alert','announcement','','secondary small','alert')}</span></div>`)+
       panel('Active Interns — Live Geofence & Progress Overview',students.length?table(['Intern Name','Course','Verified Hours','Progress','Geofence & Shift Status','Actions'],students.map(s=>{
         const isClockedIn = (db().activeShifts||[]).some(sh=>sh.studentId===s.id) || logs.some(l=>l.studentId===s.id&&l.status==='Running') || (db().shift?.studentId===s.id&&!db().shift.clockOut);
         const hasFlagged = logs.some(l=>l.studentId===s.id&&l.status==='Flagged');
+        const hrsDone = approvedHours(db(),s.id) >= (s.requiredHours || 500);
         const statusHtml = isClockedIn
           ? '<span class="badge green">● Active On-Site (Inside 100m Geofence)</span>'
           : (hasFlagged ? '<span class="badge red">⚠️ Exception Flagged</span>' : '<span class="badge green">✓ Auto-Verified On-Site</span>');
-        return `<tr><td>${person({...s,course:''})}</td><td>${e(s.course)}</td><td><strong>${approvedHours(db(),s.id)}</strong> / ${s.requiredHours} hrs</td><td>${progress(approvedHours(db(),s.id),s.requiredHours)}</td><td>${statusHtml}</td><td><div class="row" style="gap:6px;">${nav('Task Logs ›','dtr','profile',s.id,'secondary small')}${nav('Evaluate Rubric','appraisals','evaluate',s.id,'primary small')}</div></td></tr>`;
+        return `<tr><td>${person({...s,course:''})}</td><td>${e(s.course)}</td><td><strong>${approvedHours(db(),s.id)}</strong> / ${s.requiredHours} hrs</td><td>${progress(approvedHours(db(),s.id),s.requiredHours)}</td><td>${statusHtml}</td><td><div class="row" style="gap:6px;">${nav('View Profile','candidates','profile',s.id,'secondary small')}${nav('Task Logs ›','dtr','profile',s.id,'secondary small')}${hrsDone?nav('Evaluate Rubric','appraisals','evaluate',s.id,'primary small'):''}</div></td></tr>`;
       })):empty('No active interns','No students are currently placed under your supervision.'))+
       `<div class="row" style="margin-top: 24px; gap: 12px;">${nav('Candidate Review','candidates','','','secondary small')}${nav('Application Review','applications','','','secondary small')}</div>`;
   }
@@ -622,26 +623,18 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
         const flaggedList=logs.filter(l=>['Flagged','Pending'].includes(l.status));
         
         const myStudents = visibleStudents(db(), u());
-        const totalRendered = myStudents.reduce((sum, s) => sum + approvedHours(db(), s.id), 0);
+        const totalRendered = Number(myStudents.reduce((sum, s) => sum + approvedHours(db(), s.id), 0).toFixed(2));
         const totalRequired = myStudents.reduce((sum, s) => sum + (s.requiredHours || 500), 0);
+        const totalRemaining = Math.max(0, Number((totalRequired - totalRendered).toFixed(2)));
+        const hoursAccomplished = totalRequired > 0 && totalRendered >= totalRequired;
+
         const supervisorStatsHtml = stats([
-          ['Auto-Verified Hours', totalRendered + ' Hours', 'check'],
+          ['Total Rendered Hours', totalRendered + ' Hours', 'check'],
           ['Required Hours', totalRequired + ' Hours', 'target'],
-          ['Exception Queue (Flagged)', flaggedList.length + (flaggedList.length === 1 ? ' Log' : ' Logs'), 'alert']
+          ['Remaining Hours', totalRemaining + ' Hours', 'clock']
         ]);
 
-        const oversightBannerHtml = flaggedList.length === 0 ? `
-          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:14px 18px; margin-top:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-            <div style="display:flex; align-items:center; gap:12px;">
-              <span style="width:34px; height:34px; border-radius:50%; background:#dcfce7; color:#166534; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; flex-shrink:0;">✓</span>
-              <div>
-                <strong style="display:block; font-size:14px; color:#14532d;">Automated Geofence Validation Active — Passive Oversight Mode</strong>
-                <span style="font-size:12.5px; color:#166534;">On-site shifts inside the 100m HTE perimeter are automatically verified and credited immediately. <strong>0 off-site exceptions</strong> require manual review.</span>
-              </div>
-            </div>
-            ${nav('Open Performance Appraisals ›', 'appraisals', '', '', 'secondary small')}
-          </div>
-        ` : `
+        const oversightBannerHtml = flaggedList.length > 0 ? `
           <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:14px 18px; margin-top:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div style="display:flex; align-items:center; gap:12px;">
               <span style="width:34px; height:34px; border-radius:50%; background:#fee2e2; color:#991b1b; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; flex-shrink:0;">!</span>
@@ -651,12 +644,23 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
               </div>
             </div>
           </div>
-        `;
+        ` : (hoursAccomplished ? `
+          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:14px 18px; margin-top:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="width:34px; height:34px; border-radius:50%; background:#dcfce7; color:#166534; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; flex-shrink:0;">✓</span>
+              <div>
+                <strong style="display:block; font-size:14px; color:#14532d;">OJT Hours Accomplished (${totalRendered} / ${totalRequired} Hours) — Ready for Final Evaluation</strong>
+                <span style="font-size:12.5px; color:#166534;">Your assigned intern has completed the required training hours. You may now proceed with the Final Performance Appraisal.</span>
+              </div>
+            </div>
+            ${nav('Open Performance Appraisals ›', 'appraisals', '', '', 'secondary small')}
+          </div>
+        ` : '');
 
-        const headerHtml = heading('Intern Attendance & Task Oversight','Automated 100m geofence validation credits on-site shifts immediately. Read daily task summaries at your convenience or step in by exception for flagged logs.') + 
+        const headerHtml = heading('Log Sheets & Summary','Review auto-verified on-site shifts, daily task accomplishments, and any flagged off-site exceptions.') + 
             supervisorStatsHtml + oversightBannerHtml;
         
-        const toolbarHtml = '<div class="ref-attendance-toolbar" style="margin-top: 12px; margin-bottom: 8px;">' + search('Search intern name, date, or task summary…') + '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; width: 100%;">' + filter([['All','All Shift Logs'],['Approved','✓ Verified On-Site (Auto)'],['Flagged','⚠️ Exception Queue ('+flaggedList.length+')']]) + '</div></div>';
+        const toolbarHtml = '<div class="ref-attendance-toolbar" style="margin-top: 12px; margin-bottom: 8px;">' + search('Search intern name, date, or task summary…') + '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; width: 100%;">' + filter([['All','All Shift Logs'],['Approved','✓ Verified On-Site'],['Flagged','⚠️ Flagged ('+flaggedList.length+')']]) + '</div></div>';
         
         const historyPanel = panel('Verified Shift Logs & Daily Task Summaries', (() => {
             if(!list.length) return empty('No Shift Logs in This View', 'Auto-verified on-site shifts and daily task summaries from your interns appear here.');
