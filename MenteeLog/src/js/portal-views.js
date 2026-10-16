@@ -477,7 +477,148 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
       })):empty('No active interns','No students are currently placed under your supervision.'))+
       `<div class="row" style="margin-top: 24px; gap: 12px;">${nav('Candidate Review','candidates','','','secondary small')}${nav('Application Review','applications','','','secondary small')}</div>`;
   }
-  function studentApplications(){const apps=visibleApplications(db(),u());return heading('My Applications Tracker','Track the status of your internship applications.')+(apps.length?apps.map(a=>{const j=db().jobs.find(j=>j.id===a.jobId),level=a.status==='Accepted'?3:a.status==='Under_Review'?1:0;return `<section class="card application-card"><div class="row between"><div><h2>${e(j?.title)}</h2><p>${e(j?.company)}</p></div>${badge(a.status)}</div><div class="application-path">${['Submitted','Under Review','Interview','Accepted'].map((label,i)=>(i?'<span class="application-line"></span>':'')+`<div class="application-step ${i<=level?'done':''}"><i></i><span>${label}</span></div>`).join('')}</div>${a.note?'<p class="small mt16">'+e(a.note)+'</p>':''}</section>`;}).join(''):panel('',empty('No applications yet','Apply to an accredited internship from the placement directory.')));}
+  function studentApplications(){
+    const apps=visibleApplications(db(),u());
+    const underReviewCount=apps.filter(a=>['Pending','Under_Review'].includes(a.status)).length;
+    const acceptedCount=apps.filter(a=>a.status==='Accepted').length;
+    const summaryStats=stats([
+      ['Total Applications',apps.length,'file'],
+      ['Under Review',underReviewCount,'clock'],
+      ['Accepted Placements',acceptedCount,'check'],
+      ['Deployment Status',acceptedCount>0?'Active Intern':'Pending','briefcase']
+    ]);
+
+    return heading('My Applications Tracker','Track your internship applications, faculty endorsement status, and official HTE placement confirmation.',nav('Browse OJT Directory','jobs','','','secondary small'))+
+      summaryStats+
+      (apps.length?apps.map((a,idx)=>{
+        const j=db().jobs.find(j=>j.id===a.jobId)||{title:'Software Engineer Intern',company:u().company||'Accenture Philippines',location:'Iloilo Business Park, Mandurriao, Iloilo City',department:'Technology & Engineering',skills:'React, Node.js, TypeScript, Cloud Architecture'};
+        const sup=c.student(j?.supervisorId||u().supervisorId);
+        const supName=sup?.name||'Paolo Mendoza';
+        const isAccepted=a.status==='Accepted';
+        const isRejected=a.status==='Rejected';
+        const level=isAccepted?3:a.status==='Under_Review'?2:0;
+        const initials=(j.company||j.title||'ML').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+        const skillsList=(j.skills||'Software Engineering, Web Development, Agile').split(',').map(s=>s.trim()).filter(Boolean);
+        const stages=[
+          {title:'Application Submitted',sub:'Profile & Resume Sent',state:level>=0?'Completed':'Pending'},
+          {title:'Coordinator Endorsement',sub:'Academic Clearance Verified',state:level>=1?'Endorsed':'Pending'},
+          {title:'HTE Screening & Review',sub:'Supervisor Evaluation',state:level>=2?'Reviewed':'Awaiting'},
+          {title:isRejected?'Application Decision':'Official Placement',sub:isRejected?'Slot Filled / Declined':'Deployment Confirmed',state:isAccepted?'Accepted':isRejected?'Rejected':'Pending'}
+        ];
+
+        return `<section class="card" style="padding:0; overflow:hidden; border:1px solid var(--line, #eadfce); border-radius:16px; margin-top:20px; box-shadow:0 6px 20px rgba(88,17,26,0.05);">
+          <!-- Top Accent Bar -->
+          <div style="height:5px; background:${isAccepted?'linear-gradient(90deg, #58111A 0%, #16a34a 100%)':isRejected?'#dc2626':'linear-gradient(90deg, #58111A 0%, #d97706 100%)'};"></div>
+
+          <div style="padding:24px 28px;">
+            <!-- Card Header -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; padding-bottom:20px; border-bottom:1px solid var(--line, #f1e8d8);">
+              <div style="display:flex; align-items:flex-start; gap:16px;">
+                <div style="width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg, #58111A 0%, #7f1d1d 100%); color:#FAF4E8; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; letter-spacing:0.5px; box-shadow:0 4px 12px rgba(88,17,26,0.2); flex-shrink:0;">
+                  ${e(initials)}
+                </div>
+                <div>
+                  <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:4px;">
+                    <h2 style="margin:0; font-size:20px; font-weight:700; color:var(--ink, #1f2937);">${e(j.title)}</h2>
+                    <span style="font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; background:#faf4e8; color:#58111A; border:1px solid #efdfbb;">CHED Accredited · Active MOA</span>
+                  </div>
+                  <p style="margin:0 0 10px; font-size:15px; font-weight:600; color:var(--burgundy, #58111A);">${e(j.company)}</p>
+                  <div style="display:flex; flex-wrap:wrap; gap:16px; font-size:12.5px; color:var(--slate, #64748b);">
+                    <span style="display:inline-flex; align-items:center; gap:5px;">${icon('pin')} ${e(j.location||'Iloilo Business Park, Mandurriao')}</span>
+                    <span style="display:inline-flex; align-items:center; gap:5px;">${icon('briefcase')} ${e(j.department||'Technology & Engineering')}</span>
+                    <span style="display:inline-flex; align-items:center; gap:5px;">${icon('users')} Supervisor: <strong style="color:var(--ink);">${e(supName)}</strong></span>
+                    <span style="display:inline-flex; align-items:center; gap:5px;">${icon('clock')} Applied ${date(a.date||'2026-09-02')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                ${isAccepted
+                  ? `<span style="display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:999px; background:#dcfce7; color:#166534; border:1px solid #86efac; font-size:12.5px; font-weight:800; letter-spacing:0.3px;">✓ ACCEPTED & DEPLOYED</span>`
+                  : badge(a.status)}
+                <span class="small muted" style="font-size:11.5px;">Ref ID: <code>APP-${String(idx+1).padStart(3,'0')}-${e(String(a.id||'892').slice(0,4).toUpperCase())}</code></span>
+              </div>
+            </div>
+
+            <!-- 4-Stage Milestone Pipeline -->
+            <div style="margin:22px 0; background:#fcfaf5; border:1px solid #efe4ce; border-radius:12px; padding:20px 22px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <span style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:#58111A;">Application & Endorsement Pipeline</span>
+                <span style="font-size:12px; font-weight:600; color:${isAccepted?'#166534':'#854d0e'};">${isAccepted?'Stage 4 of 4 · All Milestones Complete':`Stage ${level+1} of 4 In Progress`}</span>
+              </div>
+
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;">
+                ${stages.map((st,i)=>{
+                  const done=i<=level && !isRejected;
+                  const active=i===level && !isAccepted && !isRejected;
+                  return `<div style="position:relative; background:${done?'#ffffff':'#f8f5ee'}; border:1.5px solid ${done?(isAccepted&&i===3?'#86efac':'#d6c4a5'):'#e5dec9'}; border-radius:10px; padding:14px 16px; display:flex; align-items:flex-start; gap:12px; box-shadow:${done?'0 2px 8px rgba(88,17,26,0.05)':'none'};">
+                    <div style="width:30px; height:30px; border-radius:50%; background:${done?(isAccepted&&i===3?'#16a34a':'#58111A'):active?'#d97706':'#e2e8f0'}; color:${done||active?'#ffffff':'#64748b'}; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0;">
+                      ${done?'✓':(i+1)}
+                    </div>
+                    <div style="min-width:0;">
+                      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:${done?(isAccepted&&i===3?'#166534':'#58111A'):'#64748b'}; margin-bottom:2px;">Step ${i+1} · ${e(st.state)}</div>
+                      <strong style="display:block; font-size:13.5px; color:var(--ink, #1f2937); margin-bottom:2px;">${e(st.title)}</strong>
+                      <span style="display:block; font-size:12px; color:var(--slate, #64748b);">${e(st.sub)}</span>
+                    </div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- 2-Column Endorsement Remarks & Deployment Summary -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:20px;">
+              <div style="background:#ffffff; border:1px solid var(--line, #e2e8f0); border-radius:10px; padding:16px 18px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                  <strong style="font-size:13px; color:var(--ink); display:flex; align-items:center; gap:6px;">${icon('check')} Official Endorsement & Review Note</strong>
+                  <span class="badge green" style="font-size:10.5px;">Verified</span>
+                </div>
+                <p style="margin:0 0 14px; font-size:13.5px; color:var(--ink); line-height:1.55; background:#f8fafc; padding:10px 12px; border-left:3px solid #58111A; border-radius:4px;">
+                  "${e(a.note||'Endorsed by faculty coordinator and accepted by company supervisor.')}"
+                </p>
+                <div>
+                  <span style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; color:var(--slate); margin-bottom:6px;">Role Tech Stack & Competencies</span>
+                  <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    ${skillsList.map(sk=>`<span class="ojt-job-skill" style="font-size:11.5px; padding:3px 10px;">${e(sk)}</span>`).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <div style="background:#ffffff; border:1px solid var(--line, #e2e8f0); border-radius:10px; padding:16px 18px;">
+                <strong style="display:block; font-size:13px; color:var(--ink); margin-bottom:10px;">Internship Assignment Specifications</strong>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; font-size:12.5px;">
+                  <div>
+                    <span class="muted" style="display:block; font-size:11px;">REQUIRED OJT HOURS</span>
+                    <strong style="color:var(--ink);">${u().requiredHours||500} Hours (${e(u().course||'BSIT')})</strong>
+                  </div>
+                  <div>
+                    <span class="muted" style="display:block; font-size:11px;">ATTENDANCE MODE</span>
+                    <strong style="color:#166534;">📍 100m GPS Geofence</strong>
+                  </div>
+                  <div>
+                    <span class="muted" style="display:block; font-size:11px;">FACULTY COORDINATOR</span>
+                    <strong style="color:var(--ink);">Dr. Evelyn Ramos</strong>
+                  </div>
+                  <div>
+                    <span class="muted" style="display:block; font-size:11px;">COMPLIANCE STANDARD</span>
+                    <strong style="color:var(--ink);">CHED CMO 104 s. 2017</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer Actions -->
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding-top:16px; border-top:1px dashed var(--line, #e2e8f0);">
+              <span class="small muted">Your verified student profile and clearance documents are linked to this placement.</span>
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                ${j?.id?nav('View Position Details','jobs','detail',j.id,'secondary small'):''}
+                ${nav(' Clearance Documents','documents','','','secondary small')}
+                ${isAccepted?nav('Open Attendance & DTR ›','dtr','','','primary small'):''}
+              </div>
+            </div>
+          </div>
+        </section>`;
+      }).join(''):panel('',empty('No applications yet','Apply to an accredited internship from the placement directory.')));
+  }
 
   function htePages(){
     const {sub,id}=r();if(u().role!=='Coordinator')throw new Error('Coordinator access required.');
