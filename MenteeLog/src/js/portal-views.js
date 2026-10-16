@@ -752,12 +752,40 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
 
   function attendancePages(){const {sub,id}=r(),role=u().role,logs=visibleLogs(db(),u());
     if(sub==='profile'){const s=student(id)||c.student(id)||{name:'kenzosomes',requiredHours:500},items=logs.filter(l=>l.studentId===id),tasks=c.view.tasks;return back('dtr')+heading(e(s.name)+' — Verified DTR & Task Log','Automated geofence-verified attendance records and daily task accomplishments.',`<div style="display:flex; gap:8px;">${b('Export PDF', 'ref-export-dtr', 'pdf', 'secondary', 'download')} ${b('Export CSV', 'ref-export-dtr', 'csv', 'secondary', 'download')}</div>`)+`<div class="ref-identity">${person(s)}${b(tasks?'View Shift Timestamps':'View Full Task Descriptions','ref-task-view','','secondary small')}</div>`+panel('Verified Shift Log Sheets',table(tasks?['Date','Task Description','Verification Status','Oversight']:['Date','Day','Time In','Time Out','Break','Total Hours','Verification Status','Oversight'],items.map(l=>{const stBadge=l.status==='Approved'?'<span class="badge green">✓ Verified On-Site</span>':(l.status==='Flagged'?'<span class="badge red">⚠️ Flagged Exception</span>':badge(l.status));return `<tr><td>${date(l.date)}</td>${tasks?'<td>'+e(l.task)+'</td>':'<td>'+new Date(l.date+'T12:00:00').toLocaleDateString('en',{weekday:'long'})+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+(l.breakMinutes?'<span style="color:#854d0e;">'+l.breakMinutes+'m</span>':'—')+'</td><td>'+l.hours+' hrs</td>'}<td>${stBadge}</td><td>${b('📖 Task & Map','log-detail',l.id,'secondary small')}</td></tr>`;})))+stats([['Auto-Verified Hours',approvedHours(db(),id)+' Hours'],['Required Hours',s.requiredHours+' Hours'],['Remaining Hours',Math.max(0,s.requiredHours-approvedHours(db(),id))+' Hours']]);}
-    if(sub==='review'){if(role!=='Coordinator')throw new Error('Coordinator access required.');const l=logs.find(l=>l.id===id);if(!l)throw new Error('DTR unavailable.');return back('dtr')+heading('Review DTR Entry','Review the original record, supporting justification, and required corrections.')+`<div class="ref-identity">${person(c.student(l.studentId))}${badge(l.status)}</div><div class="grid-2">${panel('Original Record',`<dl class="ref-facts"><dt>Date</dt><dd>${date(l.date)}</dd><dt>Clock In</dt><dd>${time(l.clockIn)}</dd><dt>Clock Out</dt><dd>${time(l.clockOut)}</dd><dt>Break Time</dt><dd>${l.breakMinutes?'<span style="color:#854d0e;">'+l.breakMinutes+' minutes</span>':'None'}</dd><dt>Hours</dt><dd>${l.hours}</dd></dl><h3>Task Summary</h3><p>${e(l.task)}</p>`)}${panel('Justification & Review',`<p>${e(l.justification||'No justification submitted.')}</p><p>${e(l.remarks||'No supervisor remarks.')}</p><p>GPS: ${l.gps?'Captured; server verification pending':'Unavailable'}</p><div style="margin-top:14px;">${b('🗺️ Inspect Clock-In Map Pin','log-detail',l.id,'primary small')}</div>`)}</div>`+panel('Compliance Review',form(sel('Compliance status','status',['Flagged','Pending'],l.status==='Pending'?'Pending':'Flagged')+ta('Coordinator remarks','remarks',l.coordinatorRemarks||'','required minlength="10"'),v=>{(async () => {
+    if(sub==='review'){
+      if(role!=='Coordinator')throw new Error('Coordinator access required.');
+      const l=logs.find(l=>l.id===id);
+      if(!l)throw new Error('DTR unavailable.');
+      const stu = c.student(l.studentId) || student(l.studentId) || { name: 'kenzosomes', company: 'Accenture Philippines' };
+      const hte = (window.menteelogGps && window.menteelogGps.getHte(stu?.company || 'Accenture Philippines')) || { lat: 10.7167, lng: 122.5458, name: 'Accenture Philippines' };
+      const isRecOnSite = l.status === 'Approved' || Boolean(l.remarks && l.remarks.includes('Verified on-site'));
+      let recLat = hte.lat + 0.00008;
+      let recLng = hte.lng + 0.00006;
+      if (l.remarks) {
+        const m = l.remarks.match(/(\d+\.\d+)°?[NS]?,\s*(\d+\.\d+)°?[EW]?/);
+        if (m) {
+          recLat = parseFloat(m[1]);
+          recLng = parseFloat(m[2]);
+        } else if (!isRecOnSite) {
+          recLat = hte.lat + 0.0215;
+          recLng = hte.lng + 0.0185;
+        }
+      } else if (!isRecOnSite) {
+        recLat = hte.lat + 0.0215;
+        recLng = hte.lng + 0.0185;
+      }
+      setTimeout(() => {
+        if (window.menteelogGps && document.getElementById('modal-record-map-' + l.id)) {
+          window.menteelogGps.renderMap('modal-record-map-' + l.id, recLat, recLng, hte.lat, hte.lng, hte.name, isRecOnSite);
+        }
+      }, 100);
+
+      return back('dtr')+heading('Review DTR Entry','Review the original record, supporting justification, and required corrections.')+`<div class="ref-identity">${person(stu)}${badge(l.status)}</div><div class="grid-2">${panel('Original Record',`<dl class="ref-facts"><dt>Date</dt><dd>${date(l.date)}</dd><dt>Clock In</dt><dd>${time(l.clockIn)}</dd><dt>Clock Out</dt><dd>${time(l.clockOut)}</dd><dt>Break Time</dt><dd>${l.breakMinutes?'<span style="color:#854d0e;">'+l.breakMinutes+' minutes</span>':'None'}</dd><dt>Hours</dt><dd>${l.hours}</dd></dl><h3>Task Summary</h3><p>${e(l.task)}</p>`)}${panel('Justification & Review',`<p><strong>Intern Justification:</strong> ${e(l.justification||'No justification submitted.')}</p><p>${e(l.remarks||'No supervisor remarks.')}</p><p><strong>Geofence Telemetry:</strong> ${isRecOnSite?'<span style="color:#166534; font-weight:600;">✓ Verified Inside 100m HTE Perimeter</span>':'<span style="color:#991b1b; font-weight:600;">⚠️ Captured Outside 100m HTE Perimeter</span>'}</p><div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;"><button type="button" class="btn primary small" data-action="view-record-map" data-id="${e(l.id)}" style="display:inline-flex; align-items:center; gap:6px;">🗺️ Toggle Record Map</button><button type="button" class="btn secondary small" data-action="fullscreen-record-map" data-id="${e(l.id)}" style="display:inline-flex; align-items:center; gap:6px;">⛶ Wide / Fullscreen</button></div><div id="modal-record-map-${e(l.id)}" style="display:block; margin-top:14px; width:100%; height:240px; background:#f1f5f9; border-radius:8px; overflow:hidden; border:1px solid #cbd5e1; position:relative;"></div>`)}</div>`+panel('Compliance Review',form(sel('Compliance status','status',['Flagged','Pending'],l.status==='Pending'?'Pending':'Flagged')+ta('Coordinator remarks','remarks',l.coordinatorRemarks||'','required minlength="10"'),v=>{(async () => {
 const { error, data: updated } = await supabase.from('logs').update({ coordinator_remarks: v.remarks, status: v.status }).eq('id', l.id).select();
 if (error) { alert(error.message); return; }
 if (!updated || updated.length === 0) { alert('Update failed or rejected by security rules.'); return; }
 await c.syncRemote(supabase, db());
-c.notify(l.supervisorId,'DTR_Event','DTR compliance review',c.student(l.studentId).name+': '+v.remarks);
+c.notify(l.supervisorId,'DTR_Event','DTR compliance review',(stu?.name||'Student')+': '+v.remarks);
 finish('Compliance review saved; supervisor sign-off is required.','dtr','flagged');
 })();
 },'Save & Notify Supervisor'));}
