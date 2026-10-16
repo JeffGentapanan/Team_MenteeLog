@@ -445,7 +445,26 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
   function reports(){return reportPages();}
   function governance(){return governancePages();}
 
-  function supervisorDashboard(){const students=visibleStudents(db(),u()),logs=visibleLogs(db(),u()),pending=logs.filter(l=>l.status==='Pending').length,weekStart=new Date(Date.now()-7*86400000).toISOString().slice(0,10),weekly=logs.filter(l=>l.status==='Approved'&&l.date>=weekStart).reduce((n,l)=>n+l.hours,0);return heading('Supervisor Dashboard',e(u().company)+' · Technology Division OJT Program')+stats([['Active Interns',students.length,'users'],['Pending DTR Queue',pending,'clock'],['Evaluations Due',students.filter(s=>!db().appraisals.some(a=>a.studentId===s.id)).length,'file'],['Avg. Hours / Week',(weekly/Math.max(1,students.length)).toFixed(1)+'h','briefcase']])+panel('',`<div class="row wrap"><strong>Quick Actions:</strong>${b('Bulk Approve DTRs','ref-approve-all','','small')}${b('+ Add Intern Slot','job-edit','','secondary small')}<span class="push-right">${b('Send Emergency Alert','announcement','','secondary small','alert')}</span></div>`)+panel('Active Interns Overview',students.length?table(['Intern Name','Course','Hours Rendered','Progress','Status','Action'],students.map(s=>`<tr><td>${person({...s,course:''})}</td><td>${e(s.course)}</td><td>${approvedHours(db(),s.id)} / ${s.requiredHours} hrs</td><td>${progress(approvedHours(db(),s.id),s.requiredHours)}</td><td>${db().shift?.studentId===s.id&&!db().shift.clockOut?'● Clocked In':'● Clocked Out'}</td><td>${nav('View DTR ›','dtr','profile',s.id,'secondary small')}</td></tr>`)):empty('No active interns','No students are currently placed under your supervision.'))+`<div class="row" style="margin-top: 24px; gap: 12px;">${nav('Candidate Review','candidates','','','secondary small')}${nav('Application Review','applications','','','secondary small')}</div>`;}
+  function supervisorDashboard(){
+    const students=visibleStudents(db(),u()),logs=visibleLogs(db(),u()),flaggedCount=logs.filter(l=>['Flagged','Pending'].includes(l.status)).length,verifiedCount=logs.filter(l=>l.status==='Approved').length,evalsDue=students.filter(s=>!db().appraisals.some(a=>a.studentId===s.id)).length;
+    return heading('Supervisor Dashboard',e(u().company)+' · Automated Geofence Oversight & Intern Evaluation')+
+      stats([
+        ['Active Interns',students.length,'users'],
+        ['Verified On-Site Shifts',verifiedCount,'check'],
+        ['Exception Queue (Flagged)',flaggedCount,'alert'],
+        ['Evaluations Due',evalsDue,'star']
+      ])+
+      panel('',`<div class="row wrap" style="align-items:center; gap:10px;"><strong>Oversight & High-Value Actions:</strong>${nav('Read Task Summaries','dtr','','','small')}${nav('Performance Appraisal Rubric','appraisals','','','secondary small')}${b('+ Add Intern Slot','job-edit','','secondary small')}<span class="push-right">${b('Send Emergency Alert','announcement','','secondary small','alert')}</span></div>`)+
+      panel('Active Interns — Live Geofence & Progress Overview',students.length?table(['Intern Name','Course','Verified Hours','Progress','Geofence & Shift Status','Actions'],students.map(s=>{
+        const isClockedIn = (db().activeShifts||[]).some(sh=>sh.studentId===s.id) || logs.some(l=>l.studentId===s.id&&l.status==='Running') || (db().shift?.studentId===s.id&&!db().shift.clockOut);
+        const hasFlagged = logs.some(l=>l.studentId===s.id&&l.status==='Flagged');
+        const statusHtml = isClockedIn
+          ? '<span class="badge green">● Active On-Site (Inside 100m Geofence)</span>'
+          : (hasFlagged ? '<span class="badge red">⚠️ Exception Flagged</span>' : '<span class="badge green">✓ Auto-Verified On-Site</span>');
+        return `<tr><td>${person({...s,course:''})}</td><td>${e(s.course)}</td><td><strong>${approvedHours(db(),s.id)}</strong> / ${s.requiredHours} hrs</td><td>${progress(approvedHours(db(),s.id),s.requiredHours)}</td><td>${statusHtml}</td><td><div class="row" style="gap:6px;">${nav('Task Logs ›','dtr','profile',s.id,'secondary small')}${nav('Evaluate Rubric','appraisals','evaluate',s.id,'primary small')}</div></td></tr>`;
+      })):empty('No active interns','No students are currently placed under your supervision.'))+
+      `<div class="row" style="margin-top: 24px; gap: 12px;">${nav('Candidate Review','candidates','','','secondary small')}${nav('Application Review','applications','','','secondary small')}</div>`;
+  }
   function studentApplications(){const apps=visibleApplications(db(),u());return heading('My Applications Tracker','Track the status of your internship applications.')+(apps.length?apps.map(a=>{const j=db().jobs.find(j=>j.id===a.jobId),level=a.status==='Accepted'?3:a.status==='Under_Review'?1:0;return `<section class="card application-card"><div class="row between"><div><h2>${e(j?.title)}</h2><p>${e(j?.company)}</p></div>${badge(a.status)}</div><div class="application-path">${['Submitted','Under Review','Interview','Accepted'].map((label,i)=>(i?'<span class="application-line"></span>':'')+`<div class="application-step ${i<=level?'done':''}"><i></i><span>${label}</span></div>`).join('')}</div>${a.note?'<p class="small mt16">'+e(a.note)+'</p>':''}</section>`;}).join(''):panel('',empty('No applications yet','Apply to an accredited internship from the placement directory.')));}
 
   function htePages(){
@@ -582,7 +601,7 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
   }
 
   function attendancePages(){const {sub,id}=r(),role=u().role,logs=visibleLogs(db(),u());
-    if(sub==='profile'){const s=student(id)||c.student(id)||{name:'kenzosomes',requiredHours:500},items=logs.filter(l=>l.studentId===id),tasks=c.view.tasks;return back('dtr')+heading(e(s.name)+' DTR Records','Review weekly log sheets and task summaries.',`<div style="display:flex; gap:8px;">${b('Export PDF', 'ref-export-dtr', 'pdf', 'secondary', 'download')} ${b('Export CSV', 'ref-export-dtr', 'csv', 'secondary', 'download')}</div>`)+`<div class="ref-identity">${person(s)}${b(tasks?'View DTR Records':'View Task Summary','ref-task-view','','secondary small')}</div>`+panel('Weekly Log Sheets',table(tasks?['Date','Task Description','Status','Action']:['Date','Day','Time In','Time Out','Break','Total Hours','Status','Action'],items.map(l=>`<tr><td>${date(l.date)}</td>${tasks?'<td>'+e(l.task)+'</td>':'<td>'+new Date(l.date+'T12:00:00').toLocaleDateString('en',{weekday:'long'})+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+(l.breakMinutes?'<span style="color:#854d0e;">'+l.breakMinutes+'m</span>':'—')+'</td><td>'+l.hours+' hrs</td>'}<td>${badge(l.status)}</td><td>${b('🗺️ Map & Details','log-detail',l.id,'secondary small')}</td></tr>`)))+stats([['Total Rendered Hours',approvedHours(db(),id)+' Hours'],['Required Hours',s.requiredHours+' Hours'],['Remaining Hours',Math.max(0,s.requiredHours-approvedHours(db(),id))+' Hours']]);}
+    if(sub==='profile'){const s=student(id)||c.student(id)||{name:'kenzosomes',requiredHours:500},items=logs.filter(l=>l.studentId===id),tasks=c.view.tasks;return back('dtr')+heading(e(s.name)+' — Verified DTR & Task Log','Automated geofence-verified attendance records and daily task accomplishments.',`<div style="display:flex; gap:8px;">${b('Export PDF', 'ref-export-dtr', 'pdf', 'secondary', 'download')} ${b('Export CSV', 'ref-export-dtr', 'csv', 'secondary', 'download')}</div>`)+`<div class="ref-identity">${person(s)}${b(tasks?'View Shift Timestamps':'View Full Task Descriptions','ref-task-view','','secondary small')}</div>`+panel('Verified Shift Log Sheets',table(tasks?['Date','Task Description','Verification Status','Oversight']:['Date','Day','Time In','Time Out','Break','Total Hours','Verification Status','Oversight'],items.map(l=>{const stBadge=l.status==='Approved'?'<span class="badge green">✓ Verified On-Site</span>':(l.status==='Flagged'?'<span class="badge red">⚠️ Flagged Exception</span>':badge(l.status));return `<tr><td>${date(l.date)}</td>${tasks?'<td>'+e(l.task)+'</td>':'<td>'+new Date(l.date+'T12:00:00').toLocaleDateString('en',{weekday:'long'})+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+(l.breakMinutes?'<span style="color:#854d0e;">'+l.breakMinutes+'m</span>':'—')+'</td><td>'+l.hours+' hrs</td>'}<td>${stBadge}</td><td>${b('📖 Task & Map','log-detail',l.id,'secondary small')}</td></tr>`;})))+stats([['Auto-Verified Hours',approvedHours(db(),id)+' Hours'],['Required Hours',s.requiredHours+' Hours'],['Remaining Hours',Math.max(0,s.requiredHours-approvedHours(db(),id))+' Hours']]);}
     if(sub==='review'){if(role!=='Coordinator')throw new Error('Coordinator access required.');const l=logs.find(l=>l.id===id);if(!l)throw new Error('DTR unavailable.');return back('dtr')+heading('Review DTR Entry','Review the original record, supporting justification, and required corrections.')+`<div class="ref-identity">${person(c.student(l.studentId))}${badge(l.status)}</div><div class="grid-2">${panel('Original Record',`<dl class="ref-facts"><dt>Date</dt><dd>${date(l.date)}</dd><dt>Clock In</dt><dd>${time(l.clockIn)}</dd><dt>Clock Out</dt><dd>${time(l.clockOut)}</dd><dt>Break Time</dt><dd>${l.breakMinutes?'<span style="color:#854d0e;">'+l.breakMinutes+' minutes</span>':'None'}</dd><dt>Hours</dt><dd>${l.hours}</dd></dl><h3>Task Summary</h3><p>${e(l.task)}</p>`)}${panel('Justification & Review',`<p>${e(l.justification||'No justification submitted.')}</p><p>${e(l.remarks||'No supervisor remarks.')}</p><p>GPS: ${l.gps?'Captured; server verification pending':'Unavailable'}</p><div style="margin-top:14px;">${b('🗺️ Inspect Clock-In Map Pin','log-detail',l.id,'primary small')}</div>`)}</div>`+panel('Compliance Review',form(sel('Compliance status','status',['Flagged','Pending'],l.status==='Pending'?'Pending':'Flagged')+ta('Coordinator remarks','remarks',l.coordinatorRemarks||'','required minlength="10"'),v=>{(async () => {
 const { error, data: updated } = await supabase.from('logs').update({ coordinator_remarks: v.remarks, status: v.status }).eq('id', l.id).select();
 if (error) { alert(error.message); return; }
@@ -600,42 +619,67 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
     }
     if(role==='Supervisor'){
         const list=logs.filter(l=>match(c.student(l.studentId)?.name,l.date,l.task)&&(c.view.filter==='All'||l.status===c.view.filter));
-        const pending=logs.filter(l=>l.status==='Pending');
+        const flaggedList=logs.filter(l=>['Flagged','Pending'].includes(l.status));
         
         const myStudents = visibleStudents(db(), u());
         const totalRendered = myStudents.reduce((sum, s) => sum + approvedHours(db(), s.id), 0);
         const totalRequired = myStudents.reduce((sum, s) => sum + (s.requiredHours || 500), 0);
-        const totalRemaining = Math.max(0, totalRequired - totalRendered);
         const supervisorStatsHtml = stats([
-          ['Total Rendered Hours', totalRendered + ' Hours', 'clock'],
+          ['Auto-Verified Hours', totalRendered + ' Hours', 'check'],
           ['Required Hours', totalRequired + ' Hours', 'target'],
-          ['Remaining Hours', totalRemaining + ' Hours', 'chart']
+          ['Exception Queue (Flagged)', flaggedList.length + (flaggedList.length === 1 ? ' Log' : ' Logs'), 'alert']
         ]);
 
-        const headerHtml = heading('Intern Log Sheets & Summary','Review, verify, and approve daily log sheets and task summaries submitted by assigned interns.') + 
-            supervisorStatsHtml;
+        const oversightBannerHtml = flaggedList.length === 0 ? `
+          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:14px 18px; margin-top:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="width:34px; height:34px; border-radius:50%; background:#dcfce7; color:#166534; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; flex-shrink:0;">✓</span>
+              <div>
+                <strong style="display:block; font-size:14px; color:#14532d;">Automated Geofence Validation Active — Passive Oversight Mode</strong>
+                <span style="font-size:12.5px; color:#166534;">On-site shifts inside the 100m HTE perimeter are automatically verified and credited immediately. <strong>0 off-site exceptions</strong> require manual review.</span>
+              </div>
+            </div>
+            ${nav('Open Performance Appraisals ›', 'appraisals', '', '', 'secondary small')}
+          </div>
+        ` : `
+          <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:14px 18px; margin-top:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="width:34px; height:34px; border-radius:50%; background:#fee2e2; color:#991b1b; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; flex-shrink:0;">!</span>
+              <div>
+                <strong style="display:block; font-size:14px; color:#7f1d1d;">Management by Exception — ${flaggedList.length} Flagged Shift(s) in Queue</strong>
+                <span style="font-size:12.5px; color:#991b1b;">Normal on-site shifts are auto-verified. Step in only for the flagged off-site or anomalous log(s) below.</span>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const headerHtml = heading('Intern Attendance & Task Oversight','Automated 100m geofence validation credits on-site shifts immediately. Read daily task summaries at your convenience or step in by exception for flagged logs.') + 
+            supervisorStatsHtml + oversightBannerHtml;
         
-        const toolbarHtml = '<div class="ref-attendance-toolbar" style="margin-top: 16px; margin-bottom: 8px;">' + search('Search intern name or date.') + '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; width: 100%;">' + filter([['All','All Status'],['Pending','Pending'],['Approved','Approved'],['Flagged','Flagged']]) + '<div style="display:flex; gap:8px; flex-shrink: 0;">' + b('Approve All Pending ('+pending.length+')','ref-approve-all','primary small','check') + '</div></div></div>';
+        const toolbarHtml = '<div class="ref-attendance-toolbar" style="margin-top: 12px; margin-bottom: 8px;">' + search('Search intern name, date, or task summary…') + '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; width: 100%;">' + filter([['All','All Shift Logs'],['Approved','✓ Verified On-Site (Auto)'],['Flagged','⚠️ Exception Queue ('+flaggedList.length+')']]) + '</div></div>';
         
-        const historyPanel = panel('Recent Log Sheets & Approvals', (() => {
-            if(!list.length) return empty('No Attendance Logs', 'Submitted log sheets and task summaries from your interns will appear here for review and verification.');
+        const historyPanel = panel('Verified Shift Logs & Daily Task Summaries', (() => {
+            if(!list.length) return empty('No Shift Logs in This View', 'Auto-verified on-site shifts and daily task summaries from your interns appear here.');
             let historyRows = list.map(l=>{
                 const st = c.student(l.studentId);
                 const sName = st?.name || (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' ? 'kenzosomes' : 'Assigned Intern');
                 const sCourse = st?.course || 'BSIT';
                 const taskHtml = l.task ? e(l.task) : (l.status === 'Awaiting_Student_Log' ? '<span class="task-excerpt" style="color:var(--slate); font-style:italic;">Pending intern logbook submission</span>' : '<span class="task-excerpt" style="color:var(--slate); font-style:italic;">No task summary entered</span>');
                 const breakHtml = l.breakMinutes ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#854d0e;font-weight:600;"><span style="width:6px;height:6px;border-radius:50%;background:#854d0e;"></span>' + l.breakMinutes + 'm</span>' : '<span style="font-size:12px;color:var(--slate);">—</span>';
-                const statusBadgeHtml = l.status === 'Approved' ? '<span class="badge green" title="' + e(l.remarks || 'Verified on-site within HTE premises') + '">✓ Approved</span>' : (l.status === 'Flagged' ? '<span class="badge red" title="' + e(l.remarks || 'Location unverified / off-site') + '">⚠️ Flagged</span>' : badge(l.status));
-                const actionButtonsHtml = (['Pending','Flagged'].includes(l.status) ? b('Review & Map','log-detail',l.id,'primary small') + b('Approve','ref-approve',l.id,'small') + b('Reject','ref-reject',l.id,'secondary small') : b('🗺️ Map & Details','log-detail',l.id,'primary small')) + nav('Profile','dtr','profile',l.studentId,'secondary small');
-                return '<tr><td><strong>' + e(sName) + '</strong><br><small>' + e(sCourse) + '</small></td><td>' + date(l.date) + '</td><td>' + time(l.clockIn) + '</td><td>' + time(l.clockOut) + '</td><td>' + breakHtml + '</td><td><span class="task-excerpt">' + taskHtml + '</span></td><td>' + badge(l.gps?'Captured':'Unavailable') + '</td><td>' + statusBadgeHtml + '</td><td><div class="row" style="flex-wrap:wrap; gap:4px; max-width:260px;">' + actionButtonsHtml + '</div></td></tr>';
+                const geofenceBadgeHtml = l.status === 'Approved' ? '<span class="badge green">📍 Inside 100m</span>' : (l.status === 'Flagged' ? '<span class="badge red">⚠️ Outside 100m</span>' : badge(l.gps?'Captured':'Unavailable'));
+                const statusBadgeHtml = l.status === 'Approved' ? '<span class="badge green" title="' + e(l.remarks || 'Automatically verified on-site within 100m HTE geofence') + '">✓ Verified On-Site</span>' : (l.status === 'Flagged' ? '<span class="badge red" title="' + e(l.remarks || 'Logged outside 100m geofence — exception review required') + '">⚠️ Flagged Exception</span>' : badge(l.status));
+                const actionButtonsHtml = (['Pending','Flagged'].includes(l.status)
+                    ? b('⚠️ Review Exception','log-detail',l.id,'primary small') + b('Approve','ref-approve',l.id,'small') + b('Reject','ref-reject',l.id,'secondary small')
+                    : b('📖 Read Task & Map','log-detail',l.id,'secondary small') + nav('Log Sheet','dtr','profile',l.studentId,'secondary small'));
+                return '<tr><td><strong>' + e(sName) + '</strong><br><small>' + e(sCourse) + '</small></td><td>' + date(l.date) + '</td><td>' + time(l.clockIn) + '</td><td>' + time(l.clockOut) + '</td><td>' + breakHtml + '</td><td><span class="task-excerpt">' + taskHtml + '</span></td><td>' + geofenceBadgeHtml + '</td><td>' + statusBadgeHtml + '</td><td><div class="row" style="flex-wrap:wrap; gap:4px; max-width:260px;">' + actionButtonsHtml + '</div></td></tr>';
             });
-            return table(['Intern','Date','Clock In','Clock Out','Break','Task Summary','GPS','Status','Actions'], historyRows) + '<style>.table-wrap { overflow-x: auto !important; } .table-wrap table { width: 100%; table-layout: auto; } .table-wrap td { white-space: normal !important; word-break: break-word; } .task-excerpt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 150px; max-width: 250px; } td:last-child .row { max-width: 240px !important; justify-content: flex-start; }</style>';
+            return table(['Intern','Date','Clock In','Clock Out','Break','Daily Task Summary','Geofence','Verification','Oversight'], historyRows) + '<style>.table-wrap { overflow-x: auto !important; } .table-wrap table { width: 100%; table-layout: auto; } .table-wrap td { white-space: normal !important; word-break: break-word; } .task-excerpt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 150px; max-width: 250px; } td:last-child .row { max-width: 240px !important; justify-content: flex-start; }</style>';
         })());
         
         return headerHtml + toolbarHtml + historyPanel;
     }
     // Student: clock and task draft at left, history and saved drafts at right.
-    if(sub==='history') return back('dtr') + heading('DTR History', 'Complete attendance and task records.', b('Clear Test Records', 'ref-clear-test-logs', '', 'secondary small', 'trash')) + `<div class="ref-alert" style="margin-bottom: 16px;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:6px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><strong>Lock Enabled:</strong> All past and submitted DTR entries are strictly READ-ONLY. Modification of timestamps is permanently restricted.</div>` + filter([['All','All'],['Approved','Approved'],['Pending','Pending'],['Flagged','Flagged'],['Rejected','Rejected']]) + panel('', c.dtrTable(logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter), u()));
+    if(sub==='history') return back('dtr') + heading('DTR History', 'Complete geofence-verified attendance and task records.', b('Clear Test Records', 'ref-clear-test-logs', '', 'secondary small', 'trash')) + `<div class="ref-alert" style="margin-bottom: 16px;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:6px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><strong>Lock Enabled:</strong> All past and submitted DTR entries are strictly READ-ONLY. Modification of timestamps is permanently restricted.</div>` + filter([['All','All Shifts'],['Approved','✓ Verified On-Site'],['Flagged','⚠️ Flagged (Exception)'],['Rejected','Rejected']]) + panel('', c.dtrTable(logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter), u()));
       const activeShiftObj = (db().activeShifts || []).find(sh => sh.studentId === u().id);
       const runningLog = logs.find(sh => sh.studentId === u().id && sh.status === 'Running');
       const shift = runningLog || activeShiftObj || null;

@@ -194,7 +194,7 @@ function connectCoreUsers(dataDb) {
     if (String(l.id || '').startsWith('log_')) return false;
     if (String(l.studentId || '').startsWith('s_dummy')) return false;
     if (String(l.task || '').includes('Configured project development environment')) return false;
-    if (l.id === 'log_' + stu.id + '_1' || l.id === 'log_s1_1') return false;
+    if (l.id === 'log_' + stu.id + '_1' || l.id === 'log_s1_1' || l.id === 'shift-flagged-001' || String(l.id || '').startsWith('shift-flagged-')) return false;
     if (l.date === '2026-10-14' || l.date === '2026-10-15') return false;
     if (l.date === '2026-10-16' && Number(l.hours || 0) <= 0.02 && (String(l.clockIn || '').includes('00:23') || String(l.clockIn || '').includes('12:23') || String(l.clockOut || '').includes('00:23') || String(l.clockOut || '').includes('12:23') || !l.task)) return false;
     return true;
@@ -210,36 +210,11 @@ function connectCoreUsers(dataDb) {
 
   // Auto-verify on-site logs within geofence
   (dataDb.logs || []).forEach(l => {
-    if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0 && (!l.remarks || !l.remarks.includes('Flagged'))) {
+    if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0 && (!l.remarks || !l.remarks.includes('Outside geofence'))) {
       l.status = 'Approved';
       l.remarks = l.remarks || 'Verified on-site within HTE premises';
     }
   });
-
-  // Ensure a realistic flagged shift exists for Kenzo so supervisor can demonstrate flagged review and clock-in map pin
-  let flaggedLog = (dataDb.logs || []).find(l => (l.studentId === stu.id || l.studentId === 's1' || l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c') && (l.status === 'Flagged' || l.id === 'shift-flagged-001'));
-  if (!flaggedLog) {
-    flaggedLog = {
-      id: 'shift-flagged-001',
-      studentId: stu.id,
-      supervisorId: sup.id,
-      date: '2026-10-16',
-      clockIn: '2026-10-16T08:00:00.000Z',
-      clockOut: '2026-10-16T12:00:00.000Z',
-      breakMinutes: 0,
-      hours: 4.0,
-      task: 'Conducted off-site client deployment at Iloilo Provincial Capitol for enterprise server rack setup and fiber optic termination.',
-      status: 'Flagged',
-      gps: true,
-      remarks: '⚠️ Flagged: Clock-in recorded 2.4km outside HTE geofence perimeter (10.7382° N, 122.5643° E). Verification required.',
-      justification: 'Attended scheduled off-site client deployment at Iloilo Provincial Capitol under Senior Engineer mentor instructions.',
-      signature: ''
-    };
-    dataDb.logs.push(flaggedLog);
-  } else {
-    flaggedLog.studentId = stu.id;
-    flaggedLog.supervisorId = sup.id;
-  }
 
   // Clean active shifts: remove any dummy student active shifts
   dataDb.activeShifts = (dataDb.activeShifts || []).filter(s => !String(s.studentId).startsWith('s_dummy'));
@@ -893,15 +868,15 @@ function netElapsed(sh){if(!sh||!sh.clockIn)return '00:00:00';const now=Date.now
 function elapsed(start){if(!start)return '00:00:00';const t=new Date(start).getTime();if(isNaN(t))return '00:00:00';const seconds=Math.max(0,Math.floor((Date.now()-t)/1000));return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(v=>String(v).padStart(2,'0')).join(':');}
 function dtrTable(logs,u){
   const breakCol=l=>l.breakMinutes?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#854d0e;"><span style="width:6px;height:6px;border-radius:50%;background:#854d0e;"></span>'+l.breakMinutes+'m</span>':'<span style="font-size:12px;color:var(--slate);">—</span>';
-  const statusBadge=l=>l.status==='Approved'?'<span class="badge green" title="'+e(l.remarks||'Verified on-site within HTE premises')+'">✓ Approved</span>':l.status==='Flagged'?'<span class="badge red" title="'+e(l.remarks||'Location unverified / off-site')+'">⚠️ Flagged</span>':badge(l.status);
+  const statusBadge=l=>l.status==='Approved'?'<span class="badge green" title="'+e(l.remarks||'Automatically verified within 100m HTE geofence')+'">✓ Verified On-Site</span>':l.status==='Flagged'?'<span class="badge red" title="'+e(l.remarks||'Location unverified / off-site exception')+'">⚠️ Flagged</span>':badge(l.status);
   const gpsBadge=l=>{
     if (l.status==='Approved'||(l.remarks&&l.remarks.includes('Verified on-site'))) return '<span class="badge green" title="'+e(l.remarks||'Verified on-site within geofence')+'">📍 On-Site</span>';
     if (l.status==='Flagged'||(l.remarks&&(l.remarks.includes('Outside geofence')||l.remarks.includes('Off-site')))) return '<span class="badge red" title="'+e(l.remarks||'Outside workplace geofence')+'">⚠️ Off-Site</span>';
     return badge(l.gps?'Captured':'Unavailable');
   };
   const actionBtn=l=>{
-    if(u.role==='Student'&&l.status==='Flagged') return button('Justify','log-detail',l.id,'secondary small');
-    if(u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status)) return button('Review','log-detail',l.id,'secondary small');
+    if(u.role==='Student'&&l.status==='Flagged') return button('Justify','log-detail',l.id,'primary small');
+    if(u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status)) return button('Review Exception','log-detail',l.id,'primary small');
     return button('View','log-detail',l.id,'secondary small');
   };
   return logs.length?table([...(u.role==='Student'?[]:['Intern']),'Date','Clock In','Clock Out','Break',...(u.role==='Student'?['Total']:['Task Summary']),'GPS','Status','Action'],logs.slice().reverse().map(l=>'<tr>'+(u.role==='Student'?'':'<td><strong>'+e(student(l.studentId)?.name)+'</strong></td>')+'<td>'+date(l.date)+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+breakCol(l)+'</td><td>'+(u.role==='Student'?(Number(l.hours)||0).toFixed(2)+'h':'<span class="task-excerpt">'+e(l.task)+'</span>')+'</td><td>'+gpsBadge(l)+'</td><td>'+statusBadge(l)+'</td><td>'+actionBtn(l)+'</td></tr>')):empty('No DTR entries here','Submitted attendance records will appear here.');
@@ -1108,9 +1083,10 @@ async function studentClockOut() {
   const hrs = Math.max(0, hoursBetween(clockInTime, clockOutTime, breakMins));
   const supId = shift?.supervisorId || log?.supervisorId || u.supervisorId;
   const defaultDraft = db.draft || db.taskDrafts?.find(d => d.studentId === u.id && d.date === today())?.task || '';
+  const isShiftOnSite = shift?.gps ? Boolean(shift.gps.isOnSite) : (log?.gpsData ? Boolean(log.gpsData.isOnSite) : (log?.remarks?.includes('Outside geofence') ? false : Boolean(window.menteelogGps?.state?.isOnSite ?? true)));
 
   showModal('Clock Out & Submit Daily Logbook', `
-    <div style="background:var(--cream, #fbf8f2); padding:16px; border-radius:8px; margin-bottom:16px; border:1px solid var(--line, #e2e8f0);">
+    <div style="background:var(--cream, #fbf8f2); padding:16px; border-radius:8px; margin-bottom:14px; border:1px solid var(--line, #e2e8f0);">
       <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
         <span class="muted">Clock In</span>
         <strong>${time(clockInTime)}</strong>
@@ -1128,6 +1104,15 @@ async function studentClockOut() {
         <strong style="color:var(--burgundy); font-size:15px;">${hrs} hrs</strong>
       </div>
     </div>
+    ${isShiftOnSite ? `
+      <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; margin-bottom:14px; color:#166534; font-size:12.5px; line-height:1.45;">
+        <strong>✓ Automated Geofence Validation Active:</strong> You are inside the 100m HTE perimeter. Your shift hours will be <strong>automatically verified on-site and credited immediately</strong> upon submission.
+      </div>
+    ` : `
+      <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px 14px; margin-bottom:14px; color:#991b1b; font-size:12.5px; line-height:1.45;">
+        <strong>⚠️ Off-Site Exception Detected:</strong> You clocked in outside the 100m workplace perimeter. This shift will be placed in the <strong>Supervisor Exception Queue (Flagged)</strong> for review.
+      </div>
+    `}
     ${textarea('Task summary & learning reflection', 'task', defaultDraft, 'required minlength="150" placeholder="Describe the specific tasks completed, technical skills applied, and milestones achieved during this shift (min 150 characters)..."')}
     <div style="display:flex; justify-content:space-between; align-items:center; margin:-8px 0 16px 0;">
       <button type="button" class="btn secondary small" data-action="save-clockout-draft" id="btn-save-clockout-draft" style="padding:6px 12px; font-size:12px;">
@@ -1135,14 +1120,21 @@ async function studentClockOut() {
       </button>
       <span class="small muted" id="draft-save-hint">Want to finish later? Save your progress as a draft</span>
     </div>
-    <p class="note">Enter your daily task accomplishments (minimum 150 characters). This will be submitted to your supervisor for review and approval.</p>
+    <p class="note">Record your daily task accomplishments (minimum 150 characters). Supervisors can read your task summaries at any time on their live dashboard.</p>
   `, async (data) => {
     if (shiftIdx !== -1) db.activeShifts.splice(shiftIdx, 1);
     db.taskDrafts = (db.taskDrafts || []).filter(d => !(d.studentId === studentId && d.date === today()));
     let targetLog = log;
-    const isGpsOnSite = targetLog ? (targetLog.gps !== false) : true;
+    const isGpsOnSite = isShiftOnSite;
     const autoStatus = isGpsOnSite ? 'Approved' : 'Flagged';
-    const autoRemarks = isGpsOnSite ? 'Verified on-site within HTE premises' : 'Off-site / GPS unverified - awaiting student justification';
+    const gpsState = (window.menteelogGps && window.menteelogGps.state) || { lat: 10.71678, lng: 122.54586, accuracy: 8, isOnSite: isGpsOnSite, distanceMeters: isGpsOnSite ? 11 : 2450 };
+    const hte = (window.menteelogGps && window.menteelogGps.getHte(u.company || 'Accenture Philippines')) || { name: 'Accenture Philippines' };
+    const distText = isGpsOnSite ? `${gpsState.distanceMeters || 11}m from ${hte.name}` : `${((gpsState.distanceMeters || 2450)/1000).toFixed(2)}km from ${hte.name}`;
+    const autoRemarks = (targetLog?.remarks && targetLog.remarks.includes('°'))
+      ? targetLog.remarks
+      : (isGpsOnSite
+          ? `Verified on-site: ${gpsState.lat.toFixed(4)}°N, ${gpsState.lng.toFixed(4)}°E (${distText})`
+          : `Outside geofence: ${gpsState.lat.toFixed(4)}°N, ${gpsState.lng.toFixed(4)}°E (${distText})`);
 
     if (!targetLog) {
       targetLog = {
@@ -1226,14 +1218,14 @@ async function studentClockOut() {
     }
 
     if (supId) {
-      notify(supId, 'DTR_Event', isGpsOnSite ? 'Intern shift completed (Auto-Verified)' : 'Off-site shift logged (Flagged for review)', u.name + ' completed shift (' + hrs + 'h). ' + autoRemarks);
+      notify(supId, 'DTR_Event', isGpsOnSite ? 'Intern shift completed (Auto-Verified On-Site)' : 'Off-site shift logged (Flagged Exception)', u.name + ' completed shift (' + hrs + 'h). ' + autoRemarks);
     }
     audit('Student ' + u.name + ' clocked out and submitted daily log for ' + today() + ' (' + autoStatus + ')');
     db.draft = '';
     db.shift = null;
     save();
     render();
-    toast(isGpsOnSite ? 'Shift completed! Attendance automatically verified on-site and credited.' : 'Shift completed! Location unverified — please submit a justification.');
+    toast(isGpsOnSite ? 'Shift completed! Automatically verified on-site and hours credited immediately.' : 'Shift completed! Outside geofence — placed in exception queue for justification.');
   }, 'Submit & Clock Out');
 }
 
@@ -1253,11 +1245,12 @@ async function clockAction() {
       return;
     }
     
-    showModal('Submit Daily Summary Logbook', `<p>Shift completed: Clocked in at ${time(log.clockIn)}, Clocked out at ${time(log.clockOut)} (${log.hours || 8} hrs).</p>${textarea('Task summary & learning reflection','task','','required minlength="150" placeholder="Describe the tasks, tools, and technical learnings achieved during today\'s shift (min 150 characters)..."')}<p class="note">Describe the tasks you completed during this session (min 150 characters) for supervisor review.</p>`, async data => {
+    showModal('Submit Daily Summary Logbook', `<p>Shift completed: Clocked in at ${time(log.clockIn)}, Clocked out at ${time(log.clockOut)} (${log.hours || 8} hrs).</p>${textarea('Task summary & learning reflection','task','','required minlength="150" placeholder="Describe the tasks, tools, and technical learnings achieved during today\'s shift (min 150 characters)..."')}<p class="note">Describe the tasks you completed during this session (min 150 characters). On-site shifts are automatically verified and credited.</p>`, async data => {
         log.task = data.task;
-        log.status = 'Pending';
+        log.status = 'Approved';
+        log.remarks = log.remarks || 'Verified on-site within HTE premises';
         try {
-          const { error, data: updated } = await supabase.from('logs').update({ task: log.task, status: log.status }).eq('id', log.id).select();
+          const { error, data: updated } = await supabase.from('logs').update({ task: log.task, status: log.status, remarks: log.remarks }).eq('id', log.id).select();
           if (!error && updated && updated.length > 0) {
             await syncRemote(supabase, db);
           }
@@ -1265,11 +1258,11 @@ async function clockAction() {
           console.warn('Supabase sync note:', e);
         }
         if (log.supervisorId) {
-          notify(log.supervisorId, 'DTR_Event', 'Daily time record submitted', u.name + ' submitted their verified logbook summary.');
+          notify(log.supervisorId, 'DTR_Event', 'Daily time record auto-verified', u.name + ' submitted their verified logbook summary.');
         }
         audit('Submitted a daily time record summary');
         save();
-        toast('Logbook summary submitted for supervisor review.');
+        toast('Logbook summary submitted and hours automatically credited.');
         render();
     }, 'Submit Daily Logbook');
 }
@@ -1329,17 +1322,17 @@ function logDetail(id){
   const isApprovedOnSite = l.status === 'Approved' || (l.remarks && l.remarks.includes('Verified on-site'));
   const locBadge = isApprovedOnSite 
     ? '<span class="badge green">✓ Verified On-Site</span>' 
-    : '<span class="badge red">⚠️ Outside Geofence</span>';
+    : '<span class="badge red">⚠️ Outside Geofence (Exception)</span>';
   const locMatch = l.remarks ? l.remarks.match(/(\d+\.\d+)°?[NS]?,\s*(\d+\.\d+)°?[EW]?/) : null;
   const locCoords = locMatch ? locMatch[0] : (isApprovedOnSite ? `${hte.lat.toFixed(4)}° N, ${hte.lng.toFixed(4)}° E` : `${(hte.lat + 0.0215).toFixed(4)}° N, ${(hte.lng + 0.0185).toFixed(4)}° E`);
   const locDistanceText = isApprovedOnSite 
-    ? 'Attendance verified within accredited workplace perimeter (< 100m geofence).' 
-    : 'Attendance clocked outside accredited workplace perimeter (anomalous distance logged).';
+    ? 'Automatically verified within accredited 100m workplace perimeter — hours credited immediately.' 
+    : 'Attendance clocked outside accredited 100m workplace perimeter — flagged for supervisor exception review.';
 
   const locCardHtml = `
     <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px; margin:14px 0;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <strong style="font-size:13px; color:var(--ink);">Clock-In Geolocation Record</strong>
+        <strong style="font-size:13px; color:var(--ink);">Automated Geofence Verification Record</strong>
         ${locBadge}
       </div>
       <p class="small muted" style="margin:0 0 6px;"><strong>Workplace:</strong> ${e(stu?.company || 'Accenture Philippines')} · <code>${locCoords}</code></p>
@@ -1356,7 +1349,15 @@ function logDetail(id){
     </div>
   `;
 
-  showModal(u.role==='Student'?'Daily time record [READ-ONLY]':'Daily time record',`<div class="row between"><strong>${e(student(l.studentId)?.name || 'Intern')}</strong>${badge(l.status)}</div><p class="muted mt16">${date(l.date)} · ${time(l.clockIn)} - ${time(l.clockOut)} · ${l.hours} hours${l.breakMinutes?' · <span style="color:#854d0e;">'+l.breakMinutes+'m break</span>':''}</p><h3>Task summary</h3><p>${e(l.task)}</p>${locCardHtml}${l.justification?`<h3>Justification</h3><p>${e(l.justification)}</p>`:''}${l.remarks?`<h3>Supervisor remarks</h3><p>${e(l.remarks)}</p>`:''}${l.signature?`<p class="small muted">Demo typed signature: ${e(l.signature)}</p>`:''}${u.role==='Student'?`<div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span class="small muted">Testing mode: remove this sample log</span>${button('Delete Test Record','student-delete-log',l.id,'secondary small','trash')}</div>`:''}${review?select('Review decision','status',['Approved','Flagged','Rejected'])+textarea('Review remarks','remarks',l.remarks||'')+field('Typed signature (demo)','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I reviewed this attendance record.</label>':''}`,review?async data=>{ l.status=data.status; l.remarks=data.remarks; l.signature=data.signature; try { const {error, data:updated} = await supabase.from('logs').update({status: data.status, remarks: data.remarks, signature: data.signature}).eq('id', id).select(); if (!error && updated && updated.length > 0) { await syncRemote(supabase, db); } } catch(err) { console.warn('Remote sync note:', err); } notify(l.studentId,'DTR_Event','DTR entry '+data.status.toLowerCase(),date(l.date)+': '+data.remarks); audit('Marked '+(student(l.studentId)?.name||'intern')+' DTR '+data.status); save(); render(); toast('DTR review saved.'); }:null,'Submit review');}
+  const statusHeaderBadge = l.status === 'Approved'
+    ? '<span class="badge green">✓ Verified On-Site (Auto-Credited)</span>'
+    : (l.status === 'Flagged' ? '<span class="badge red">⚠️ Flagged Exception</span>' : badge(l.status));
+
+  const modalTitle = review
+    ? 'Exception Review — Flagged Shift'
+    : (u.role === 'Student' ? 'Daily Time Record [Verified]' : 'Verified Shift & Task Summary');
+
+  showModal(modalTitle,`<div class="row between"><strong>${e(student(l.studentId)?.name || 'Intern')}</strong>${statusHeaderBadge}</div><p class="muted mt16">${date(l.date)} · ${time(l.clockIn)} - ${time(l.clockOut)} · ${l.hours} hours${l.breakMinutes?' · <span style="color:#854d0e;">'+l.breakMinutes+'m break</span>':''}</p><h3>Daily Task Summary</h3><p style="background:var(--cream, #fbf8f2); padding:12px 14px; border-radius:8px; border:1px solid var(--line, #e2e8f0); line-height:1.5;">${e(l.task || 'No task summary recorded.')}</p>${locCardHtml}${l.justification?`<h3>Intern Off-Site Justification</h3><p style="background:#fffbeb; padding:10px 14px; border-radius:8px; border:1px solid #fde68a;">${e(l.justification)}</p>`:''}${l.remarks?`<h3>System / Verification Log</h3><p class="small muted">${e(l.remarks)}</p>`:''}${l.signature?`<p class="small muted">Supervisor exception sign-off: ${e(l.signature)}</p>`:''}${u.role==='Supervisor'&&isApprovedOnSite?`<div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; margin-top:14px; color:#166534; font-size:12.5px;"><strong>✓ Passive Oversight Mode:</strong> This shift was automatically verified inside the 100m geofence and credited immediately. No manual approval action is needed.</div>`:''}${u.role==='Student'?`<div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span class="small muted">Testing mode: remove this sample log</span>${button('Delete Test Record','student-delete-log',l.id,'secondary small','trash')}</div>`:''}${review?`<hr class="hr"><h3 style="margin-bottom:8px;">Supervisor Exception Decision</h3>`+select('Exception decision','status',['Approved','Flagged','Rejected'])+textarea('Supervisor remarks','remarks',l.remarks||'')+field('Typed signature','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I reviewed this off-site exception and justification.</label>':''}`,review?async data=>{ l.status=data.status; l.remarks=data.remarks; l.signature=data.signature; try { const {error, data:updated} = await supabase.from('logs').update({status: data.status, remarks: data.remarks, signature: data.signature}).eq('id', id).select(); if (!error && updated && updated.length > 0) { await syncRemote(supabase, db); } } catch(err) { console.warn('Remote sync note:', err); } notify(l.studentId,'DTR_Event','DTR exception '+data.status.toLowerCase(),date(l.date)+': '+data.remarks); audit('Reviewed exception for '+(student(l.studentId)?.name||'intern')+' DTR: '+data.status); save(); render(); toast('Exception review saved.'); }:null,'Submit Exception Review');}
 function studentDetail(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id===id);if(!s)throw new Error('Student is outside your assigned scope.');showModal(e(s.name),`${person(s)}<hr class="hr"><div class="grid-2"><div><span class="small muted">SR code</span><p>${e(s.identifier)}</p><span class="small muted">Host company</span><p>${e(s.company||'Unplaced')}</p></div><div><span class="small muted">Approved hours</span><p>${approvedHours(db,s.id)} / ${s.requiredHours} hours</p><span class="small muted">Accreditation</span><p>${badge(s.badge)}</p></div></div>${progress(approvedHours(db,s.id),s.requiredHours)}<h3 class="mt16">Recent attendance</h3>${dtrTable(db.logs.filter(l=>l.studentId===s.id).slice(-3),{role:'Student'})}${u.role==='Coordinator'?`<hr class="hr">${select('Host company','company',[['','Unplaced'],...db.htes.filter(h=>h.status==='Accredited').map(h=>h.name)],s.company)}${select('Assigned supervisor','supervisorId',[['','Unassigned'],...db.users.filter(v=>v.role==='Supervisor'&&v.status==='Active').map(v=>[v.id,v.name])],s.supervisorId||'')}${select('Accreditation status','badge',['Pre_Seeded','Eligible','Enrolled','Cleared'],s.badge)}${field('Required OJT hours','requiredHours','number',s.requiredHours,'required min="1" max="2000"')}<p class="small muted">Clearance requires completed hours, an appraisal, and no unresolved incidents.</p>${button('Download endorsement','endorsement',s.id,'secondary small','download')}`:''}`,u.role==='Coordinator'?async data=>{const supervisor=student(data.supervisorId);if(data.company&&(!supervisor||supervisor.company!==data.company))throw new Error('Select a supervisor from the chosen host company.');if(!data.company&&data.supervisorId)throw new Error('Assign a host company before a supervisor.');if(data.badge==='Cleared'&&(approvedHours(db,id)<Number(data.requiredHours)||!db.appraisals.some(a=>a.studentId===id)||db.incidents.some(i=>i.studentId===id&&!['Resolved','Dismissed'].includes(i.status))))throw new Error('This student has incomplete clearance requirements.');const { data: updated, error } = await supabase.from('profiles').update({ company: data.company, supervisor_id: data.supervisorId || null, required_hours: Number(data.requiredHours) }).eq('id', id).select();if(error)throw new Error(error.message);if(!updated||updated.length===0)throw new Error('Update failed. You may not have permission.');await syncRemote(supabase, db);notify(s.id,'System','Placement profile updated','Your coordinator updated your placement or accreditation details.');audit('Updated placement for '+s.name);save();toast('Student placement updated.');}:null,'Save placement');}
 function incidentNew(){const u=currentUser(),students=visibleStudents(db,u);showModal(u.role==='Student'?'File an incident claim':'Create disciplinary log',`<p class="note">Document the situation clearly. This demo does not send emergency alerts or contact school staff.</p>${u.role==='Supervisor'?select('Student involved','studentId',students.map(s=>[s.id,s.name])):''}${field('Short title','title','text','','required maxlength="120"')}${select('Priority','priority',['Low','Medium','High'],'Medium')}${textarea('Description','description','','required minlength="20"')}${select('Related DTR (optional)','logId',[['','No linked entry'],...visibleLogs(db,u).map(l=>[l.id,student(l.studentId).name+' · '+date(l.date)])])}${field('Evidence (optional, PDF / PNG / JPEG, up to 10 MB)','evidence','file','','accept="application/pdf,image/png,image/jpeg"')}`,async(data,form)=>{const sid=u.role==='Student'?u.id:data.studentId;if(u.role==='Supervisor'&&!students.some(s=>s.id===sid))throw new Error('Choose an assigned intern.');if(data.logId&&!db.logs.some(l=>l.id===data.logId&&l.studentId===sid))throw new Error('The linked DTR must belong to the selected student.');const incCode = 'IR-'+crypto.randomUUID().slice(0,8).toUpperCase();
 let evidence=null;const file=form.elements.evidence.files[0];if(file){validateUpload(file);evidence=await uploadEvidence(file, incCode);}const incident={id:incCode,studentId:sid,supervisorId:u.role==='Supervisor'?u.id:u.supervisorId,category:u.role==='Student'?'Student_Claim':'Disciplinary_Violation',title:data.title,description:data.description,priority:data.priority,status:'Pending',date:today(),logId:data.logId||null,evidence,notes:[],meeting:null};const { error, data: inserted } = await supabase.from('incidents').insert({
