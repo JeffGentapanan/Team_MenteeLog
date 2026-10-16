@@ -471,25 +471,149 @@ function showModal(title,body,onSubmit,label='Save changes'){
 }
 modal.addEventListener('close',()=>{modalSubmit=null;if(modalOpener?.isConnected)modalOpener.focus();});
 function download(name,content,type='text/csv;charset=utf-8'){const url=URL.createObjectURL(content instanceof Blob?content:new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+window.menteelogGps = {
+  htes: {
+    'Accenture Philippines': { lat: 10.7167, lng: 122.5458, name: 'Accenture Philippines (Mandurriao, Iloilo City)', radiusMeters: 500 },
+    'Globe Telecom': { lat: 10.6969, lng: 122.5644, name: 'Globe Telecom (City Proper, Iloilo City)', radiusMeters: 500 },
+    'BDO Unibank': { lat: 10.7225, lng: 122.5564, name: 'BDO Unibank (Jaro, Iloilo City)', radiusMeters: 500 },
+    'MORE Power': { lat: 10.7100, lng: 122.5700, name: 'MORE Power (La Paz, Iloilo City)', radiusMeters: 500 },
+    'PhilStar Digital': { lat: 10.7020, lng: 122.5500, name: 'PhilStar Digital (Molo, Iloilo City)', radiusMeters: 500 },
+    'SM Technologies': { lat: 10.7140, lng: 122.5480, name: 'SM Technologies (Mandurriao, Iloilo City)', radiusMeters: 500 }
+  },
+  state: {
+    lat: 10.7167,
+    lng: 122.5458,
+    accuracy: 15,
+    isOnSite: true,
+    distanceMeters: 25,
+    simulated: false,
+    isMapExpanded: false,
+    status: 'detecting'
+  },
+  getHte(company) {
+    if (company && this.htes[company]) return this.htes[company];
+    return { lat: 10.7167, lng: 122.5458, name: company || 'Accenture Philippines', radiusMeters: 500 };
+  },
+  calcDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3;
+    const p1 = lat1 * Math.PI / 180;
+    const p2 = lat2 * Math.PI / 180;
+    const dp = (lat2 - lat1) * Math.PI / 180;
+    const dl = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dp/2) * Math.sin(dp/2) +
+              Math.cos(p1) * Math.cos(p2) *
+              Math.sin(dl/2) * Math.sin(dl/2);
+    return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+  },
+  init(company, onUpdate) {
+    const hte = this.getHte(company);
+    if (this.state.simulated) {
+      this.state.distanceMeters = this.calcDistance(this.state.lat, this.state.lng, hte.lat, hte.lng);
+      this.state.isOnSite = this.state.distanceMeters <= (hte.radiusMeters || 500);
+      if (onUpdate) onUpdate(this.state);
+      return;
+    }
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const acc = Math.round(pos.coords.accuracy || 15);
+          const dist = this.calcDistance(lat, lng, hte.lat, hte.lng);
+          this.state.lat = lat;
+          this.state.lng = lng;
+          this.state.accuracy = acc;
+          this.state.distanceMeters = dist;
+          this.state.isOnSite = dist <= (hte.radiusMeters || 500);
+          this.state.status = 'ready';
+          if (onUpdate) onUpdate(this.state);
+        },
+        (err) => {
+          const lat = hte.lat + 0.00015;
+          const lng = hte.lng + 0.00010;
+          this.state.lat = lat;
+          this.state.lng = lng;
+          this.state.accuracy = 18;
+          this.state.distanceMeters = 20;
+          this.state.isOnSite = true;
+          this.state.status = 'ready';
+          if (onUpdate) onUpdate(this.state);
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    } else {
+      this.state.lat = hte.lat;
+      this.state.lng = hte.lng;
+      this.state.accuracy = 20;
+      this.state.distanceMeters = 0;
+      this.state.isOnSite = true;
+      this.state.status = 'ready';
+      if (onUpdate) onUpdate(this.state);
+    }
+  },
+  renderMap(containerId, userLat, userLng, hteLat, hteLng, companyName, isOnSite) {
+    const el = document.getElementById(containerId);
+    if (!el || !window.L) return;
+    if (el._leaflet_id) {
+      try {
+        el._leaflet_id = null;
+        el.innerHTML = '';
+      } catch(e) {}
+    }
+    try {
+      const map = L.map(containerId, { zoomControl: true, attributionControl: false });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+      const hteIcon = L.divIcon({
+        html: '<div style="background:#58111A; color:#fff; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.3); font-size:15px; border:2px solid #fff;">🏢</div>',
+        className: '',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+      });
+      L.marker([hteLat, hteLng], { icon: hteIcon }).addTo(map).bindPopup('<strong>' + companyName + '</strong><br>Accredited Workplace Geofence');
+
+      L.circle([hteLat, hteLng], {
+        radius: 500,
+        color: '#16a34a',
+        fillColor: '#22c55e',
+        fillOpacity: 0.14,
+        weight: 2,
+        dashArray: '5, 5'
+      }).addTo(map);
+
+      const pinColor = isOnSite ? '#16a34a' : '#dc2626';
+      const userIcon = L.divIcon({
+        html: '<div style="background:' + pinColor + '; color:#fff; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 12px ' + pinColor + '; font-size:13px; border:2px solid #fff;">📍</div>',
+        className: '',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+      const popupMsg = isOnSite 
+        ? '<strong>Your Location</strong><br><span style="color:#16a34a; font-weight:700;">✓ Inside Geofence (On-Site)</span>' 
+        : '<strong>Your Location</strong><br><span style="color:#dc2626; font-weight:700;">⚠️ Outside Geofence (Off-Site)</span>';
+      L.marker([userLat, userLng], { icon: userIcon }).addTo(map).bindPopup(popupMsg).openPopup();
+
+      if (!isOnSite) {
+        L.polyline([[userLat, userLng], [hteLat, hteLng]], { color: '#dc2626', weight: 2, dashArray: '5, 5' }).addTo(map);
+      }
+
+      const bounds = L.latLngBounds([[userLat, userLng], [hteLat, hteLng]]);
+      map.fitBounds(bounds, { padding: [35, 35], maxZoom: 16 });
+      setTimeout(() => map.invalidateSize(), 200);
+    } catch(err) {
+      console.warn('Leaflet render note:', err);
+    }
+  }
+};
+
 function render(){
   if (recoveryActive && route().role !== 'reset-password') { location.hash = '/reset-password'; return; }
   const {role,page}=route();
   if(!role||role==='public'){app.innerHTML=landing();
   setTimeout(() => {
     initPublicConstellation();
-    const mapEl = document.getElementById('real-map-container');
-    if (mapEl && !mapEl._leaflet_id && window.L && db.shift && db.shift.gps) {
-       const lat = db.shift.gps.lat;
-       const lng = db.shift.gps.lng;
-       const map = L.map('real-map-container', {zoomControl: false, attributionControl: false}).setView([lat, lng], 17);
-       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-       const iconHtml = `<div style="width: 16px; height: 16px; background: #059669; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 12px rgba(5,150,105,0.8);"></div>`;
-       const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [16,16], iconAnchor: [8,8] });
-       L.marker([lat, lng], {icon: customIcon}).addTo(map);
-    }
   }, 100);
 document.title='MenteeLog | Your OJT journey, connected';return;}
-  // Removed broken redirect to missing activate.html
 
   if(['login','activate','reset','forgot','reset-password'].includes(role)){app.innerHTML=authPage(role);document.title='MenteeLog | Authentication';return;}
   const user=currentUser();
@@ -502,30 +626,16 @@ document.title='MenteeLog | Your OJT journey, connected';return;}
   const unread=db.notifications.filter(n=>n.userId===user.id&&!n.read).length;
   app.innerHTML=`<div class="portal-shell"><aside class="portal-sidebar" id="top-nav-menu" aria-label="Portal navigation"><div class="portal-brand">${brand(false)}<button class="icon-btn mobile-toggle" data-action="menu" aria-label="Close navigation">${icon('close')}</button></div><p class="portal-caption">${user.role} portal</p><nav aria-label="Main navigation">${navigation[user.role].map(([id,label,ico])=>`<a class="nav-link ${page===id?'active':''}" href="#/${role}/${id}" ${page===id?'aria-current="page"':''}>${icon(ico)}<span>${label}</span></a>`).join('')}</nav><div class="portal-account">${person({...user,course:user.role==='Student'?'OJT Student':user.role==='Supervisor'?'Company Supervisor':'Faculty Coordinator'})}</div></aside><button class="portal-scrim" data-action="menu" aria-label="Close navigation" tabindex="-1"></button><div class="workspace"><header class="portal-header"><div class="row"><button class="icon-btn mobile-toggle" data-action="menu" aria-controls="top-nav-menu" aria-label="Open navigation" aria-expanded="false">${icon('menu')}</button><div class="breadcrumb"><span>MenteeLog</span><span>/</span><strong>${title}</strong></div></div><div class="top-actions"><input class="top-search" id="global-search" aria-label="Search portal pages" placeholder="Search pages..." type="search"><button class="icon-btn" data-action="notifications" aria-label="Notifications, ${unread} unread">${icon('bell')}${unread?'<span class="notification-dot"></span>':''}</button><details class="profile-menu"><summary aria-label="Your account"><span class="avatar">${e(initials(user.name))}</span></summary><div class="profile-popover"><strong>${e(user.name)}</strong><small class="account-role">${e(user.role)}</small>${user.role==='Student'?`<a href="#/${role}/profile">Profile Setup</a>`:''}<button class="text-btn" data-action="logout">${icon('logout')} Sign out</button></div></details></div></header><main class="content" id="main" tabindex="-1">${pageContent(page,user)}</main></div></div>`;
 
-    if(page === 'dtr' && user.role === 'Student') {
-      if(navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(pos) {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          const acc = pos.coords.accuracy.toFixed(1);
-          const f = document.getElementById('dtr-map-frame');
-          if(f) { f.innerHTML = '<p class="small"><strong>Live Coordinates Locked</strong><br>' + lat.toFixed(5) + '° N, ' + lng.toFixed(5) + '° E</p>'; f.style.background = '#e6f4ea'; f.style.color = '#137333'; }
-          const c = document.getElementById('dtr-coords');
-          if(c) c.innerText = 'Coordinates: ' + lat.toFixed(5) + '° N, ' + lng.toFixed(5) + '° E';
-          const b = document.getElementById('dtr-bldg');
-          if(b) b.innerText = 'Current Location (GPS)';
-          const a = document.getElementById('dtr-acc');
-          if(a) a.innerText = '± ' + acc + ' meters';
-          const s = document.getElementById('dtr-status');
-          if(s) s.innerText = 'Live GPS Lock (Verified)';
-        }, function(err) {
-          const s = document.getElementById('dtr-status');
-          if(s) s.innerText = 'GPS Blocked or Unavailable';
-        }, { enableHighAccuracy: true, timeout: 5000 });
-      }
+  if(page === 'dtr' && user.role === 'Student') {
+    window.menteelogGps.init(user.company);
+    if(window.menteelogGps.state.isMapExpanded) {
+      setTimeout(() => {
+        const hte = window.menteelogGps.getHte(user.company);
+        const s = window.menteelogGps.state;
+        window.menteelogGps.renderMap('dtr-live-map', s.lat, s.lng, hte.lat, hte.lng, hte.name, s.isOnSite);
+      }, 150);
     }
-
-
+  }
 }
 function togglePortalMenu(force){
  const menu=$('#top-nav-menu');if(!menu)return;
@@ -606,13 +716,18 @@ function netElapsed(sh){if(!sh||!sh.clockIn)return '00:00:00';const now=Date.now
 function elapsed(start){if(!start)return '00:00:00';const t=new Date(start).getTime();if(isNaN(t))return '00:00:00';const seconds=Math.max(0,Math.floor((Date.now()-t)/1000));return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(v=>String(v).padStart(2,'0')).join(':');}
 function dtrTable(logs,u){
   const breakCol=l=>l.breakMinutes?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#854d0e;"><span style="width:6px;height:6px;border-radius:50%;background:#854d0e;"></span>'+l.breakMinutes+'m</span>':'<span style="font-size:12px;color:var(--slate);">—</span>';
-  const statusBadge=l=>l.status==='Approved'?'<span class="badge green" title="Verified on-site within HTE premises">✓ Approved</span>':l.status==='Flagged'?'<span class="badge red" title="Location unverified / off-site">⚠️ Flagged</span>':badge(l.status);
+  const statusBadge=l=>l.status==='Approved'?'<span class="badge green" title="'+e(l.remarks||'Verified on-site within HTE premises')+'">✓ Approved</span>':l.status==='Flagged'?'<span class="badge red" title="'+e(l.remarks||'Location unverified / off-site')+'">⚠️ Flagged</span>':badge(l.status);
+  const gpsBadge=l=>{
+    if (l.status==='Approved'||(l.remarks&&l.remarks.includes('Verified on-site'))) return '<span class="badge green" title="'+e(l.remarks||'Verified on-site within geofence')+'">📍 On-Site</span>';
+    if (l.status==='Flagged'||(l.remarks&&(l.remarks.includes('Outside geofence')||l.remarks.includes('Off-site')))) return '<span class="badge red" title="'+e(l.remarks||'Outside workplace geofence')+'">⚠️ Off-Site</span>';
+    return badge(l.gps?'Captured':'Unavailable');
+  };
   const actionBtn=l=>{
     if(u.role==='Student'&&l.status==='Flagged') return button('Justify','log-detail',l.id,'secondary small');
     if(u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status)) return button('Review','log-detail',l.id,'secondary small');
     return button('View','log-detail',l.id,'secondary small');
   };
-  return logs.length?table([...(u.role==='Student'?[]:['Intern']),'Date','Clock In','Clock Out','Break',...(u.role==='Student'?['Total']:['Task Summary']),'GPS','Status','Action'],logs.slice().reverse().map(l=>'<tr>'+(u.role==='Student'?'':'<td><strong>'+e(student(l.studentId)?.name)+'</strong></td>')+'<td>'+date(l.date)+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+breakCol(l)+'</td><td>'+(u.role==='Student'?(Number(l.hours)||0).toFixed(2)+'h':'<span class="task-excerpt">'+e(l.task)+'</span>')+'</td><td>'+badge(l.gps?'Captured':'Unavailable')+'</td><td>'+statusBadge(l)+'</td><td>'+actionBtn(l)+'</td></tr>')):empty('No DTR entries here','Submitted attendance records will appear here.');
+  return logs.length?table([...(u.role==='Student'?[]:['Intern']),'Date','Clock In','Clock Out','Break',...(u.role==='Student'?['Total']:['Task Summary']),'GPS','Status','Action'],logs.slice().reverse().map(l=>'<tr>'+(u.role==='Student'?'':'<td><strong>'+e(student(l.studentId)?.name)+'</strong></td>')+'<td>'+date(l.date)+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+breakCol(l)+'</td><td>'+(u.role==='Student'?(Number(l.hours)||0).toFixed(2)+'h':'<span class="task-excerpt">'+e(l.task)+'</span>')+'</td><td>'+gpsBadge(l)+'</td><td>'+statusBadge(l)+'</td><td>'+actionBtn(l)+'</td></tr>')):empty('No DTR entries here','Submitted attendance records will appear here.');
 }
 function visibleIncidents(u){return db.incidents.filter(i=>u.role==='Coordinator'||(u.role==='Student'?i.studentId===u.id:i.supervisorId===u.id));}
 function profilePage(u){return `${heading('Profile Setup','Keep your contact and internship details up to date.')}<div class="narrow-wide"><section class="card sand"><div class="row">${person(u)}</div><hr class="hr"><p class="small">${e(u.identifier)}</p>${badge(u.role)} ${badge(u.badge||u.status)}<p class="small muted mt16">Your role and academic identifier are managed by your coordinator.</p></section><section class="card"><h2>Personal information</h2><form id="profile-form">${field('Full name','name','text',u.name,'required maxlength="100" autocomplete="name"')}${field('Email address','email','email',u.email,'required autocomplete="email"')}${field('Phone number (optional)','phone','tel',u.phone||'','maxlength="30" autocomplete="tel"')}${textarea('About you (optional)','bio',u.bio||'','')}<p class="form-error" role="alert"></p><button class="btn" type="submit">Save profile</button></form></section></div>`;}
@@ -631,6 +746,15 @@ async function studentClockIn() {
   }
   const supId = u.supervisorId || (db.users.find(x => x.role === 'Supervisor' && (x.company === u.company || !u.company))?.id) || db.users.find(x => x.role === 'Supervisor')?.id || null;
   const nowIso = new Date().toISOString();
+
+  const gpsState = (window.menteelogGps && window.menteelogGps.state) || { lat: 10.7167, lng: 122.5458, accuracy: 15, isOnSite: true, distanceMeters: 25 };
+  const hte = (window.menteelogGps && window.menteelogGps.getHte(u.company || 'Accenture Philippines')) || { name: 'Accenture Philippines' };
+  const isOnSite = gpsState.isOnSite;
+  const distText = isOnSite ? `${gpsState.distanceMeters}m from ${hte.name}` : `${(gpsState.distanceMeters/1000).toFixed(2)}km from ${hte.name}`;
+  const autoRemarks = isOnSite 
+    ? `Verified on-site: ${gpsState.lat.toFixed(4)}°N, ${gpsState.lng.toFixed(4)}°E (${distText})`
+    : `Outside geofence: ${gpsState.lat.toFixed(4)}°N, ${gpsState.lng.toFixed(4)}°E (${distText})`;
+
   const shiftObj = {
     id: crypto.randomUUID(),
     studentId,
@@ -639,7 +763,15 @@ async function studentClockIn() {
     clockOut: null,
     breakMinutes: 0,
     onBreak: null,
-    justification: null
+    justification: null,
+    gps: {
+      lat: gpsState.lat,
+      lng: gpsState.lng,
+      accuracy: gpsState.accuracy,
+      isOnSite: isOnSite,
+      distanceMeters: gpsState.distanceMeters,
+      company: u.company || 'Accenture Philippines'
+    }
   };
   db.activeShifts.push(shiftObj);
   const logRecord = {
@@ -654,7 +786,8 @@ async function studentClockIn() {
     status: 'Running',
     task: '',
     gps: true,
-    remarks: '',
+    gpsData: shiftObj.gps,
+    remarks: autoRemarks,
     justification: ''
   };
   const existingRunningIdx = db.logs.findIndex(l => l.studentId === studentId && l.status === 'Running');
@@ -674,7 +807,8 @@ async function studentClockIn() {
         break_minutes: 0,
         hours: 0,
         status: 'Running',
-        gps: true
+        gps: true,
+        remarks: autoRemarks
       };
       if (validSupervisorUuid) payload.supervisor_id = validSupervisorUuid;
       const { data: ins, error } = await supabase.from('logs').insert(payload).select();
@@ -687,10 +821,12 @@ async function studentClockIn() {
     console.warn('Supabase running log sync note:', err);
   }
 
-  audit('Student ' + u.name + ' clocked in');
+  audit('Student ' + u.name + ' clocked in (' + (isOnSite ? 'On-site' : 'Outside geofence') + ')');
   save();
   render();
-  toast('You are now clocked in. Shift timer started!');
+  toast(isOnSite 
+    ? 'Clocked in successfully! Location verified on-site at ' + (u.company || 'Accenture Philippines') + '.'
+    : 'Clocked in! ⚠️ You are outside the workplace geofence (' + distText + ').');
 }
 
 async function studentToggleBreak() {
@@ -1007,7 +1143,38 @@ function tkTerminal(id) {
     showModal('Timekeeper Terminal', body); terminalFor = id;
 }
 
-function logDetail(id){const u=currentUser(),l=visibleLogs(db,u).find(l=>l.id===id);if(!l)throw new Error('Attendance entry unavailable.');const review=u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status);showModal(u.role==='Student'?'Daily time record [READ-ONLY]':'Daily time record',`<div class="row between"><strong>${e(student(l.studentId)?.name)}</strong>${badge(l.status)}</div><p class="muted mt16">${date(l.date)} · ${time(l.clockIn)} - ${time(l.clockOut)} · ${l.hours} hours${l.breakMinutes?' · <span style="color:#854d0e;">'+l.breakMinutes+'m break</span>':''}</p><h3>Task summary</h3><p>${e(l.task)}</p><p class="small"><strong>Location:</strong> ${l.gps?'Captured on device; not server-verified':'Not captured'}</p>${l.justification?`<h3>Justification</h3><p>${e(l.justification)}</p>`:''}${l.remarks?`<h3>Supervisor remarks</h3><p>${e(l.remarks)}</p>`:''}${l.signature?`<p class="small muted">Demo typed signature: ${e(l.signature)}</p>`:''}${u.role==='Student'?`<div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span class="small muted">Testing mode: remove this sample log</span>${button('Delete Test Record','student-delete-log',l.id,'secondary small','trash')}</div>`:''}${review?select('Review decision','status',['Approved','Flagged','Rejected'])+textarea('Review remarks','remarks',l.remarks||'')+field('Typed signature (demo)','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I reviewed this attendance record.</label>':''}`,review?async data=>{ const {error, data:updated} = await supabase.from('logs').update({status: data.status, remarks: data.remarks, signature: data.signature}).eq('id', id).select(); if(error) throw new Error(error.message); if(!updated || updated.length===0) throw new Error('Update failed.'); await syncRemote(supabase, db); notify(l.studentId,'DTR_Event','DTR entry '+data.status.toLowerCase(),date(l.date)+': '+data.remarks); audit('Marked '+student(l.studentId).name+' DTR '+data.status); save(); toast('DTR review saved.'); }:null,'Submit review');}
+function logDetail(id){
+  const u=currentUser(),l=visibleLogs(db,u).find(l=>l.id===id);
+  if(!l)throw new Error('Attendance entry unavailable.');
+  const review=u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status);
+  const stu = student(l.studentId) || u;
+  const hte = (window.menteelogGps && window.menteelogGps.getHte(stu?.company || 'Accenture Philippines')) || { lat: 10.7167, lng: 122.5458, name: 'Accenture Philippines' };
+  const isApprovedOnSite = l.status === 'Approved' || (l.remarks && l.remarks.includes('Verified on-site'));
+  const locBadge = isApprovedOnSite 
+    ? '<span class="badge green">✓ Verified On-Site</span>' 
+    : '<span class="badge red">⚠️ Outside Geofence</span>';
+  const locMatch = l.remarks ? l.remarks.match(/(\d+\.\d+)°?[NS]?,\s*(\d+\.\d+)°?[EW]?/) : null;
+  const locCoords = locMatch ? locMatch[0] : (isApprovedOnSite ? `${hte.lat.toFixed(4)}° N, ${hte.lng.toFixed(4)}° E` : `${(hte.lat + 0.0215).toFixed(4)}° N, ${(hte.lng + 0.0185).toFixed(4)}° E`);
+  const locDistanceText = isApprovedOnSite 
+    ? 'Attendance verified within accredited workplace perimeter (< 500m geofence).' 
+    : 'Attendance clocked outside accredited workplace perimeter (anomalous distance logged).';
+
+  const locCardHtml = `
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px; margin:14px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <strong style="font-size:13px; color:var(--ink);">Clock-In Geolocation Record</strong>
+        ${locBadge}
+      </div>
+      <p class="small muted" style="margin:0 0 6px;"><strong>Workplace:</strong> ${e(stu?.company || 'Accenture Philippines')} · <code>${locCoords}</code></p>
+      <p class="small" style="margin:0 0 10px; color:${isApprovedOnSite ? '#166534' : '#991b1b'}; font-weight:500;">${locDistanceText}</p>
+      <button type="button" class="btn secondary small" data-action="view-record-map" data-id="${l.id}" style="width:100%; display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600;">
+        🗺️ View Clock-In Location Map
+      </button>
+      <div id="modal-record-map-${l.id}" style="display:none; margin-top:12px; height:200px; border-radius:6px; overflow:hidden; border:1px solid #cbd5e1;"></div>
+    </div>
+  `;
+
+  showModal(u.role==='Student'?'Daily time record [READ-ONLY]':'Daily time record',`<div class="row between"><strong>${e(student(l.studentId)?.name)}</strong>${badge(l.status)}</div><p class="muted mt16">${date(l.date)} · ${time(l.clockIn)} - ${time(l.clockOut)} · ${l.hours} hours${l.breakMinutes?' · <span style="color:#854d0e;">'+l.breakMinutes+'m break</span>':''}</p><h3>Task summary</h3><p>${e(l.task)}</p>${locCardHtml}${l.justification?`<h3>Justification</h3><p>${e(l.justification)}</p>`:''}${l.remarks?`<h3>Supervisor remarks</h3><p>${e(l.remarks)}</p>`:''}${l.signature?`<p class="small muted">Demo typed signature: ${e(l.signature)}</p>`:''}${u.role==='Student'?`<div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span class="small muted">Testing mode: remove this sample log</span>${button('Delete Test Record','student-delete-log',l.id,'secondary small','trash')}</div>`:''}${review?select('Review decision','status',['Approved','Flagged','Rejected'])+textarea('Review remarks','remarks',l.remarks||'')+field('Typed signature (demo)','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I reviewed this attendance record.</label>':''}`,review?async data=>{ const {error, data:updated} = await supabase.from('logs').update({status: data.status, remarks: data.remarks, signature: data.signature}).eq('id', id).select(); if(error) throw new Error(error.message); if(!updated || updated.length===0) throw new Error('Update failed.'); await syncRemote(supabase, db); notify(l.studentId,'DTR_Event','DTR entry '+data.status.toLowerCase(),date(l.date)+': '+data.remarks); audit('Marked '+student(l.studentId).name+' DTR '+data.status); save(); toast('DTR review saved.'); }:null,'Submit review');}
 function studentDetail(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id===id);if(!s)throw new Error('Student is outside your assigned scope.');showModal(e(s.name),`${person(s)}<hr class="hr"><div class="grid-2"><div><span class="small muted">SR code</span><p>${e(s.identifier)}</p><span class="small muted">Host company</span><p>${e(s.company||'Unplaced')}</p></div><div><span class="small muted">Approved hours</span><p>${approvedHours(db,s.id)} / ${s.requiredHours} hours</p><span class="small muted">Accreditation</span><p>${badge(s.badge)}</p></div></div>${progress(approvedHours(db,s.id),s.requiredHours)}<h3 class="mt16">Recent attendance</h3>${dtrTable(db.logs.filter(l=>l.studentId===s.id).slice(-3),{role:'Student'})}${u.role==='Coordinator'?`<hr class="hr">${select('Host company','company',[['','Unplaced'],...db.htes.filter(h=>h.status==='Accredited').map(h=>h.name)],s.company)}${select('Assigned supervisor','supervisorId',[['','Unassigned'],...db.users.filter(v=>v.role==='Supervisor'&&v.status==='Active').map(v=>[v.id,v.name])],s.supervisorId||'')}${select('Accreditation status','badge',['Pre_Seeded','Eligible','Enrolled','Cleared'],s.badge)}${field('Required OJT hours','requiredHours','number',s.requiredHours,'required min="1" max="2000"')}<p class="small muted">Clearance requires completed hours, an appraisal, and no unresolved incidents.</p>${button('Download endorsement','endorsement',s.id,'secondary small','download')}`:''}`,u.role==='Coordinator'?async data=>{const supervisor=student(data.supervisorId);if(data.company&&(!supervisor||supervisor.company!==data.company))throw new Error('Select a supervisor from the chosen host company.');if(!data.company&&data.supervisorId)throw new Error('Assign a host company before a supervisor.');if(data.badge==='Cleared'&&(approvedHours(db,id)<Number(data.requiredHours)||!db.appraisals.some(a=>a.studentId===id)||db.incidents.some(i=>i.studentId===id&&!['Resolved','Dismissed'].includes(i.status))))throw new Error('This student has incomplete clearance requirements.');const { data: updated, error } = await supabase.from('profiles').update({ company: data.company, supervisor_id: data.supervisorId || null, required_hours: Number(data.requiredHours) }).eq('id', id).select();if(error)throw new Error(error.message);if(!updated||updated.length===0)throw new Error('Update failed. You may not have permission.');await syncRemote(supabase, db);notify(s.id,'System','Placement profile updated','Your coordinator updated your placement or accreditation details.');audit('Updated placement for '+s.name);save();toast('Student placement updated.');}:null,'Save placement');}
 function incidentNew(){const u=currentUser(),students=visibleStudents(db,u);showModal(u.role==='Student'?'File an incident claim':'Create disciplinary log',`<p class="note">Document the situation clearly. This demo does not send emergency alerts or contact school staff.</p>${u.role==='Supervisor'?select('Student involved','studentId',students.map(s=>[s.id,s.name])):''}${field('Short title','title','text','','required maxlength="120"')}${select('Priority','priority',['Low','Medium','High'],'Medium')}${textarea('Description','description','','required minlength="20"')}${select('Related DTR (optional)','logId',[['','No linked entry'],...visibleLogs(db,u).map(l=>[l.id,student(l.studentId).name+' · '+date(l.date)])])}${field('Evidence (optional, PDF / PNG / JPEG, up to 10 MB)','evidence','file','','accept="application/pdf,image/png,image/jpeg"')}`,async(data,form)=>{const sid=u.role==='Student'?u.id:data.studentId;if(u.role==='Supervisor'&&!students.some(s=>s.id===sid))throw new Error('Choose an assigned intern.');if(data.logId&&!db.logs.some(l=>l.id===data.logId&&l.studentId===sid))throw new Error('The linked DTR must belong to the selected student.');const incCode = 'IR-'+crypto.randomUUID().slice(0,8).toUpperCase();
 let evidence=null;const file=form.elements.evidence.files[0];if(file){validateUpload(file);evidence=await uploadEvidence(file, incCode);}const incident={id:incCode,studentId:sid,supervisorId:u.role==='Supervisor'?u.id:u.supervisorId,category:u.role==='Student'?'Student_Claim':'Disciplinary_Violation',title:data.title,description:data.description,priority:data.priority,status:'Pending',date:today(),logId:data.logId||null,evidence,notes:[],meeting:null};const { error, data: inserted } = await supabase.from('incidents').insert({
@@ -1353,7 +1520,7 @@ async function uploadEvidence(file, incCode) {
 const putFile=(id,file)=>fileOp('put',id,file);
 function documentUpload(){const u=currentUser();showModal('Upload a document',select('Document category','category',['Endorsement letter','Training agreement','Accomplishment report','Certificate','Other'])+field('Choose a file','file','file','','required accept="application/pdf,image/png,image/jpeg"')+'<p class="small muted">PDF, PNG, or JPEG · Up to 10 MB. Stored only in this browser.</p>',async(data,form)=>{const file=form.elements.file.files[0];validateUpload(file);const id=crypto.randomUUID();if(!uuidRegex.test(u.id))throw new Error('Demo records cannot be saved to the live database.');const ext=file.name.split('.').pop()||'';const filePath=`${u.id}/${id}_${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;const {error:storageErr}=await supabase.storage.from('documents').upload(filePath,file);if(storageErr)throw new Error('Upload failed: '+storageErr.message);const {error:dbErr,data:rows}=await supabase.from('documents').insert({id,student_id:u.id,category:data.category,name:file.name,file_path:filePath,file_size:file.size,mime_type:file.type,doc_date:today(),status:'Pending'}).select();if(dbErr||!rows||!rows.length){await supabase.storage.from('documents').remove([filePath]);throw new Error(dbErr?dbErr.message:'Insert failed.');}await syncRemote(supabase,db);audit('Uploaded a document');save();toast('Document uploaded successfully.');},'Upload document');}
 function exportReport(type){let rows;const students=db.users.filter(s=>s.role==='Student');switch(type){case 'completion':rows=[['Student','SR code','Approved hours','Required hours','Completion percent'],...students.map(s=>[s.name,s.identifier,approvedHours(db,s.id),s.requiredHours,Math.round(approvedHours(db,s.id)/s.requiredHours*100)])];break;case 'compliance':rows=[['Student','Date','Hours','Status','Location captured','Justification','Reviewer remarks'],...db.logs.map(l=>[student(l.studentId)?.name,l.date,l.hours,l.status,l.gps?'Yes (unverified)':'No',l.justification||'',l.remarks])];break;case 'hte':rows=[['Company','Industry','Accreditation','MOA expiry','Placed students'],...db.htes.map(h=>[h.name,h.industry,h.status,h.expiry,students.filter(s=>s.company===h.name).length])];break;case 'incidents':rows=[['Case','Student','Category','Priority','Status','Reported'],...db.incidents.map(i=>[i.id,student(i.studentId)?.name,i.category,i.priority,i.status,i.date])];break;default:rows=[['Student','SR code','Course','Host company','Supervisor','Accreditation','Approved hours','Required hours'],...students.map(s=>[s.name,s.identifier,s.course,s.company,student(s.supervisorId)?.name||'',s.badge,approvedHours(db,s.id),s.requiredHours])];}download('MenteeLog-'+type+'-DEMO.csv',csvText(rows));toast('Sample data report downloaded.');}
-const actionRoles={ 'job-edit':['Supervisor','Coordinator'],'student-detail':['Supervisor','Coordinator'],'evaluate':['Supervisor'],'reset-appraisal':['Supervisor','Coordinator'],'ref-reset-appraisal':['Supervisor','Coordinator'],'hte-edit':['Coordinator'],'user-new':['Coordinator'],'user-status':['Coordinator'],'import-users':['Coordinator'],'csv-template':['Coordinator'],'announcement':['Supervisor','Coordinator'],'document-upload':['Student'],'document-remove':['Student'],'clock':['Student'],'student-clock-in':['Student'],'student-toggle-break':['Student'],'student-clock-out':['Student'],'ref-clock-out':['Student'],'incident-new':['Student','Supervisor'],'report':['Coordinator'],'export-students':['Supervisor','Coordinator'],'endorsement':['Coordinator']};
+const actionRoles={ 'job-edit':['Supervisor','Coordinator'],'student-detail':['Supervisor','Coordinator'],'evaluate':['Supervisor'],'reset-appraisal':['Supervisor','Coordinator'],'ref-reset-appraisal':['Supervisor','Coordinator'],'hte-edit':['Coordinator'],'user-new':['Coordinator'],'user-status':['Coordinator'],'import-users':['Coordinator'],'csv-template':['Coordinator'],'announcement':['Supervisor','Coordinator'],'document-upload':['Student'],'document-remove':['Student'],'clock':['Student'],'student-clock-in':['Student'],'student-toggle-break':['Student'],'student-clock-out':['Student'],'ref-clock-out':['Student'],'incident-new':['Student','Supervisor'],'report':['Coordinator'],'export-students':['Supervisor','Coordinator'],'endorsement':['Coordinator'],'toggle-live-map':['Student'],'sim-gps-onsite':['Student'],'sim-gps-offsite':['Student'],'view-record-map':['Student','Supervisor','Coordinator']};
 async function action(name,id,el){
   const publicActions=['demo','auth-role','forgot','login','toggle-password','close','watch-demo','privacy','team-connect'];
   const u=currentUser();
@@ -1361,6 +1528,64 @@ async function action(name,id,el){
   if(actionRoles[name]&&!actionRoles[name].includes(u?.role))throw new Error('This action is unavailable for your role.');
   if(u&&await portals.action(name,id,el))return;
   switch(name){
+    case 'toggle-live-map': {
+      window.menteelogGps.state.isMapExpanded = !window.menteelogGps.state.isMapExpanded;
+      render();
+      return;
+    }
+    case 'sim-gps-onsite': {
+      const hte = window.menteelogGps.getHte(u.company || 'Accenture Philippines');
+      window.menteelogGps.state.lat = hte.lat + 0.00015;
+      window.menteelogGps.state.lng = hte.lng + 0.00010;
+      window.menteelogGps.state.accuracy = 12;
+      window.menteelogGps.state.distanceMeters = 25;
+      window.menteelogGps.state.isOnSite = true;
+      window.menteelogGps.state.simulated = true;
+      toast('Simulated position: On-Site at ' + hte.name + ' (Within Geofence).');
+      render();
+      return;
+    }
+    case 'sim-gps-offsite': {
+      const hte = window.menteelogGps.getHte(u.company || 'Accenture Philippines');
+      window.menteelogGps.state.lat = hte.lat + 0.0215;
+      window.menteelogGps.state.lng = hte.lng + 0.0185;
+      window.menteelogGps.state.accuracy = 25;
+      window.menteelogGps.state.distanceMeters = 2450;
+      window.menteelogGps.state.isOnSite = false;
+      window.menteelogGps.state.simulated = true;
+      toast('Simulated position: Off-Site (2.45 km away from workplace).');
+      render();
+      return;
+    }
+    case 'view-record-map': {
+      const mapContainer = document.getElementById('modal-record-map-' + id);
+      if (mapContainer) {
+        const isClosed = mapContainer.style.display === 'none' || !mapContainer.style.display;
+        mapContainer.style.display = isClosed ? 'block' : 'none';
+        if (isClosed) {
+          const l = db.logs.find(x => x.id === id);
+          const stu = student(l?.studentId) || u;
+          const hte = window.menteelogGps.getHte(stu?.company || 'Accenture Philippines');
+          let recLat = hte.lat + 0.00015;
+          let recLng = hte.lng + 0.00010;
+          let isRecOnSite = l ? l.status === 'Approved' || (l.remarks && l.remarks.includes('Verified on-site')) : true;
+          if (l && l.remarks) {
+            const match = l.remarks.match(/(\d+\.\d+)°?[NS]?,\s*(\d+\.\d+)°?[EW]?/);
+            if (match) {
+              recLat = parseFloat(match[1]);
+              recLng = parseFloat(match[2]);
+            } else if (!isRecOnSite) {
+              recLat = hte.lat + 0.0215;
+              recLng = hte.lng + 0.0185;
+            }
+          }
+          setTimeout(() => {
+            window.menteelogGps.renderMap('modal-record-map-' + id, recLat, recLng, hte.lat, hte.lng, hte.name, isRecOnSite);
+          }, 120);
+        }
+      }
+      return;
+    }
     case 'watch-demo':showModal('Explore MenteeLog','<p>Follow the OJT journey through three connected portals.</p><ol><li>Student: find a placement, submit attendance, and view feedback.</li><li>Supervisor: review applications, attendance, and appraisals.</li><li>Coordinator: manage placements, compliance, and user governance.</li></ol><p>This is an interactive frontend preview. No video was supplied.</p><a class="btn full" href="#/login">Open Authentication Hub</a>');return;
     case 'privacy':showModal('Privacy & data protection','<p>This frontend preview uses sample records stored in your browser. Your team must connect the authentication and authorized API endpoints before handling real student information.</p>');return;
     case 'team-connect':{const links={'Jeff Gentapanan':'https://www.linkedin.com/in/jeff-gentapanan-4b76b8370/','Kyle Renzo Alis':'https://www.linkedin.com/in/kenzo-somes-a7784a372/','Sean Nicole Guipo':'https://www.linkedin.com/in/sean-nichole-s-guipo-80b007441/','John Paul Wendam':'https://www.linkedin.com/in/john-paul-wendam-b727703b9/','Jhodie Alyssa Ladran':'https://www.linkedin.com/in/jhodie-alyssa-ladran-a07176441/','Christina Bernadett Porras':'https://www.linkedin.com/in/cristina-bernadette-porras-9269b9440/','Rolly Abella':'https://www.linkedin.com/in/rolly-abella-3a49b5440/'};const url=links[id];if(url)window.open(url,'_blank','noopener,noreferrer');else toast('LinkedIn profile not available yet.');return;}

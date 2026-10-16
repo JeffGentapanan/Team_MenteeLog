@@ -351,8 +351,31 @@ export function createPortalViews(c){
   }
 
   async function action(name,id,el){
+    if(['toggle-live-map','sim-gps-onsite','sim-gps-offsite','view-record-map'].includes(name)) return false;
     if(name==='application-detail'&&u().role!=='Student'){const a=visibleApplications(db(),u()).find(a=>a.id===id);if(!a)throw new Error('Application outside your scope.');const captured=c.capture(()=>c.legacy.applicationDetail(id));c.showModal(captured.title,captured.body+(a.resumeId?b('Preview Applicant Resume','ref-file-preview',a.resumeId,'secondary full'):''),captured.onSubmit,captured.label);return true;}
-    if((name==='log-detail'||name==='ref-justify-modal')&&u().role==='Student'){const l=visibleLogs(db(),u()).find(l=>l.id===id);if(!l)throw new Error('DTR unavailable.');if(['Flagged','Rejected'].includes(l.status)){c.showModal('Write Justification',`<p class="muted small mb16" style="text-transform: uppercase; font-weight: 600;">${date(l.date)} - ${l.status}</p><h3>Flag Reason</h3><p class="ref-alert mb16">${e(l.remarks||'GPS Mismatch - logged in 2.3 km outside registered geofence.')}</p><p class="muted small mb16">Your justification will be forwarded to your supervisor for review. Be clear and factual.</p>${ta('Your Explanation','justification',l.justification||'','required minlength="10" placeholder="Explain the reason for the attendance anomaly (e.g. internet outage, venue change, device issue)..."')}${f('Attach Evidence','evidence','file','','accept="application/pdf,image/png,image/jpeg"')}<p class="small muted mt8">PNG, JPG or PDF (max. 10MB)</p>`,async(v,form)=>{const file=form.elements.evidence.files[0];if(file){validateUpload(file);const doc={id:crypto.randomUUID(),studentId:u().id,category:'DTR Justification',name:file.name,type:file.type,size:file.size,date:today()};await c.putFile(doc.id,file);db().documents.push(doc);l.evidenceId=doc.id;}const { error, data: updated } = await supabase.from('logs').update({ justification: v.justification, status: 'Pending' }).eq('id', l.id).select();
+    if((name==='log-detail'||name==='ref-justify-modal')&&u().role==='Student'){
+      const l=visibleLogs(db(),u()).find(l=>l.id===id);
+      if(!l)throw new Error('DTR unavailable.');
+      if(['Flagged','Rejected'].includes(l.status)){
+        const stu = u();
+        const hte = (window.menteelogGps && window.menteelogGps.getHte(stu?.company || 'Accenture Philippines')) || { lat: 10.7167, lng: 122.5458, name: 'Accenture Philippines' };
+        const locMatch = l.remarks ? l.remarks.match(/(\d+\.\d+)°?[NS]?,\s*(\d+\.\d+)°?[EW]?/) : null;
+        const locCoords = locMatch ? locMatch[0] : `${(hte.lat + 0.0215).toFixed(4)}° N, ${(hte.lng + 0.0185).toFixed(4)}° E`;
+        const locCard = `
+          <div style="background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; padding:12px; margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <strong style="font-size:13px; color:#9f1239;">Clock-In Location Anomaly</strong>
+              <span class="badge red">⚠️ Outside Geofence</span>
+            </div>
+            <p class="small muted" style="margin:0 0 6px;"><strong>Workplace:</strong> ${e(stu?.company || 'Accenture Philippines')} · <code>${locCoords}</code></p>
+            <p class="small" style="margin:0 0 10px; color:#991b1b;">Shift was recorded outside the 500m geofence perimeter. Please provide an official justification.</p>
+            <button type="button" class="btn secondary small" data-action="view-record-map" data-id="${l.id}" style="width:100%; display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600;">
+              🗺️ View Clock-In Location Map
+            </button>
+            <div id="modal-record-map-${l.id}" style="display:none; margin-top:12px; height:200px; border-radius:6px; overflow:hidden; border:1px solid #cbd5e1;"></div>
+          </div>
+        `;
+        c.showModal('Write Justification',`<p class="muted small mb16" style="text-transform: uppercase; font-weight: 600;">${date(l.date)} - ${l.status}</p><h3>Flag Reason</h3><p class="ref-alert mb16">${e(l.remarks||'GPS Mismatch - logged outside accredited workplace geofence.')}</p>${locCard}<p class="muted small mb16">Your justification will be forwarded to your supervisor for review. Be clear and factual.</p>${ta('Your Explanation','justification',l.justification||'','required minlength="10" placeholder="Explain the reason for the attendance anomaly (e.g. client site visit, official fieldwork, internet outage)..."')}${f('Attach Evidence','evidence','file','','accept="application/pdf,image/png,image/jpeg"')}<p class="small muted mt8">PNG, JPG or PDF (max. 10MB)</p>`,async(v,form)=>{const file=form.elements.evidence.files[0];if(file){validateUpload(file);const doc={id:crypto.randomUUID(),studentId:u().id,category:'DTR Justification',name:file.name,type:file.type,size:file.size,date:today()};await c.putFile(doc.id,file);db().documents.push(doc);l.evidenceId=doc.id;}const { error, data: updated } = await supabase.from('logs').update({ justification: v.justification, status: 'Pending' }).eq('id', l.id).select();
 if (error) throw new Error(error.message);
 if (!updated || updated.length === 0) throw new Error('Update failed or rejected by security rules.');
 await c.syncRemote(supabase, db());
@@ -751,64 +774,65 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
       @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 
-    <div class="location-panel" style="margin-top: 32px; border: 2px dashed rgba(88,17,26,0.15); border-radius: 12px; padding: 24px; position: relative; overflow: hidden; background: #FAF8F5; text-align: left;">
-      
-      <div class="dtr-map-loader">
-         <div class="radar-ping"></div>
-         <strong style="color: var(--burgundy); font-size: 16px;">Scanning Map Location...</strong>
-      </div>
+    ${(() => {
+      const gps = (window.menteelogGps && window.menteelogGps.state) || { lat: 10.7167, lng: 122.5458, accuracy: 15, isOnSite: true, distanceMeters: 25, isMapExpanded: false };
+      const hte = (window.menteelogGps && window.menteelogGps.getHte(u().company)) || { name: u().company || 'Accenture Philippines', lat: 10.7167, lng: 122.5458, radiusMeters: 500 };
+      const isOnSite = gps.isOnSite;
+      const distText = isOnSite 
+        ? `${gps.distanceMeters}m from ${e(hte.name)}` 
+        : `${(gps.distanceMeters/1000).toFixed(2)} km away from ${e(hte.name)}`;
 
-      ${shift && shift.gps && typeof shift.gps === 'object' && shift.gps.lat != null ? `
-        <div style="background: var(--surface); border-radius: 8px; padding: 16px; margin-bottom: 16px; text-align: center; border: 1px solid var(--line);">
-          <strong style="color: #059669; font-size: 14px; display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 16px;">
-            ${icon('check')} Live Coordinates Locked
-          </strong>
-          
-          <!-- Visual Map Frame for Leaflet (Handled by app.js) -->
-          <div id="real-map-container" style="width: 100%; height: 220px; border-radius: 8px; border: 1px solid var(--line); position: relative; overflow: hidden; z-index: 1; margin-bottom: 12px; background: #E2E8F0;"></div>
-        </div>
-        
-        <div style="text-align: center; margin-bottom: 16px;">
-          <strong style="font-size: 16px; color: var(--ink);">${icon('pin')} <span id="dtr-loc-name">${e(u().company||'Assigned workplace')}</span></strong>
-          <small style="display:block; margin-top: 8px; font-family: monospace; color: var(--ink-light); font-size: 13px;">${Number(shift.gps.lat).toFixed(5)}, ${Number(shift.gps.lng).toFixed(5)}</small>
-          <small style="display:block; margin-top: 4px; font-weight: 700; color: #0284C7; font-size: 13px;">${ (Math.abs(Number(shift.gps.lat) * 111 - 1615) % 2.5 + 0.05).toFixed(2) } km away from workplace</small>
-        </div>
+      return `
+        <div class="location-panel" style="margin-top: 24px; border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #ffffff; text-align: left; box-shadow: var(--shadow-sm);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <strong style="font-size:15px; color:var(--ink);">${icon('pin')} HTE Geofence Verification</strong>
+              ${isOnSite 
+                ? '<span class="badge green" style="padding:4px 10px; font-weight:700;">✓ Inside Geofence (On-Site)</span>' 
+                : '<span class="badge red" style="padding:4px 10px; font-weight:700;">⚠️ Outside Geofence (Off-Site)</span>'}
+            </div>
+            <button type="button" class="btn secondary small" data-action="toggle-live-map" style="display:inline-flex; align-items:center; gap:6px; font-weight:600;">
+              🗺️ ${gps.isMapExpanded ? 'Hide Map ▴' : 'Expand Geofence Map ▾'}
+            </button>
+          </div>
 
-        <details style="background: var(--surface); padding: 12px; border-radius: 8px; border: 1px solid var(--line);">
-          <style>
-            .dtr-tech-summary { font-weight: 600; font-size: 15px !important; color: var(--ink); cursor: pointer; outline: none; text-decoration: underline; text-underline-offset: 4px; padding-left: 4px; }
-            .dtr-tech-summary::marker { font-size: 18px; }
-            .dtr-tech-summary::-webkit-details-marker { font-size: 18px; }
-          </style>
-          <summary class="dtr-tech-summary">Technical Details</summary>
-          <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 13px;">
-            <span class="muted">Accuracy</span>
-            <strong style="font-family: monospace;">± ${Number(shift.gps.accuracy || 12).toFixed(1)} meters</strong>
+          <div style="margin-bottom:12px;">
+            <strong style="display:block; font-size:14px; color:var(--ink); margin-bottom:2px;">${e(hte.name)}</strong>
+            <span class="small muted" style="font-family:monospace;">Coordinates: ${gps.lat.toFixed(5)}° N, ${gps.lng.toFixed(5)}° E (±${gps.accuracy}m)</span>
           </div>
-          <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px;">
-            <span class="muted">Signal Status</span>
-            <strong style="color: #059669;">Verified</strong>
+
+          ${isOnSite ? `
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; color:#166534; font-size:13px;">
+              <strong style="display:block; margin-bottom:2px;">📍 Verified On-Site (${distText})</strong>
+              You are within the accredited 500-meter workplace perimeter. Attendance will be automatically verified on clock-out.
+            </div>
+          ` : `
+            <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px 14px; color:#991b1b; font-size:13px;">
+              <strong style="display:block; margin-bottom:2px;">⚠️ Outside Accredited Geofence (${distText})</strong>
+              You are outside the workplace perimeter. If you clock in and out from here, your shift will be <strong>flagged for supervisor review and justification</strong>.
+            </div>
+          `}
+
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-top:14px; padding-top:10px; border-top:1px dashed #e2e8f0; font-size:12px; color:var(--slate);">
+            <span>Test Proximity Simulator:</span>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="btn secondary small" data-action="sim-gps-onsite" style="padding:3px 10px; font-size:11px; ${isOnSite ? 'background:#dcfce7; border-color:#86efac; color:#166534; font-weight:700;' : ''}">📍 Simulate On-Site</button>
+              <button type="button" class="btn secondary small" data-action="sim-gps-offsite" style="padding:3px 10px; font-size:11px; ${!isOnSite ? 'background:#fee2e2; border-color:#fca5a5; color:#991b1b; font-weight:700;' : ''}">🚗 Simulate Off-Site (2.5 km)</button>
+            </div>
           </div>
-        </details>
-      ` : (shift && shift.gps ? `
-        <div style="text-align: center; padding: 20px 0;">
-           <div style="display:inline-flex; align-items:center; gap:8px; background:#dcfce7; color:#166534; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; margin-bottom:12px;">
-             ${icon('check')} Live On-Site Location Verified
-           </div>
-           <strong style="display:block; color: var(--ink); font-size: 16px;">${e(u().company||'Assigned workplace')}</strong>
-           <small style="display: block; margin-top: 6px; color: var(--slate);">Shift tracking active with device timekeeping lock.</small>
+
+          ${gps.isMapExpanded ? `
+            <div style="margin-top:16px;">
+              <div id="dtr-live-map" style="width:100%; height:230px; border-radius:8px; border:1px solid #cbd5e1; overflow:hidden; background:#f1f5f9;"></div>
+              <p class="small muted" style="margin:6px 0 0; text-align:right;">Green circle indicates accredited 500m HTE geofence perimeter.</p>
+            </div>
+          ` : ''}
+
+          <!-- Hidden spans for app.js legacy references -->
+          <div style="display:none;"><span id="dtr-coords"></span><span id="dtr-acc"></span><span id="dtr-status"></span><div id="dtr-map-frame"></div></div>
         </div>
-      ` : `
-        <div style="text-align: center; padding: 24px 0;">
-           <div style="font-size: 32px; color: rgba(88,17,26,0.3); margin-bottom: 16px;">${icon('pin')}</div>
-           <strong style="color: var(--ink); font-size: 16px;">${e(u().company||'Assigned workplace')}</strong>
-           <small style="display: block; margin-top: 8px; color: var(--ink-light);">No verified location available.</small>
-        </div>
-      `)}
-    </div>
-    
-    <!-- Hidden spans for app.js legacy references -->
-    <div style="display:none;"><span id="dtr-coords"></span><span id="dtr-acc"></span><span id="dtr-status"></span><div id="dtr-map-frame"></div></div>
+      `;
+    })()}
   </div>
 `)}
 </div><div>${panel('Recent Clock-ins', (list.length ? `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><span class="small muted">Past shifts and accomplishments</span>${b('Clear Test Records', 'ref-clear-test-logs', '', 'secondary small', 'trash')}</div>` : '') + c.dtrTable(list.slice(0, 5), u()) + '<div style="margin-top: 24px; text-align: center;">' + nav('See All DTR History', 'dtr', 'history', '', 'secondary full') + '</div>')}${panel('Recent Saved Drafts', '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><span class="small muted">Prepare task accomplishments in advance</span>' + b('+ Write Task Draft', 'ref-draft-new', '', 'primary small', 'file') + '</div>' + (drafts.length ? table(['Date','Task Summary','Action'], drafts.slice(0,3).map(d=>`<tr><td>${date(d.date)}</td><td><span class="task-excerpt">${e(d.task)}</span></td><td><div class="row" style="gap:4px;">${b('View','ref-draft-view',d.id,'secondary small')}${b('Edit','ref-draft-edit',d.id,'secondary small')}</div></td></tr>`)) : empty('No saved drafts','Save a task summary draft to continue or submit it later.')) + '<div style="margin-top: 24px; text-align: center;">' + nav('See All Saved Drafts History', 'dtr', 'drafts', '', 'secondary full') + '</div>')}</div></div>`;
