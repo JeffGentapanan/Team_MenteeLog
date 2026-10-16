@@ -506,15 +506,12 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
           {title:isRejected?'Application Decision':'Official Placement',sub:isRejected?'Slot Filled / Declined':'Deployment Confirmed',state:isAccepted?'Accepted':isRejected?'Rejected':'Pending'}
         ];
 
-        return `<section class="card" style="padding:0; overflow:hidden; border:1px solid var(--line, #eadfce); border-radius:16px; margin-top:20px; box-shadow:0 6px 20px rgba(88,17,26,0.05);">
-          <!-- Top Accent Bar -->
-          <div style="height:5px; background:${isAccepted?'linear-gradient(90deg, #58111A 0%, #16a34a 100%)':isRejected?'#dc2626':'linear-gradient(90deg, #58111A 0%, #d97706 100%)'};"></div>
-
-          <div style="padding:24px 28px;">
+        return `<section class="card" style="padding:24px 28px; border:1px solid var(--line, #eadfce); border-radius:16px; margin-top:20px; box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+          <div>
             <!-- Card Header -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; padding-bottom:20px; border-bottom:1px solid var(--line, #f1e8d8);">
               <div style="display:flex; align-items:flex-start; gap:16px;">
-                <div style="width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg, #58111A 0%, #7f1d1d 100%); color:#FAF4E8; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; letter-spacing:0.5px; box-shadow:0 4px 12px rgba(88,17,26,0.2); flex-shrink:0;">
+                <div style="width:56px; height:56px; border-radius:14px; background:var(--burgundy, #58111A); color:#FAF4E8; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; letter-spacing:0.5px; flex-shrink:0;">
                   ${e(initials)}
                 </div>
                 <div>
@@ -551,7 +548,7 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
                 ${stages.map((st,i)=>{
                   const done=i<=level && !isRejected;
                   const active=i===level && !isAccepted && !isRejected;
-                  return `<div style="position:relative; background:${done?'#ffffff':'#f8f5ee'}; border:1.5px solid ${done?(isAccepted&&i===3?'#86efac':'#d6c4a5'):'#e5dec9'}; border-radius:10px; padding:14px 16px; display:flex; align-items:flex-start; gap:12px; box-shadow:${done?'0 2px 8px rgba(88,17,26,0.05)':'none'};">
+                  return `<div style="position:relative; background:${done?'#ffffff':'#f8f5ee'}; border:1px solid ${done?(isAccepted&&i===3?'#86efac':'#d6c4a5'):'#e5dec9'}; border-radius:10px; padding:14px 16px; display:flex; align-items:flex-start; gap:12px;">
                     <div style="width:30px; height:30px; border-radius:50%; background:${done?(isAccepted&&i===3?'#16a34a':'#58111A'):active?'#d97706':'#e2e8f0'}; color:${done||active?'#ffffff':'#64748b'}; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0;">
                       ${done?'✓':(i+1)}
                     </div>
@@ -572,7 +569,7 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
                   <strong style="font-size:13px; color:var(--ink); display:flex; align-items:center; gap:6px;">${icon('check')} Official Endorsement & Review Note</strong>
                   <span class="badge green" style="font-size:10.5px;">Verified</span>
                 </div>
-                <p style="margin:0 0 14px; font-size:13.5px; color:var(--ink); line-height:1.55; background:#f8fafc; padding:10px 12px; border-left:3px solid #58111A; border-radius:4px;">
+                <p style="margin:0 0 14px; font-size:13.5px; color:var(--ink); line-height:1.55; background:#f8fafc; padding:10px 12px; border:1px solid var(--line, #e2e8f0); border-radius:6px;">
                   "${e(a.note||'Endorsed by faculty coordinator and accepted by company supervisor.')}"
                 </p>
                 <div>

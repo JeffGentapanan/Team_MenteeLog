@@ -419,7 +419,7 @@ function guideBody(icon) {
                 <h3 style="color: var(--burgundy); font-size: 24px; margin-bottom: 24px; border-bottom: 2px solid #EFDFBB; padding-bottom: 12px; text-align: center;">${cat.title}</h3>
                 <div class="guide-grid">
                     ${cat.cards.map(([mod, title, desc, fullText]) => `
-                        <article class="guide-card reveal-on-scroll" style="border-top: 4px solid var(--maroon); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column;">
+                        <article class="guide-card reveal-on-scroll" style="border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column;">
                             <div class="guide-content" style="padding: 28px 24px; display: flex; flex-direction: column; flex-grow: 1;">
                                 <div style="width: 40px; height: 40px; background: #f5ebe0; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--maroon);">
                                     ${icon('file')}
