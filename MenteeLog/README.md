@@ -2,13 +2,56 @@
 
 **A modern, secure, and centralized web-based On-the-Job Training tracking platform.**
 
+[![Academic Scope](https://img.shields.io/badge/Academic%20Scope-BSIT%20Only-58111A.svg?style=for-the-badge)](#-academic-scope--institutional-policy)
+[![Institutional Policy](https://img.shields.io/badge/Institutional%20Email-Strictly%20Required-D85A63.svg?style=for-the-badge)](#-academic-scope--institutional-policy)
+[![CHED Compliance](https://img.shields.io/badge/Compliance-CHED%20CMO%20104%20s.%202017-059669.svg?style=for-the-badge)](#-institutional-compliance--ched-cmo-104-s-2017-alignment)
+[![AI Engineering](https://img.shields.io/badge/AI%20Assisted-Antigravity%20AI%20(Google%20DeepMind)-4285F4.svg?style=for-the-badge)](#-antigravity-ai-engineering--architecture-collaboration)
+
 ---
 
 ## 📌 Project Overview
 
-**MenteeLog** is a centralized, department-level web platform designed to modernize and streamline On-the-Job Training (OJT) tracking. It eliminates paper-based Daily Time Records (DTR), simplifies Host Training Establishment (HTE) accreditation, automates attendance verification through GPS geofencing, and provides a connected, auditable digital workflow for students, company supervisors, and faculty coordinators.
+**MenteeLog** is a specialized, enterprise-grade On-the-Job Training (OJT) and internship management system engineered to modernize, automate, and govern university internship programs. It completely replaces fragile, easily forged paper Daily Time Records (DTR) and uncoordinated logbooks with an automated, tamper-resistant digital ecosystem.
 
-Developed for university OJT programs (including Batangas State University), MenteeLog unifies placement discovery, automated geofence attendance tracking, daily task summaries, performance appraisals with drawn digital signatures, and CHED compliance reporting into three specialized portals.
+MenteeLog unifies the entire internship lifecycle across three interconnected portals:
+1. **OJT Student Interns** — Autonomous placement discovery, automated 100m GPS geofenced attendance tracking, millisecond shift timers with break tracking, saved task drafts, and digital appraisal transparency.
+2. **Host Training Establishment (HTE) Supervisors** — Streamlined applicant screening pipelines, automated on-site attendance crediting, off-site anomaly justification audits with location maps, and 7-criteria performance evaluations authenticated via drawn digital canvas signatures.
+3. **Faculty OJT Coordinators & Academic Administrators** — Corporate HTE accreditations, bulk student cohort placements, continuous compliance queues, dispute and incident mediation, and single-click CHED completion reporting.
+
+Developed specifically for university academic departments (with initial rollout tailored for Batangas State University), MenteeLog enforces strict academic integrity, automated geofence verifications, and standardized institutional compliance.
+
+---
+
+## 🎓 Academic Scope & Institutional Policy
+
+### 1. BSIT (Bachelor of Science in Information Technology) Course ONLY
+MenteeLog is **purpose-built and strictly scoped exclusively for Bachelor of Science in Information Technology (BSIT)** curricula:
+* **Curricular Hour Target:** Optimized for BSIT required internship hours (standard 300 to 500 hours depending on the academic track).
+* **Technical Industry Tracks:** Listings, skill tags, and evaluation instruments are calibrated for software engineering, web and mobile development, network administration, ICT infrastructure, database management, technical support, and cybersecurity internships.
+* **Non-BSIT Syllabi Excluded:** MenteeLog does not accommodate clinical hospital rotations (Nursing), maritime sea-time logs, or hotel/restaurant kitchen duty rotations, as each non-IT discipline possesses vastly divergent accreditation rubrics and regulatory board mandates.
+
+### 2. Strict Institutional Student Email Requirement
+> [!IMPORTANT]
+> **MenteeLog strictly requires educational institutions to provide official institutional student email accounts (e.g., `@g.batstate-u.edu.ph`, `@university.edu.ph`).**
+
+* **Schools Without Institutional Email Systems Are NOT Supported:** Educational institutions that do not issue institutional email accounts to their students cannot be onboarded to MenteeLog.
+* **Identity Verification & Anti-Impersonation:** Account activation requires matching an institutional email domain with a pre-seeded student identification number (SR Code). Public, free, or disposable email addresses (such as `@gmail.com`, `@yahoo.com`, or `@outlook.com` for student accounts) are barred from self-registration to prevent impersonation, unauthorized roster infiltration, and academic fraud.
+* **Automated Identity Binding:** Pre-seeding student rosters via CSV binds each student's SR Code directly to their official institutional email address, ensuring only verified students can receive activation OTPs and access the platform.
+
+---
+
+## ⚠️ System Boundaries, Constraints & Limitations
+
+To ensure transparency and operational reliability, MenteeLog operates under clearly defined technical and institutional boundaries:
+
+| Dimension | Scope & Policy | Operational Constraint & Mitigation |
+| :--- | :--- | :--- |
+| **Academic Program** | **BSIT Only** | Does not support non-IT disciplines (nursing, maritime, HRM, education). |
+| **Institutional Email** | **Mandatory Institutional Domain** | Universities without institutional email domains cannot onboard; ensures verified academic identity. |
+| **GPS Geofence Perimeter** | **Strict 100-Meter Radial Boundary** | Calibrated to the physical building footprint of accredited HTE offices. Clock-ins outside 100m are flagged as off-site anomalies. |
+| **Client Geolocation Hardware** | **HTML5 Geolocation API Dependent** | Requires client devices with GPS hardware/location services enabled. Indoor multipath or browser permission blocks are resolved via the Attendance Justification Modal. |
+| **Network Connectivity** | **Online Real-Time Transmission** | Telemetry, shift timestamps, and task summaries require an active internet connection at clock-in and clock-out moments; offline synchronization is not supported. |
+| **Fieldwork & Remote Tasks** | **Exception Justification Workflow** | Interns assigned to client sites, outdoor networking, or remote duties must submit an Attendance Justification with map pins and proof for supervisor approval. |
 
 ---
 
@@ -34,13 +77,120 @@ Developed for university OJT programs (including Batangas State University), Men
 
 ---
 
-## 👥 System Roles & Permissions
+## 🤖 Antigravity AI Engineering & Architecture Collaboration
 
-| Role | Main Responsibilities |
-| :--- | :--- |
-| **Student / Trainee** | Browse accredited HTEs, submit applications, upload clearances & MOAs, track live Attendance & DTR (100m GPS clock in/out, millisecond break resume, saved task drafts), review clock-in location maps, submit justifications for flagged shifts, and file incident claims. |
-| **Supervisor / Industry Partner** | Post verified training slots, review applicants in a unified pipeline, monitor intern progress (Rendered, Required & Remaining hours), review flagged attendance anomalies and map justifications, and evaluate interns with 7-criteria performance appraisals signed on an interactive digital canvas. |
-| **Coordinator / Faculty Admin** | Accredit HTE partners, manage bulk student placements, monitor cohort DTR compliance, mediate student incidents, pre-seed student cohorts via CSV, and export 1-click CHED CMO 104 s. 2017 reports. |
+MenteeLog was engineered in close collaboration with **Antigravity AI**, Google DeepMind's Advanced Agentic Coding assistant. The agentic AI architecture played an instrumental role across critical engineering modules:
+
+1. **Geodesic Haversine Geofencing Engine:**
+   * Formulated and implemented the spherical trigonometry Haversine algorithm in vanilla JavaScript to calculate real-time Euclidean distance between student GPS telemetry and HTE company coordinates with sub-meter precision.
+   * Engineered the automated 100m boundary evaluation logic that automatically categorizes shifts into verified on-site records versus flagged off-site anomalies.
+2. **High-DPI Canvas Draw Signature Station:**
+   * Designed the responsive HTML5 drawing canvas with dynamic `devicePixelRatio` scaling, eliminating blurriness on retina displays and mobile touch screens.
+   * Implemented smooth Bézier curve interpolation for pen/mouse strokes, clear canvas handlers, and base64 vector extraction directly embedded into appraisal records.
+3. **Multi-Tab Scoped Session Isolation:**
+   * Diagnosed and eliminated cross-tab session bleed and accidental role overwrites by creating an isolated session management architecture (`sessionStorage.SESSION.<role>`).
+   * Ensured browser refreshes retain the exact portal subview, active shift timer state, and draft reflections without session termination.
+4. **Custom Vector SVG Mapping & Coordinate Calibration:**
+   * Replaced generic raster icons with bespoke, hardware-rendered SVG teardrop corporate pins and pulsing emerald radar beacons (`mlgPulse`).
+   * Calibrated pixel anchor points to `[22, 53]` to ensure mathematical needle-tip precision on Leaflet map tiles.
+   * Implemented the fullscreen modal overlay with dynamic Leaflet tile re-rendering and `ESC` key accessibility.
+5. **Quality-Gated Build & Zero-Regression Verification:**
+   * Managed automated test cycles, Vite 8 module bundling, memory allocation optimizations, and syntax integrity validations to ensure zero compilation errors.
+
+---
+
+## 🛠️ Comprehensive Technology Stack & Libraries
+
+### 1. Languages
+* **JavaScript (ECMAScript 2023 / ES6+):** Modular vanilla ES module architecture (`export`, `import`) delivering near-zero runtime overhead and maximum execution speed.
+* **HTML5:** Semantic markup, custom SVG graphic nodes, and HTML5 Canvas API for digital signature capture.
+* **CSS3:** Custom design token system, CSS custom properties (variables), Flexbox/CSS Grid layouts, glassmorphism filters, and GPU-accelerated `@keyframes` animations.
+* **SQL (PostgreSQL Dialect):** Relational schema definitions, relational integrity foreign keys, check constraints, and Supabase Row Level Security (RLS) policies.
+
+### 2. Frontend Framework & Tooling
+* **Vite 8.x:** Next-generation frontend bundler providing instant Hot Module Replacement (HMR) and optimized Rollup/Rolldown production chunking.
+* **React 19 (Selective Ecosystem Components):** Utilized for specialized reactive components and interactive UI micro-interactions.
+* **Oxlint:** Ultra-fast Rust-based linter ensuring clean code syntax, memory safety, and strict style compliance.
+
+### 3. Mapping, GIS & Geolocation Libraries
+* **Leaflet.js (v1.9.4):** High-performance, mobile-friendly interactive mapping library powering geofence visualization, custom tile rendering, and coordinate projection.
+* **OpenStreetMap (OSM):** Standardized, open-source cartographic tile server providing street-level geographic topology.
+* **W3C Geolocation API:** Standardized HTML5 browser API interfacing directly with client GPS hardware for high-accuracy latitude, longitude, and accuracy radius ingestion.
+
+### 4. Backend & Cloud Infrastructure
+* **Supabase BaaS:**
+  * **PostgreSQL 15+:** Fully relational cloud database managing users, jobs, applications, DTR logs, incident claims, and appraisals.
+  * **Supabase Auth:** Secure credential authentication, session tokens, and password hashing (bcrypt/Argon2).
+  * **Row Level Security (RLS):** Granular database-level access policies guaranteeing students, supervisors, and coordinators can only query authorized records.
+  * **Supabase Storage:** Cloud storage buckets for student clearance documents, MOA PDFs, and incident evidence attachments.
+* **Node.js (v20+ LTS):** Server runtime environment supporting build tooling and developer scripts.
+* **Hybrid Local Persistence Engine:** In-memory reactive state manager with browser storage synchronization (`localStorage` and scoped `sessionStorage`) providing seamless offline fallbacks and demonstration stability.
+
+---
+
+## 🔒 Security Architecture & Tamper Resistance
+
+MenteeLog implements multi-layered security controls to protect academic records and prevent fraud:
+
+```mermaid
+flowchart TD
+    subgraph ClientSecurity ["Client-Side Security Layers"]
+        A["Institutional Email Domain Check"] --> B["Pre-Seeded SR Code Validation"]
+        B --> C["6-Digit Numeric OTP Activation"]
+        C --> D["Multi-Tab Scoped Session Isolation (sessionStorage.SESSION.role)"]
+        D --> E["150-Char Task Summary Minimum Quality Gate"]
+    end
+
+    subgraph HardwareAndTelemetry ["Telemetry & Geolocation Defense"]
+        F["WGS84 GPS Telemetry Ingestion"] --> G["100m Haversine Geofence Evaluation"]
+        G --> H{"Within 100m HTE Perimeter?"}
+        H -->|"Yes"| I["Auto-Verified Shift"]
+        H -->|"No"| J["Flagged Off-Site Anomaly + Justification Audit"]
+    end
+
+    subgraph DataAndSignatureSecurity ["Data & Signature Integrity"]
+        K["High-DPI HTML5 Canvas Drawing Pad"] --> L["Vector Stroke Binding & Base64 Lock"]
+        L --> M["Supabase Row Level Security (RLS)"]
+        M --> N["Immutable Audit Trail & CHED Archiving"]
+    end
+
+    ClientSecurity --> HardwareAndTelemetry --> DataAndSignatureSecurity
+```
+
+1. **Role-Based Access Control (RBAC):**
+   * Strict separation of user roles (Student, Supervisor, Coordinator) enforced at both routing and database query layers.
+2. **Institutional Identity Binding:**
+   * Students cannot register arbitrarily. Only accounts pre-seeded by faculty coordinators containing verified university SR Codes and institutional email domains can be activated.
+3. **Multi-Tab Session Isolation:**
+   * Eliminates browser storage race conditions. Running student, supervisor, and coordinator portals concurrently across multiple browser tabs maintains independent, isolated sessions without privilege elevation.
+4. **GPS Geofence Spoofing & Anomaly Defense:**
+   * Real-time Haversine distance validation against verified HTE building coordinates.
+   * Telemetry coordinates are permanently recorded alongside attendance records. Out-of-bounds shifts are locked in review status until accompanied by supervisor-approved justifications.
+5. **Canvas Signature Tamper Resistance:**
+   * Supervisors cannot complete performance appraisals using uploaded image files or plain text names. Signatures require live mouse, pen, or touch drawing on an HTML5 canvas pad that permanently binds to the appraisal payload.
+6. **Input Sanitization & Character Gates:**
+   * HTML entity encoding prevents Cross-Site Scripting (XSS).
+   * Daily task reflections enforce a strict 150-character minimum quality gate to prevent low-effort, invalid, or empty daily logs.
+
+---
+
+## 👥 System Roles & Permissions Matrix
+
+| Feature / Module | OJT Student | Company Supervisor | Faculty Coordinator | System Admin |
+| :--- | :---: | :---: | :---: | :---: |
+| **Browse HTE Opportunities** | ✅ View & Apply | ❌ | ✅ Full Oversight | ✅ Full Oversight |
+| **Manage Training Slots** | ❌ | ✅ Create / Edit Own | ✅ Cross-HTE Audit | ✅ Full Oversight |
+| **Clock In / Out (100m GPS)** | ✅ Personal Clock | ❌ | ❌ | ❌ |
+| **Pause / Resume Breaks** | ✅ Personal Shift | ❌ | ❌ | ❌ |
+| **Submit DTR Justification** | ✅ For Own Shift | ❌ | ❌ | ❌ |
+| **Review Flagged Shifts** | ❌ | ✅ Approve / Reject | ✅ Audit Access | ✅ Full Oversight |
+| **Submit Performance Appraisal** | ❌ | ✅ 7-Criteria + Canvas Signature | ❌ | ❌ |
+| **View Final Appraisal Rubric** | ✅ View Own | ✅ View Own Trainees | ✅ Global Audit | ✅ Full Oversight |
+| **File Workplace Incident** | ✅ File Claim | ✅ File Disciplinary | ❌ (Mediator) | ✅ Full Oversight |
+| **Mediate & Reassign Trainees** | ❌ | ❌ | ✅ Mediate / Reassign | ✅ Full Oversight |
+| **HTE Accreditation & MOA** | ❌ | ❌ | ✅ Accredit & Renew | ✅ Full Oversight |
+| **Pre-Seed Candidates (CSV)** | ❌ | ❌ | ✅ Import Roster | ✅ Full Oversight |
+| **Export CHED CMO 104 Reports** | ❌ | ❌ | ✅ 1-Click Export | ✅ Full Oversight |
 
 ---
 
@@ -78,7 +228,7 @@ flowchart TD
         I -->|"Yes"| J["Student: Start Break (Work Timer Pauses, Break Timer Runs)"]:::student
         J --> K["Student: End Break & Resume (Precision Resumption)"]:::student
         K --> H
-        I -->|"No"| L["Student: Clock Out & Submit Daily Task Summary"]:::student
+        I -->|"No"| L["Student: Clock Out & Submit Daily Task Summary (Min. 150 Chars)"]:::student
         L --> M{"GPS Check: Within 100m HTE Geofence?"}:::decision
         M -->|"Yes (On-Site)"| N["✓ Auto-Verified On-Site: Hours Accrue Directly to Meter"]:::action
         M -->|"No (Off-Site Anomaly)"| O["⚠️ Shift Flagged: Student Submits Justification with Map Record"]:::alert
@@ -137,10 +287,10 @@ graph TD
   %% 1. PUBLIC & AUTHENTICATION PORTAL
   %% ====================================================
   subgraph PublicAuth ["1.0 Public & Authentication Portal"]
-    P1["1.0 Landing Page (Hero & Stats)"]
+    P1["1.0 Landing Page (Hero, Opportunities & OJT Guide)"]
     P2["1.1 Auth Hub (Multi-Role Gateway)"]
     P3["1.2 Forgot Password Modal"]
-    P4["1.3 Account Activation / Password Reset"]
+    P4["1.3 Account Activation / Password Reset (SR Code + OTP)"]
 
     P1 --> P2
     P2 --> P3
@@ -150,10 +300,10 @@ graph TD
   %% ====================================================
   %% 2. OJT STUDENT PORTAL
   %% ====================================================
-  subgraph StudentPortal ["2.0 OJT Student Portal"]
+  subgraph StudentPortal ["2.0 OJT Student Portal (BSIT Only)"]
     S0["2.0 Student Dashboard<br/>(Rendered Hours, Progress Bar & Host Company)"]
     S1["2.1 Profile Setup & Settings"]
-    S2["2.2 Job Browse & Apply<br/>(CHED Accredited HTE Listings)"]
+    S2["2.2 Job Browse & Apply<br/>(CHED Accredited BSIT HTE Listings)"]
     S3["2.3 Application Status Tracker"]
     S4["2.4 Attendance & DTR Geofence Hub<br/><b>100m Workplace Geofence · Live Map & Fullscreen View</b><br/><i>(Live Clock In/Out, Auto-Verification & Breaks)</i>"]
     S4_Justify["2.4a Attendance Justification Modal<br/><i>(Off-Site Flag Explanation & Clock-In Location Map)</i>"]
@@ -180,7 +330,7 @@ graph TD
     Sup2["3.2 Log Sheets & Attendance Overview<br/><b>Auto-Verified Hours Tracking</b><br/><i>(Rendered, Required & Remaining Hours · Review Flagged Shifts & Record Map)</i>"]
     Sup3["3.3 Disciplinary Module (Incident Form & DTR Link)"]
     Sup4["3.4 Performance Appraisal Module<br/>(7-Criteria Rubric, 5-Point Scale & Canvas Signature)"]
-    Sup5["3.5 Slot Management (OJT Job Postings & Capacity)"]
+    Sup5["3.5 Slot Management (BSIT Job Postings & Capacity)"]
 
     Sup0 --> Sup1
     Sup0 --> Sup2
@@ -202,7 +352,7 @@ graph TD
     C6["4.6 Incident Reports<br/>(Red Queue & Mediation Meeting Scheduler)"]
 
     subgraph UserGov ["4.7 User Management Scope"]
-      C7_1["Pre-Seed OJT Candidates<br/>(CSV Batch Import: identifier, name, email, course)"]
+      C7_1["Pre-Seed OJT Candidates<br/>(CSV Batch Import: Institutional Emails Only)"]
       C7_2["Provision Faculty Accounts"]
       C7_3["RBAC Security Summary"]
       C7_1 --> C7_2
@@ -314,7 +464,7 @@ graph TB
   subgraph StudentPortal["STUDENT PORTAL SERVICES"]
     Dashboard2["2.0 Student Dashboard<br/><i>(OJT Progress, Hours & HTE Details)</i>"]
     ProfileSetup2["2.1 Profile Setup"]
-    JobBrowse2["2.2 Job Browse & Apply<br/><i>(CHED Accredited Listings)</i>"]
+    JobBrowse2["2.2 Job Browse & Apply<br/><i>(CHED Accredited BSIT Listings)</i>"]
     ApplicationStatus2["2.3 Application Status Tracker"]
     
     subgraph StudentDTRSub["2.4 Attendance & Geofence Hub"]
@@ -364,7 +514,7 @@ graph TB
     end
 
     subgraph UserManagementScope["4.7 User Management Scope"]
-      PreSeedBatch4["Pre-Seed OJT Candidates<br/><i>(CSV Batch Import)</i>"]
+      PreSeedBatch4["Pre-Seed OJT Candidates<br/><i>(CSV Batch Import: Institutional Emails Only)</i>"]
       ProvisionCoordinator4["Provision Faculty Accounts"]
       RBACSummary4["RBAC Security Summary"]
     end
@@ -511,73 +661,36 @@ graph TB
 
 ---
 
-## 🔐 Core Portals Breakdown
+## 🔑 Demonstration Accounts & Test Credentials
 
-### 1. Student Portal (`#/student/dashboard`)
-* **Dashboard:** Visual progress bar (`Rendered / Required hours`), placement overview, and active supervisor contact details.
-* **OJT Placement:** Directory of accredited partner companies with skill-matching badges, BSIT scope filters, and slot availability.
-* **My Applications:** Pipeline tracking from *Pending* to *Under Review* to *Accepted*.
-* **Attendance & DTR Hub (`#/student/dtr`):**
-  * **100m GPS Geofence Verification:** Measures proximity to accredited workplace premises using Haversine calculation.
-  * **Interactive Leaflet Map & Fullscreen Viewer:** High-definition vector pins (crimson building pin and green radar pulsing beacon) with a dedicated `⛶ Wide / Fullscreen` button.
-  * **Automated Clock-Out Verification:** Shifts clocked inside the 100m perimeter are automatically verified on-site.
-  * **Attendance Justification Modal:** Off-site shifts are flagged with an anomaly notice, allowing the intern to submit an explanation with attached evidence and inspect the recorded clock-in map.
-  * **Break & Task Tracking:** High-precision pause/resume for lunch breaks and task reflection saving.
-* **Requirements & Vault:** Secure document uploader for medical clearances, parent consent waivers, and endorsed MOAs.
-* **Performance Appraisal:** 7-criteria rubric breakdown and digital drawn canvas signature verification.
-* **Incident Reports:** Dispute filing system with screenshot and document attachment support.
-
-### 2. Supervisor Portal (`#/supervisor/dashboard`)
-* **Dashboard:** Active intern roster overview with quick-action cards and shift status summaries.
-* **Candidate Review:** Unified applicant pipeline with tabs (*All*, *Under Review*, *Accepted*, *Rejected*) and resume preview.
-* **Log Sheets & Attendance Overview (`#/supervisor/dtr`):**
-  * **Automatic Attendance Monitoring:** Tracks accrued intern hours without requiring daily manual clock-in intervention.
-  * **Flagged Shift Review & Map Inspection:** Review off-site attendance anomalies, read intern justifications, and inspect the exact clock-in geolocation with the `⛶ Wide / Fullscreen` map viewer.
-* **Performance Appraisal (`#/supervisor/appraisals`):** 7-criteria evaluation instrument with 1–5 scoring scale (+ N/A option) and an executive HTML5 high-DPI canvas drawing pad for authentic digital signatures.
-* **Slot Management:** Creation of training listings strictly bound to the supervisor's accredited company profile.
-* **Incident Hub:** Disciplinary action reporting and incident tracking.
-
-### 3. Coordinator Portal (`#/coordinator/dashboard`)
-* **Dashboard:** Cohort placement statistics, accredited partner totals, and compliance alerts.
-* **HTE Accreditation:** Directory management, accreditation renewals, and partner verification.
-* **Student Placement:** Unified roster pipeline to review applications and assign students to accredited HTEs.
-* **DTR Compliance Queue:** Global audit log of all rendered student hours, flagged records, and attendance anomalies.
-* **Report Generation:** Export batch completion certificates and CHED CMO-compliant CSV reports with a single click.
-* **Central Incident Hub:** Mediation center for workplace harassment, AWOL claims, and placement reassignment.
-* **User Management Scope:** Pre-seed candidate rosters via CSV import, provision faculty accounts, and review RBAC security.
-
----
-
-## 🔑 Demo Accounts & Credentials
-
-To explore the connected portals, use the following pre-configured demonstration accounts:
+To evaluate the integrated portals, use the following pre-configured demonstration accounts:
 
 > **Universal Demo Password:** `Demo@2026!`
 
-| Portal | Role | Username / Identifier | Registered Email | Assigned Company / Dept |
+| Portal | Role | Username / Identifier | Registered Email (Institutional) | Assigned HTE Company / Department |
 | :--- | :--- | :--- | :--- | :--- |
-| **Student** | OJT Student | `2021-00421` | `kenzosomes@gmail.com` | Accenture Philippines (Assigned to `shisuizhin`) |
-| **Supervisor** | Industry Supervisor | `shisulzhin@gmail.com` | `shisulzhin@gmail.com` | Accenture Philippines (Supervising `kenzosomes`) |
+| **Student** | OJT Trainee (BSIT) | `2021-00421` | `kenzosomes@gmail.com` | Accenture Philippines (Supervised by `shisuizhin`) |
+| **Supervisor** | Industry Partner | `shisulzhin@gmail.com` | `shisulzhin@gmail.com` | Accenture Philippines (Managing BSIT Trainees) |
 | **Coordinator** | Faculty Admin | `FAC-2026-001` | `jeff.gentapanan2004525@gmail.com` | College of Information Technology |
 
 ---
 
-## ⚡ Recent Updates & Key Improvements
+## ⚡ Recent Platform Innovations & Feature Updates
 
 ### 1. Automated 100m GPS Geofence Verification (`#/student/dtr`)
-* Scaled down the geofence perimeter from an overly broad 500m area to a focused **100-meter radius**, representing the actual building footprint and campus grounds (e.g. Accenture Philippines at Iloilo Business Park).
+* Calibrated the geofence boundary to a strict **100-meter radius**, mirroring the actual footprint of accredited workplace offices.
 * On-site shifts are placed directly within the building premises (~11 meters from building center).
-* When interns clock out on-site, attendance is automatically verified, relieving supervisors of tedious daily manual timekeeping sign-offs.
+* Shifts clocked out on-site are automatically verified and immediately accrue toward the student's curriculum target, eliminating daily manual timekeeper burdens for company supervisors.
 
-### 2. High-Definition Vector Map Pins & Pulse Animation
-* **Accredited Workplace Pin:** Replaced generic emoji circles with an executive teardrop pin in MenteeLog's signature deep burgundy (`#58111A`), a white circular badge with a corporate building vector icon, and a dark *"Workplace"* label pill.
-* **Intern Location Beacon:** Custom emerald green pin (`#059669`) featuring an intern silhouette icon, 3D drop shadow, an animated pulsing radar wave (`@keyframes mlgPulse`), and a *"You (On-Site)"* label pill.
-* **Off-Site Warning Pin:** Crimson alert pin (`#dc2626`) with a warning indicator and red pulsing radar ring for anomalous locations.
-* **Pixel-Perfect Needle Tip:** Anchors are calibrated to `[22, 53]` to pinpoint coordinates on the map tiles with exact precision.
+### 2. High-Definition Vector Map Pins & Pulse Radar Animation
+* **Accredited Workplace Pin:** Executive teardrop pin in MenteeLog's signature deep burgundy (`#58111A`) with a corporate office vector glyph and a *"Workplace"* label pill.
+* **Intern Location Beacon:** Custom emerald green pin (`#059669`) with an intern silhouette icon, 3D drop shadow, an animated pulsing radar wave (`@keyframes mlgPulse`), and a *"You (On-Site)"* label pill.
+* **Off-Site Warning Pin:** Crimson alert pin (`#dc2626`) with a warning glyph and red pulsing radar ring for out-of-bounds locations.
+* **Pixel-Perfect Needle Anchoring:** Calibrated to `[22, 53]` to ensure mathematical needle-tip precision on Leaflet map tiles.
 
 ### 3. Dedicated Wide / Fullscreen Interactive Map Viewer
-* Added **`⛶ Wide / Fullscreen`** buttons across the Student DTR card, DTR History modal, and Attendance Justification modal.
-* Opens an expansive viewport overlay with backdrop blur, coordinates badge, geofence status badge, pan/zoom controls, and instant **`ESC` key** dismissal.
+* Added **`⛶ Wide / Fullscreen`** controls across the Student DTR card, DTR History modal, and Attendance Justification modal.
+* Opens an expansive viewport overlay with backdrop blur, telemetry badge, geofence status badge, pan/zoom controls, and instant **`ESC` key** dismissal.
 * In on-site mode, the map automatically fits closely around the 100m circle (Zoom Level 18) for an unobstructed, close-up street view.
 
 ### 4. Interactive Draw Signature Station for Appraisals (`#/supervisor/appraisals`)
@@ -595,43 +708,10 @@ To explore the connected portals, use the following pre-configured demonstration
 * Zero-scroll 100% zoom fit ensuring all form inputs, role capsules, actions, and activation links fit cleanly without page scrolling.
 
 ### 7. Account Activation & OTP Verification Flow (`#/activate`)
-* 3-step activation pipeline: identifier & email verification, 6-digit numeric OTP validation, and secure password setup.
+* 3-step activation pipeline: identifier & institutional email verification, 6-digit numeric OTP validation, and secure password setup.
 
 ### 8. BSIT Scope Focus & Academic Standardization
 * Standardized academic scope strictly to **BSIT (Bachelor of Science in Information Technology)** across the public landing page, student directory, partner listings, and portal dashboards.
-
----
-
-## 💻 Technology Stack
-
-* **Frontend:** Vanilla JavaScript (ES6+ modular architecture), React 19, Vite 8, Leaflet.js (GIS/Mapping), GPU-accelerated CSS3.
-* **Backend & Database:** Supabase, PostgreSQL, Node.js, Express.
-* **Design & Motion:** Figma, React Bits, Anime.js-inspired keyframe physics.
-* **Code Quality & Linting:** Oxlint, modern ES modules.
-
----
-
-## 🚀 Local Development Setup
-
-To run the application locally on your machine:
-
-```bash
-# 1. Navigate to the frontend directory
-cd MenteeLog
-
-# 2. Install dependencies
-npm install
-
-# 3. Start the local development server (Vite)
-npm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173) in your browser to view the application.
-
-To create a production build:
-```bash
-npm run build
-```
 
 ---
 
@@ -641,22 +721,60 @@ npm run build
 Team_MenteeLog/
 ├── MenteeLog/                  # Core frontend application (Vite project)
 │   ├── src/
-│   │   ├── css/                # Stylesheets & animations (animations.css, portal-reference.css)
-│   │   ├── js/                 # Application modules (app.js, public.js, portal-views.js, domain.js)
-│   │   └── supabaseClient.js   # Supabase database & auth client
-│   ├── public/                 # Static assets & logos
-│   ├── package.json            # Dependencies and scripts
-│   └── vite.config.js          # Vite bundler configuration
-├── docs/                       # Project documentation & diagrams
-│   ├── diagrams/               # Architecture diagrams (ERD, sitemap, process flow)
-│   ├── design/                 # UI designs and design system specs
-│   └── assets/                 # Supporting documentation media
-├── scripts/                    # Developer & migration tooling
-│   ├── maintenance/            # Utility scripts for unicode sanitization & README builds
-│   └── migration_patches/      # Database and schema migration patches
-├── .gitignore                  # Root git ignore file
-└── README.md                   # Main project documentation
+│   │   ├── css/                # Stylesheets & animations
+│   │   │   ├── animations.css          # Keyframes, radar pulse, glassmorphism transitions
+│   │   │   ├── portal-reference.css    # Unified multi-portal layout and component styling
+│   │   │   ├── reference.css           # Public landing and authentication stylesheets
+│   │   │   └── tokens.css              # Color tokens, brand typography, and CSS variables
+│   │   ├── js/                 # Application architecture modules
+│   │   │   ├── app.js                  # Master application orchestrator, router, and session lifecycle
+│   │   │   ├── portal-views.js         # Student, Supervisor & Coordinator portal views & Leaflet maps
+│   │   │   ├── portal-domain.js        # Domain business logic, mock fallbacks, and storage syncing
+│   │   │   ├── public.js               # Public landing page, OJT Success Guide, and Knowledge Base
+│   │   │   └── auth-experience.js      # Interactive analog/digital clock dial & spotlight animations
+│   │   ├── supabaseClient.js   # Supabase client instantiation, DB tables & Auth interface
+│   │   ├── index.html          # Main HTML entry point with Leaflet and Google Fonts CDN assets
+│   │   └── main.jsx            # Application bootstrap script
+│   ├── public/                 # Static assets, logos, and reference photographs
+│   ├── package.json            # Node.js dependencies, scripts, and build configuration
+│   └── vite.config.js          # Vite configuration and bundler settings
+├── docs/                       # Project documentation & architectural diagrams
+│   ├── diagrams/               # Architecture diagrams (ERD, sitemaps, process flows)
+│   └── design/                 # UI designs and design system specifications
+├── scripts/                    # Developer, migration, and build maintenance tooling
+├── .gitignore                  # Git repository exclusion rules
+└── README.md                   # Main project documentation (this file)
 ```
+
+---
+
+## 🚀 Local Development Setup
+
+To run MenteeLog locally on your workstation:
+
+```bash
+# 1. Navigate to the core frontend directory
+cd MenteeLog
+
+# 2. Install dependencies
+npm install
+
+# 3. Start the local Vite development server
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your modern web browser.
+
+To create an optimized production build:
+```bash
+npm run build
+```
+
+> [!TIP]
+> If building on Windows workstations with restricted default Node heap allocation, allocate additional virtual memory:
+> ```powershell
+> $env:NODE_OPTIONS="--max-old-space-size=4096"; npm run build
+> ```
 
 ---
 
@@ -666,7 +784,7 @@ MenteeLog is developed collaboratively by:
 
 | Name | Role / Responsibility |
 | :--- | :--- |
-| **Jeff A. Gentapanan** | Project Manager |
+| **Jeff A. Gentapanan** | Project Manager / Lead |
 | **Kyle Renzo C. Alis** | Software Generalist |
 | **Cristina Bernadette Porras** | UI/UX Designer |
 | **John Paul B. Wendam** | Frontend Developer |
@@ -676,6 +794,9 @@ MenteeLog is developed collaboratively by:
 
 ---
 
-## 📄 License & Institutional Compliance
+## 📄 Institutional Compliance & CHED CMO 104 s. 2017 Alignment
 
-Designed and developed in compliance with **CHED Memorandum Order (CMO) No. 104, Series of 2017** (*Revised Guidelines for Student Internship Program in the Philippines*) for tertiary academic institutions.
+MenteeLog is designed and developed in strict compliance with **CHED Memorandum Order (CMO) No. 104, Series of 2017** (*Revised Guidelines for Student Internship Program in the Philippines* - SIPP) for Higher Education Institutions (HEIs):
+* **Section 11 (Obligations of HEI):** Provides continuous tracking of intern hours, verified supervisor placements, and centralized dispute mediation logs.
+* **Section 13 (Obligations of HTE):** Automates verified daily attendance tracking, guarantees structured training mentors, and standardizes competency-based evaluation instruments.
+* **Section 14 (Student Intern Obligations):** Mandates timely submission of daily task reflections (minimum 150 characters) and adherence to workplace location bounds.
