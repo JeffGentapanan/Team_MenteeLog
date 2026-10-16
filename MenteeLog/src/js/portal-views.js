@@ -368,7 +368,7 @@ export function createPortalViews(c){
               <span class="badge red">⚠️ Outside Geofence</span>
             </div>
             <p class="small muted" style="margin:0 0 6px;"><strong>Workplace:</strong> ${e(stu?.company || 'Accenture Philippines')} · <code>${locCoords}</code></p>
-            <p class="small" style="margin:0 0 10px; color:#991b1b;">Shift was recorded outside the 500m geofence perimeter. Please provide an official justification.</p>
+            <p class="small" style="margin:0 0 10px; color:#991b1b;">Shift was recorded outside the 100m geofence perimeter. Please provide an official justification.</p>
             <div style="display:flex; gap:8px;">
               <button type="button" class="btn secondary small" data-action="view-record-map" data-id="${l.id}" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600;">
                 🗺️ Toggle Record Map
@@ -780,8 +780,8 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
     </style>
 
     ${(() => {
-      const gps = (window.menteelogGps && window.menteelogGps.state) || { lat: 10.7167, lng: 122.5458, accuracy: 15, isOnSite: true, distanceMeters: 25, isMapExpanded: false };
-      const hte = (window.menteelogGps && window.menteelogGps.getHte(u().company)) || { name: u().company || 'Accenture Philippines', lat: 10.7167, lng: 122.5458, radiusMeters: 500 };
+      const gps = (window.menteelogGps && window.menteelogGps.state) || { lat: 10.71678, lng: 122.54586, accuracy: 8, isOnSite: true, distanceMeters: 11, isMapExpanded: false };
+      const hte = (window.menteelogGps && window.menteelogGps.getHte(u().company)) || { name: u().company || 'Accenture Philippines', lat: 10.7167, lng: 122.5458, radiusMeters: 100 };
       const isOnSite = gps.isOnSite;
       const distText = isOnSite 
         ? `${gps.distanceMeters}m from ${e(hte.name)}` 
@@ -814,7 +814,7 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
           ${isOnSite ? `
             <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; color:#166534; font-size:13px;">
               <strong style="display:block; margin-bottom:2px;">📍 Verified On-Site (${distText})</strong>
-              You are within the accredited 500-meter workplace perimeter. Attendance will be automatically verified on clock-out.
+              You are within the accredited 100-meter workplace perimeter. Attendance will be automatically verified on clock-out.
             </div>
           ` : `
             <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px 14px; color:#991b1b; font-size:13px;">
@@ -837,7 +837,7 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
                 ⛶ Fullscreen
               </button>
               <div id="dtr-live-map" style="width:100%; height:230px; border-radius:8px; border:1px solid #cbd5e1; overflow:hidden; background:#f1f5f9;"></div>
-              <p class="small muted" style="margin:6px 0 0; text-align:right;">Green circle indicates accredited 500m HTE geofence perimeter.</p>
+              <p class="small muted" style="margin:6px 0 0; text-align:right;">Green circle indicates accredited 100m HTE geofence perimeter.</p>
             </div>
           ` : ''}
 

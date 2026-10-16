@@ -473,26 +473,26 @@ modal.addEventListener('close',()=>{modalSubmit=null;if(modalOpener?.isConnected
 function download(name,content,type='text/csv;charset=utf-8'){const url=URL.createObjectURL(content instanceof Blob?content:new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 window.menteelogGps = {
   htes: {
-    'Accenture Philippines': { lat: 10.7167, lng: 122.5458, name: 'Accenture Philippines (Mandurriao, Iloilo City)', radiusMeters: 500 },
-    'Globe Telecom': { lat: 10.6969, lng: 122.5644, name: 'Globe Telecom (City Proper, Iloilo City)', radiusMeters: 500 },
-    'BDO Unibank': { lat: 10.7225, lng: 122.5564, name: 'BDO Unibank (Jaro, Iloilo City)', radiusMeters: 500 },
-    'MORE Power': { lat: 10.7100, lng: 122.5700, name: 'MORE Power (La Paz, Iloilo City)', radiusMeters: 500 },
-    'PhilStar Digital': { lat: 10.7020, lng: 122.5500, name: 'PhilStar Digital (Molo, Iloilo City)', radiusMeters: 500 },
-    'SM Technologies': { lat: 10.7140, lng: 122.5480, name: 'SM Technologies (Mandurriao, Iloilo City)', radiusMeters: 500 }
+    'Accenture Philippines': { lat: 10.7167, lng: 122.5458, name: 'Accenture Philippines (Mandurriao, Iloilo City)', radiusMeters: 100 },
+    'Globe Telecom': { lat: 10.6969, lng: 122.5644, name: 'Globe Telecom (City Proper, Iloilo City)', radiusMeters: 100 },
+    'BDO Unibank': { lat: 10.7225, lng: 122.5564, name: 'BDO Unibank (Jaro, Iloilo City)', radiusMeters: 100 },
+    'MORE Power': { lat: 10.7100, lng: 122.5700, name: 'MORE Power (La Paz, Iloilo City)', radiusMeters: 100 },
+    'PhilStar Digital': { lat: 10.7020, lng: 122.5500, name: 'PhilStar Digital (Molo, Iloilo City)', radiusMeters: 100 },
+    'SM Technologies': { lat: 10.7140, lng: 122.5480, name: 'SM Technologies (Mandurriao, Iloilo City)', radiusMeters: 100 }
   },
   state: {
-    lat: 10.7167,
-    lng: 122.5458,
-    accuracy: 15,
+    lat: 10.71678,
+    lng: 122.54586,
+    accuracy: 8,
     isOnSite: true,
-    distanceMeters: 25,
+    distanceMeters: 11,
     simulated: false,
     isMapExpanded: false,
     status: 'detecting'
   },
   getHte(company) {
     if (company && this.htes[company]) return this.htes[company];
-    return { lat: 10.7167, lng: 122.5458, name: company || 'Accenture Philippines', radiusMeters: 500 };
+    return { lat: 10.7167, lng: 122.5458, name: company || 'Accenture Philippines', radiusMeters: 100 };
   },
   calcDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3;
@@ -509,7 +509,7 @@ window.menteelogGps = {
     const hte = this.getHte(company);
     if (this.state.simulated) {
       this.state.distanceMeters = this.calcDistance(this.state.lat, this.state.lng, hte.lat, hte.lng);
-      this.state.isOnSite = this.state.distanceMeters <= (hte.radiusMeters || 500);
+      this.state.isOnSite = this.state.distanceMeters <= (hte.radiusMeters || 100);
       if (onUpdate) onUpdate(this.state);
       return;
     }
@@ -524,17 +524,17 @@ window.menteelogGps = {
           this.state.lng = lng;
           this.state.accuracy = acc;
           this.state.distanceMeters = dist;
-          this.state.isOnSite = dist <= (hte.radiusMeters || 500);
+          this.state.isOnSite = dist <= (hte.radiusMeters || 100);
           this.state.status = 'ready';
           if (onUpdate) onUpdate(this.state);
         },
         (err) => {
-          const lat = hte.lat + 0.00015;
-          const lng = hte.lng + 0.00010;
+          const lat = hte.lat + 0.00008;
+          const lng = hte.lng + 0.00006;
           this.state.lat = lat;
           this.state.lng = lng;
-          this.state.accuracy = 18;
-          this.state.distanceMeters = 20;
+          this.state.accuracy = 8;
+          this.state.distanceMeters = 11;
           this.state.isOnSite = true;
           this.state.status = 'ready';
           if (onUpdate) onUpdate(this.state);
@@ -544,7 +544,7 @@ window.menteelogGps = {
     } else {
       this.state.lat = hte.lat;
       this.state.lng = hte.lng;
-      this.state.accuracy = 20;
+      this.state.accuracy = 10;
       this.state.distanceMeters = 0;
       this.state.isOnSite = true;
       this.state.status = 'ready';
@@ -560,45 +560,146 @@ window.menteelogGps = {
         el.innerHTML = '';
       } catch(e) {}
     }
+    if (!document.getElementById('menteelog-gps-keyframes')) {
+      const st = document.createElement('style');
+      st.id = 'menteelog-gps-keyframes';
+      st.textContent = `
+        @keyframes mlgPulse {
+          0% { transform: translateX(-50%) scale(0.5); opacity: 0.9; }
+          100% { transform: translateX(-50%) scale(2.6); opacity: 0; }
+        }
+        .menteelog-hte-marker, .menteelog-user-marker {
+          background: transparent !important;
+          border: none !important;
+        }
+      `;
+      document.head.appendChild(st);
+    }
     try {
       const map = L.map(containerId, { zoomControl: true, attributionControl: false });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
+      const hteHtml = `
+        <div class="custom-map-pin hte-pin" style="position:relative; width:44px; height:54px; display:flex; flex-direction:column; align-items:center; cursor:pointer;">
+          <svg width="44" height="54" viewBox="0 0 44 54" fill="none" style="filter:drop-shadow(0 4px 10px rgba(0,0,0,0.38));">
+            <path d="M22 1C10.4 1 1 10.4 1 22C1 37.5 22 53 22 53C22 53 43 37.5 43 22C43 10.4 33.6 1 22 1Z" fill="#58111A" stroke="#ffffff" stroke-width="2.5"/>
+            <circle cx="22" cy="22" r="14.5" fill="#ffffff"/>
+            <g transform="translate(13, 13)">
+              <path d="M1 18V2a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16h2a1 1 0 0 1 1 1v0a1 1 0 0 1-1 1H0a1 1 0 0 1-1-1v0a1 1 0 0 1 1-1h1zm2-1h8V3H3v14z" fill="#58111A"/>
+              <rect x="4.5" y="4.5" width="2" height="2" rx="0.4" fill="#58111A"/>
+              <rect x="7.5" y="4.5" width="2" height="2" rx="0.4" fill="#58111A"/>
+              <rect x="4.5" y="8" width="2" height="2" rx="0.4" fill="#58111A"/>
+              <rect x="7.5" y="8" width="2" height="2" rx="0.4" fill="#58111A"/>
+              <rect x="4.5" y="11.5" width="2" height="2" rx="0.4" fill="#58111A"/>
+              <rect x="7.5" y="11.5" width="2" height="2" rx="0.4" fill="#58111A"/>
+              <rect x="5.5" y="14.5" width="3" height="3.5" rx="0.4" fill="#58111A"/>
+            </g>
+          </svg>
+          <div style="position:absolute; bottom:-16px; background:#1e293b; color:#ffffff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; white-space:nowrap; box-shadow:0 2px 4px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.3); letter-spacing:0.3px;">Workplace</div>
+        </div>
+      `;
       const hteIcon = L.divIcon({
-        html: '<div style="background:#58111A; color:#fff; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.3); font-size:15px; border:2px solid #fff;">🏢</div>',
-        className: '',
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
+        html: hteHtml,
+        className: 'menteelog-hte-marker',
+        iconSize: [44, 54],
+        iconAnchor: [22, 53],
+        popupAnchor: [0, -50]
       });
-      L.marker([hteLat, hteLng], { icon: hteIcon }).addTo(map).bindPopup('<strong>' + companyName + '</strong><br>Accredited Workplace Geofence');
 
-      L.circle([hteLat, hteLng], {
-        radius: 500,
-        color: '#16a34a',
-        fillColor: '#22c55e',
-        fillOpacity: 0.14,
-        weight: 2,
-        dashArray: '5, 5'
+      const htePopup = `
+        <div style="font-family:inherit; min-width:180px; padding:2px;">
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+            <span style="font-size:14px;">🏢</span>
+            <strong style="color:#58111A; font-size:13px;">${companyName}</strong>
+          </div>
+          <div style="font-size:11px; color:#475569; margin-bottom:4px;">Accredited Workplace Campus</div>
+          <div style="display:inline-block; font-size:11px; font-weight:700; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; padding:2px 8px; border-radius:12px;">
+            🟢 100m Geofence Perimeter
+          </div>
+        </div>
+      `;
+      L.marker([hteLat, hteLng], { icon: hteIcon }).addTo(map).bindPopup(htePopup);
+
+      const hteRadius = 100;
+      const circle = L.circle([hteLat, hteLng], {
+        radius: hteRadius,
+        color: '#059669',
+        fillColor: '#10b981',
+        fillOpacity: 0.16,
+        weight: 2.5,
+        dashArray: '6, 6'
       }).addTo(map);
 
-      const pinColor = isOnSite ? '#16a34a' : '#dc2626';
+      const pinColor = isOnSite ? '#059669' : '#dc2626';
+      const badgeText = isOnSite ? 'You (On-Site)' : 'You (Off-Site)';
+      const pulseColor = isOnSite ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)';
+      
+      const userHtml = `
+        <div class="custom-map-pin student-pin" style="position:relative; width:44px; height:54px; display:flex; flex-direction:column; align-items:center; cursor:pointer;">
+          <span style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:32px; height:32px; border-radius:50%; background:${pulseColor}; animation:mlgPulse 2s ease-out infinite; pointer-events:none;"></span>
+          <svg width="44" height="54" viewBox="0 0 44 54" fill="none" style="filter:drop-shadow(0 4px 10px rgba(0,0,0,0.38)); position:relative; z-index:2;">
+            <path d="M22 1C10.4 1 1 10.4 1 22C1 37.5 22 53 22 53C22 53 43 37.5 43 22C43 10.4 33.6 1 22 1Z" fill="${pinColor}" stroke="#ffffff" stroke-width="2.5"/>
+            <circle cx="22" cy="22" r="14.5" fill="#ffffff"/>
+            ${isOnSite ? `
+              <g transform="translate(13.5, 13)">
+                <circle cx="8.5" cy="5.5" r="4" fill="${pinColor}"/>
+                <path d="M2.5 17c0-3.6 3-6.5 6-6.5s6 2.9 6 6.5" stroke="${pinColor}" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+              </g>
+            ` : `
+              <g transform="translate(14, 13)">
+                <path d="M8 2v8m0 4v1" stroke="${pinColor}" stroke-width="3" stroke-linecap="round"/>
+              </g>
+            `}
+          </svg>
+          <div style="position:absolute; bottom:-16px; background:${pinColor}; color:#ffffff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; white-space:nowrap; box-shadow:0 2px 4px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.4); letter-spacing:0.3px; z-index:3;">${badgeText}</div>
+        </div>
+      `;
       const userIcon = L.divIcon({
-        html: '<div style="background:' + pinColor + '; color:#fff; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 12px ' + pinColor + '; font-size:13px; border:2px solid #fff;">📍</div>',
-        className: '',
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
+        html: userHtml,
+        className: 'menteelog-user-marker',
+        iconSize: [44, 54],
+        iconAnchor: [22, 53],
+        popupAnchor: [0, -50]
       });
-      const popupMsg = isOnSite 
-        ? '<strong>Your Location</strong><br><span style="color:#16a34a; font-weight:700;">✓ Inside Geofence (On-Site)</span>' 
-        : '<strong>Your Location</strong><br><span style="color:#dc2626; font-weight:700;">⚠️ Outside Geofence (Off-Site)</span>';
-      L.marker([userLat, userLng], { icon: userIcon }).addTo(map).bindPopup(popupMsg).openPopup();
+
+      const userPopup = isOnSite 
+        ? `
+          <div style="font-family:inherit; min-width:170px; padding:2px;">
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+              <span style="font-size:14px;">📍</span>
+              <strong style="color:#059669; font-size:13px;">Your Location</strong>
+            </div>
+            <div style="font-size:11px; font-weight:700; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; padding:2px 8px; border-radius:12px; display:inline-block; margin-bottom:4px;">
+              ✓ Inside Geofence (On-Site)
+            </div>
+            <div style="font-size:11px; color:#64748b; font-family:monospace;">${userLat.toFixed(5)}° N, ${userLng.toFixed(5)}° E</div>
+          </div>
+        ` 
+        : `
+          <div style="font-family:inherit; min-width:170px; padding:2px;">
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+              <span style="font-size:14px;">⚠️</span>
+              <strong style="color:#dc2626; font-size:13px;">Your Location</strong>
+            </div>
+            <div style="font-size:11px; font-weight:700; color:#dc2626; background:#fef2f2; border:1px solid #fecaca; padding:2px 8px; border-radius:12px; display:inline-block; margin-bottom:4px;">
+              ⚠️ Outside Geofence (Off-Site)
+            </div>
+            <div style="font-size:11px; color:#64748b; font-family:monospace;">${userLat.toFixed(5)}° N, ${userLng.toFixed(5)}° E</div>
+          </div>
+        `;
+      L.marker([userLat, userLng], { icon: userIcon }).addTo(map).bindPopup(userPopup).openPopup();
 
       if (!isOnSite) {
-        L.polyline([[userLat, userLng], [hteLat, hteLng]], { color: '#dc2626', weight: 2, dashArray: '5, 5' }).addTo(map);
+        L.polyline([[userLat, userLng], [hteLat, hteLng]], { color: '#dc2626', weight: 2.5, dashArray: '6, 6' }).addTo(map);
       }
 
-      const bounds = L.latLngBounds([[userLat, userLng], [hteLat, hteLng]]);
-      map.fitBounds(bounds, { padding: [35, 35], maxZoom: 16 });
+      if (isOnSite) {
+        const circleBounds = circle.getBounds().pad(0.35);
+        map.fitBounds(circleBounds, { maxZoom: 18 });
+      } else {
+        const bounds = L.latLngBounds([[userLat, userLng], [hteLat, hteLng]]).pad(0.2);
+        map.fitBounds(bounds, { padding: [35, 35], maxZoom: 16 });
+      }
       setTimeout(() => map.invalidateSize(), 200);
     } catch(err) {
       console.warn('Leaflet render note:', err);
@@ -633,7 +734,7 @@ window.menteelogGps = {
             <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
               <span>🏢 <strong>${companyName}</strong> (Accredited Workplace)</span>
               <span>📍 <strong>Pinpoint Position</strong></span>
-              <span>🟢 <strong>500m Accredited Geofence Radius</strong></span>
+              <span>🟢 <strong>100m Accredited Geofence Radius</strong></span>
             </div>
             <span style="color:#64748b; font-size:12px;">Scroll to zoom · Drag to pan · Press ESC to exit</span>
           </div>
@@ -1207,7 +1308,7 @@ function logDetail(id){
   const locMatch = l.remarks ? l.remarks.match(/(\d+\.\d+)°?[NS]?,\s*(\d+\.\d+)°?[EW]?/) : null;
   const locCoords = locMatch ? locMatch[0] : (isApprovedOnSite ? `${hte.lat.toFixed(4)}° N, ${hte.lng.toFixed(4)}° E` : `${(hte.lat + 0.0215).toFixed(4)}° N, ${(hte.lng + 0.0185).toFixed(4)}° E`);
   const locDistanceText = isApprovedOnSite 
-    ? 'Attendance verified within accredited workplace perimeter (< 500m geofence).' 
+    ? 'Attendance verified within accredited workplace perimeter (< 100m geofence).' 
     : 'Attendance clocked outside accredited workplace perimeter (anomalous distance logged).';
 
   const locCardHtml = `
@@ -1597,13 +1698,13 @@ async function action(name,id,el){
     }
     case 'sim-gps-onsite': {
       const hte = window.menteelogGps.getHte(u.company || 'Accenture Philippines');
-      window.menteelogGps.state.lat = hte.lat + 0.00015;
-      window.menteelogGps.state.lng = hte.lng + 0.00010;
-      window.menteelogGps.state.accuracy = 12;
-      window.menteelogGps.state.distanceMeters = 25;
+      window.menteelogGps.state.lat = hte.lat + 0.00008;
+      window.menteelogGps.state.lng = hte.lng + 0.00006;
+      window.menteelogGps.state.accuracy = 8;
+      window.menteelogGps.state.distanceMeters = 11;
       window.menteelogGps.state.isOnSite = true;
       window.menteelogGps.state.simulated = true;
-      toast('Simulated position: On-Site at ' + hte.name + ' (Within Geofence).');
+      toast('Simulated position: On-Site at ' + hte.name + ' (Within 100m Geofence).');
       render();
       return;
     }
@@ -1628,8 +1729,8 @@ async function action(name,id,el){
           const l = db.logs.find(x => x.id === id);
           const stu = student(l?.studentId) || u;
           const hte = window.menteelogGps.getHte(stu?.company || 'Accenture Philippines');
-          let recLat = hte.lat + 0.00015;
-          let recLng = hte.lng + 0.00010;
+          let recLat = hte.lat + 0.00008;
+          let recLng = hte.lng + 0.00006;
           let isRecOnSite = l ? l.status === 'Approved' || (l.remarks && l.remarks.includes('Verified on-site')) : true;
           if (l && l.remarks) {
             const match = l.remarks.match(/(\d+\.\d+)°?[NS]?,\s*(\d+\.\d+)°?[EW]?/);
@@ -1652,8 +1753,8 @@ async function action(name,id,el){
       const l = db.logs.find(x => x.id === id);
       const stu = student(l?.studentId) || u;
       const hte = window.menteelogGps.getHte(stu?.company || 'Accenture Philippines');
-      let recLat = hte.lat + 0.00015;
-      let recLng = hte.lng + 0.00010;
+      let recLat = hte.lat + 0.00008;
+      let recLng = hte.lng + 0.00006;
       let isRecOnSite = l ? l.status === 'Approved' || (l.remarks && l.remarks.includes('Verified on-site')) : true;
       if (l && l.remarks) {
         const match = l.remarks.match(/(\d+\.\d+)°?[NS]?,\s*(\d+\.\d+)°?[EW]?/);
