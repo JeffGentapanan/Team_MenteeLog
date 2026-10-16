@@ -470,3 +470,30 @@ dialog .tabs button:hover,
     transform: none !important;
     box-shadow: none !important;
 }
+
+/* Mobile & Responsive Wrap Gaps Fix */
+.row.wrap,
+.ojt-job-meta,
+.skill-tags,
+.ref-chipbar,
+.form-actions {
+    flex-wrap: wrap !important;
+    row-gap: 10px !important;
+    column-gap: 10px !important;
+}
+
+@media (max-width: 768px) {
+    .row.between {
+        flex-wrap: wrap;
+        gap: 10px 12px;
+    }
+    .ref-identity {
+        flex-wrap: wrap;
+        gap: 12px !important;
+    }
+    td .row {
+        flex-wrap: wrap;
+        gap: 6px !important;
+    }
+}
+

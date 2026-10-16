@@ -1483,15 +1483,15 @@ function evaluate(id){
 
   const legendHtml = `
     <div style="background: var(--cream, #fbf8f2); padding: 14px 18px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--line, #e2e8f0);">
-      <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 700; color: var(--ink);">Evaluation Instrument</h4>
-      <div style="font-size: 12px; color: var(--slate); line-height: 1.6;">
-        <strong style="color:var(--ink);">Legend:</strong>
-        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#fee2e2; border-radius:4px; font-weight:600; color:#991b1b;">1 - Very Poor</span>
-        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#ffedd5; border-radius:4px; font-weight:600; color:#9a3412;">2 - Poor</span>
-        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#fef9c3; border-radius:4px; font-weight:600; color:#854d0e;">3 - Average</span>
-        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#dbeafe; border-radius:4px; font-weight:600; color:#1e40af;">4 - Good</span>
-        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#dcfce7; border-radius:4px; font-weight:600; color:#166534;">5 - Very Good</span>
-        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#f1f5f9; border-radius:4px; font-weight:600; color:#475569;">NA - Not Applicable</span>
+      <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 700; color: var(--ink);">Evaluation Instrument</h4>
+      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size: 12px; color: var(--slate);">
+        <strong style="color:var(--ink); margin-right:2px;">Legend:</strong>
+        <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#fee2e2; border-radius:5px; font-weight:600; color:#991b1b;">1 - Very Poor</span>
+        <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#ffedd5; border-radius:5px; font-weight:600; color:#9a3412;">2 - Poor</span>
+        <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#fef9c3; border-radius:5px; font-weight:600; color:#854d0e;">3 - Average</span>
+        <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#dbeafe; border-radius:5px; font-weight:600; color:#1e40af;">4 - Good</span>
+        <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#dcfce7; border-radius:5px; font-weight:600; color:#166534;">5 - Very Good</span>
+        <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#f1f5f9; border-radius:5px; font-weight:600; color:#475569;">NA - Not Applicable</span>
       </div>
     </div>
   `;
