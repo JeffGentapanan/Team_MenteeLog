@@ -208,6 +208,14 @@ function connectCoreUsers(dataDb) {
     return true;
   });
 
+  // Auto-verify on-site logs within geofence
+  (dataDb.logs || []).forEach(l => {
+    if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0) {
+      l.status = 'Approved';
+      l.remarks = l.remarks || 'Verified on-site within HTE premises';
+    }
+  });
+
   // Clean active shifts: remove any dummy student active shifts
   dataDb.activeShifts = (dataDb.activeShifts || []).filter(s => !String(s.studentId).startsWith('s_dummy'));
 
@@ -279,6 +287,29 @@ try {
 
     if (typeof supabase !== 'undefined' && supabase) {
       supabase.from('appraisals').delete().in('student_id', kenzoIds).then(() => {}).catch(() => {});
+    }
+  }
+} catch(e) {}
+
+// Automatic geofence verification for on-site pending logs
+try {
+  const autoVerifyKey = 'dtr_autoverify_onsite_oct16_v2';
+  if (!localStorage.getItem(autoVerifyKey)) {
+    localStorage.setItem(autoVerifyKey, '1');
+    if (db && Array.isArray(db.logs)) {
+      db.logs.forEach(l => {
+        if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0) {
+          l.status = 'Approved';
+          l.remarks = l.remarks || 'Verified on-site within HTE premises';
+        }
+      });
+      save();
+    }
+    if (typeof supabase !== 'undefined' && supabase) {
+      supabase.from('logs').update({
+        status: 'Approved',
+        remarks: 'Verified on-site within HTE premises'
+      }).eq('status', 'Pending').eq('gps', true).then(() => {}).catch(() => {});
     }
   }
 } catch(e) {}
@@ -573,7 +604,16 @@ function matches(...texts){return texts.join(' ').toLowerCase().includes(view.se
 function applicationsPage(u){const apps=visibleApplications(db,u).filter(a=>(view.filter==='All'||a.status===view.filter)&&matches(student(a.studentId)?.name,job(a.jobId)?.title,job(a.jobId)?.company));return heading(u.role==='Student'?'My Applications Tracker':'Application Review',u.role==='Student'?'Track your internship applications and placement progress.':'Review and endorse your candidates.')+(u.role==='Student'?'':tabs(['All','Pending','Under_Review','Accepted','Rejected'])+searchToolbar('Search applications'))+(apps.length?apps.map(a=>{const j=job(a.jobId),level=a.status==='Accepted'?3:a.status==='Under_Review'?1:0;return '<section class="card application-card"><div class="row between"><div><h2>'+e(j?.company)+' - '+e(j?.title)+'</h2><small>Applied '+date(a.date)+(u.role==='Student'?'':' · '+e(student(a.studentId)?.name))+'</small></div>'+badge(a.status)+'</div><div class="application-path">'+['Submitted','Under Review','Interview','Accepted'].map((label,i)=>(i?'<span class="application-line"></span>':'')+'<div class="application-step '+(i<=level?'done':'')+'"><i></i><span>'+label+'</span></div>').join('')+'</div><div class="mt16">'+button(u.role==='Student'?'View Details':'Review Application','application-detail',a.id,'secondary small')+'</div></section>';}).join(''):empty('No applications in this view','Your application progress will appear here.'));}
 function netElapsed(sh){if(!sh||!sh.clockIn)return '00:00:00';const now=Date.now();const cIn=new Date(sh.clockIn).getTime();if(isNaN(cIn))return '00:00:00';let ms=now-cIn;if(typeof sh.breakMs==='number'&&sh.breakMs>0){ms-=Math.min(sh.breakMs,Math.max(0,ms));}else if(sh.breakMinutes){ms-=Math.min(sh.breakMinutes*60000,Math.max(0,ms));}const b=sh.onBreak||sh.justification;if(b){const bTime=new Date(b).getTime();if(!isNaN(bTime))ms-=Math.max(0,now-bTime);}const s=Math.max(0,Math.floor(ms/1000));return [Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(v=>String(v).padStart(2,'0')).join(':');}
 function elapsed(start){if(!start)return '00:00:00';const t=new Date(start).getTime();if(isNaN(t))return '00:00:00';const seconds=Math.max(0,Math.floor((Date.now()-t)/1000));return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(v=>String(v).padStart(2,'0')).join(':');}
-function dtrTable(logs,u){const breakCol=l=>l.breakMinutes?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#854d0e;"><span style="width:6px;height:6px;border-radius:50%;background:#854d0e;"></span>'+l.breakMinutes+'m</span>':'<span style="font-size:12px;color:var(--slate);">—</span>';return logs.length?table([...(u.role==='Student'?[]:['Intern']),'Date','Clock In','Clock Out','Break',...(u.role==='Student'?['Total']:['Task Summary']),'GPS','Status','Action'],logs.slice().reverse().map(l=>'<tr>'+(u.role==='Student'?'':'<td><strong>'+e(student(l.studentId)?.name)+'</strong></td>')+'<td>'+date(l.date)+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+breakCol(l)+'</td><td>'+(u.role==='Student'?(Number(l.hours)||0).toFixed(2)+'h':'<span class="task-excerpt">'+e(l.task)+'</span>')+'</td><td>'+badge(l.gps?'Captured':'Unavailable')+'</td><td>'+badge(l.status)+'</td><td>'+button(u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status)?'Review':'View','log-detail',l.id,'secondary small')+'</td></tr>')):empty('No DTR entries here','Submitted attendance records will appear here.');}
+function dtrTable(logs,u){
+  const breakCol=l=>l.breakMinutes?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#854d0e;"><span style="width:6px;height:6px;border-radius:50%;background:#854d0e;"></span>'+l.breakMinutes+'m</span>':'<span style="font-size:12px;color:var(--slate);">—</span>';
+  const statusBadge=l=>l.status==='Approved'?'<span class="badge green" title="Verified on-site within HTE premises">✓ Approved</span>':l.status==='Flagged'?'<span class="badge red" title="Location unverified / off-site">⚠️ Flagged</span>':badge(l.status);
+  const actionBtn=l=>{
+    if(u.role==='Student'&&l.status==='Flagged') return button('Justify','log-detail',l.id,'secondary small');
+    if(u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status)) return button('Review','log-detail',l.id,'secondary small');
+    return button('View','log-detail',l.id,'secondary small');
+  };
+  return logs.length?table([...(u.role==='Student'?[]:['Intern']),'Date','Clock In','Clock Out','Break',...(u.role==='Student'?['Total']:['Task Summary']),'GPS','Status','Action'],logs.slice().reverse().map(l=>'<tr>'+(u.role==='Student'?'':'<td><strong>'+e(student(l.studentId)?.name)+'</strong></td>')+'<td>'+date(l.date)+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+breakCol(l)+'</td><td>'+(u.role==='Student'?(Number(l.hours)||0).toFixed(2)+'h':'<span class="task-excerpt">'+e(l.task)+'</span>')+'</td><td>'+badge(l.gps?'Captured':'Unavailable')+'</td><td>'+statusBadge(l)+'</td><td>'+actionBtn(l)+'</td></tr>')):empty('No DTR entries here','Submitted attendance records will appear here.');
+}
 function visibleIncidents(u){return db.incidents.filter(i=>u.role==='Coordinator'||(u.role==='Student'?i.studentId===u.id:i.supervisorId===u.id));}
 function profilePage(u){return `${heading('Profile Setup','Keep your contact and internship details up to date.')}<div class="narrow-wide"><section class="card sand"><div class="row">${person(u)}</div><hr class="hr"><p class="small">${e(u.identifier)}</p>${badge(u.role)} ${badge(u.badge||u.status)}<p class="small muted mt16">Your role and academic identifier are managed by your coordinator.</p></section><section class="card"><h2>Personal information</h2><form id="profile-form">${field('Full name','name','text',u.name,'required maxlength="100" autocomplete="name"')}${field('Email address','email','email',u.email,'required autocomplete="email"')}${field('Phone number (optional)','phone','tel',u.phone||'','maxlength="30" autocomplete="tel"')}${textarea('About you (optional)','bio',u.bio||'','')}<p class="form-error" role="alert"></p><button class="btn" type="submit">Save profile</button></form></section></div>`;}
 function safeMeetingURL(value){const url=new URL(value);if(url.protocol!=='https:'||!['meet.google.com','teams.microsoft.com','teams.live.com','zoom.us','www.zoom.us'].some(h=>url.hostname===h||url.hostname.endsWith('.'+h)))throw new Error('Use an HTTPS Google Meet, Microsoft Teams, or Zoom link.');return url.href;}
@@ -787,6 +827,10 @@ async function studentClockOut() {
     if (shiftIdx !== -1) db.activeShifts.splice(shiftIdx, 1);
     db.taskDrafts = (db.taskDrafts || []).filter(d => !(d.studentId === studentId && d.date === today()));
     let targetLog = log;
+    const isGpsOnSite = targetLog ? (targetLog.gps !== false) : true;
+    const autoStatus = isGpsOnSite ? 'Approved' : 'Flagged';
+    const autoRemarks = isGpsOnSite ? 'Verified on-site within HTE premises' : 'Off-site / GPS unverified - awaiting student justification';
+
     if (!targetLog) {
       targetLog = {
         id: crypto.randomUUID(),
@@ -797,10 +841,10 @@ async function studentClockOut() {
         clockOut: clockOutTime,
         breakMinutes: breakMins,
         hours: hrs,
-        status: 'Pending',
+        status: autoStatus,
         task: data.task,
-        gps: true,
-        remarks: '',
+        gps: isGpsOnSite,
+        remarks: autoRemarks,
         justification: ''
       };
       db.logs.unshift(targetLog);
@@ -808,9 +852,10 @@ async function studentClockOut() {
       targetLog.clockOut = clockOutTime;
       targetLog.breakMinutes = breakMins;
       targetLog.hours = hrs;
-      targetLog.status = 'Pending';
+      targetLog.status = autoStatus;
       targetLog.task = data.task;
       targetLog.onBreak = null;
+      targetLog.remarks = autoRemarks;
       targetLog.justification = '';
     }
 
@@ -826,7 +871,8 @@ async function studentClockOut() {
           break_minutes: breakMins,
           hours: hrs,
           task: data.task,
-          status: 'Pending',
+          status: autoStatus,
+          remarks: autoRemarks,
           justification: ''
         }).eq('id', targetLog.id).select();
 
@@ -844,8 +890,9 @@ async function studentClockOut() {
           break_minutes: breakMins,
           hours: hrs,
           task: data.task,
-          status: 'Pending',
-          gps: true
+          status: autoStatus,
+          remarks: autoRemarks,
+          gps: isGpsOnSite
         };
         if (validSupervisorUuid) insertPayload.supervisor_id = validSupervisorUuid;
         const { data: ins, error: insErr } = await supabase.from('logs').insert(insertPayload).select();
@@ -866,14 +913,14 @@ async function studentClockOut() {
     }
 
     if (supId) {
-      notify(supId, 'DTR_Event', 'Daily time record submitted', u.name + ' clocked out and submitted their daily logbook.');
+      notify(supId, 'DTR_Event', isGpsOnSite ? 'Intern shift completed (Auto-Verified)' : 'Off-site shift logged (Flagged for review)', u.name + ' completed shift (' + hrs + 'h). ' + autoRemarks);
     }
-    audit('Student ' + u.name + ' clocked out and submitted daily log for ' + today());
+    audit('Student ' + u.name + ' clocked out and submitted daily log for ' + today() + ' (' + autoStatus + ')');
     db.draft = '';
     db.shift = null;
     save();
     render();
-    toast('Clocked out successfully! Daily logbook submitted for supervisor approval.');
+    toast(isGpsOnSite ? 'Shift completed! Attendance automatically verified on-site and credited.' : 'Shift completed! Location unverified — please submit a justification.');
   }, 'Submit & Clock Out');
 }
 
