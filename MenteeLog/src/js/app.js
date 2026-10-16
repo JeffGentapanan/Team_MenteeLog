@@ -210,11 +210,36 @@ function connectCoreUsers(dataDb) {
 
   // Auto-verify on-site logs within geofence
   (dataDb.logs || []).forEach(l => {
-    if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0) {
+    if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0 && (!l.remarks || !l.remarks.includes('Flagged'))) {
       l.status = 'Approved';
       l.remarks = l.remarks || 'Verified on-site within HTE premises';
     }
   });
+
+  // Ensure a realistic flagged shift exists for Kenzo so supervisor can demonstrate flagged review and clock-in map pin
+  let flaggedLog = (dataDb.logs || []).find(l => (l.studentId === stu.id || l.studentId === 's1' || l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c') && (l.status === 'Flagged' || l.id === 'shift-flagged-001'));
+  if (!flaggedLog) {
+    flaggedLog = {
+      id: 'shift-flagged-001',
+      studentId: stu.id,
+      supervisorId: sup.id,
+      date: '2026-10-16',
+      clockIn: '2026-10-16T08:00:00.000Z',
+      clockOut: '2026-10-16T12:00:00.000Z',
+      breakMinutes: 0,
+      hours: 4.0,
+      task: 'Conducted off-site client deployment at Iloilo Provincial Capitol for enterprise server rack setup and fiber optic termination.',
+      status: 'Flagged',
+      gps: true,
+      remarks: '⚠️ Flagged: Clock-in recorded 2.4km outside HTE geofence perimeter (10.7382° N, 122.5643° E). Verification required.',
+      justification: 'Attended scheduled off-site client deployment at Iloilo Provincial Capitol under Senior Engineer mentor instructions.',
+      signature: ''
+    };
+    dataDb.logs.push(flaggedLog);
+  } else {
+    flaggedLog.studentId = stu.id;
+    flaggedLog.supervisorId = sup.id;
+  }
 
   // Clean active shifts: remove any dummy student active shifts
   dataDb.activeShifts = (dataDb.activeShifts || []).filter(s => !String(s.studentId).startsWith('s_dummy'));
@@ -1331,7 +1356,7 @@ function logDetail(id){
     </div>
   `;
 
-  showModal(u.role==='Student'?'Daily time record [READ-ONLY]':'Daily time record',`<div class="row between"><strong>${e(student(l.studentId)?.name)}</strong>${badge(l.status)}</div><p class="muted mt16">${date(l.date)} · ${time(l.clockIn)} - ${time(l.clockOut)} · ${l.hours} hours${l.breakMinutes?' · <span style="color:#854d0e;">'+l.breakMinutes+'m break</span>':''}</p><h3>Task summary</h3><p>${e(l.task)}</p>${locCardHtml}${l.justification?`<h3>Justification</h3><p>${e(l.justification)}</p>`:''}${l.remarks?`<h3>Supervisor remarks</h3><p>${e(l.remarks)}</p>`:''}${l.signature?`<p class="small muted">Demo typed signature: ${e(l.signature)}</p>`:''}${u.role==='Student'?`<div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span class="small muted">Testing mode: remove this sample log</span>${button('Delete Test Record','student-delete-log',l.id,'secondary small','trash')}</div>`:''}${review?select('Review decision','status',['Approved','Flagged','Rejected'])+textarea('Review remarks','remarks',l.remarks||'')+field('Typed signature (demo)','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I reviewed this attendance record.</label>':''}`,review?async data=>{ const {error, data:updated} = await supabase.from('logs').update({status: data.status, remarks: data.remarks, signature: data.signature}).eq('id', id).select(); if(error) throw new Error(error.message); if(!updated || updated.length===0) throw new Error('Update failed.'); await syncRemote(supabase, db); notify(l.studentId,'DTR_Event','DTR entry '+data.status.toLowerCase(),date(l.date)+': '+data.remarks); audit('Marked '+student(l.studentId).name+' DTR '+data.status); save(); toast('DTR review saved.'); }:null,'Submit review');}
+  showModal(u.role==='Student'?'Daily time record [READ-ONLY]':'Daily time record',`<div class="row between"><strong>${e(student(l.studentId)?.name || 'Intern')}</strong>${badge(l.status)}</div><p class="muted mt16">${date(l.date)} · ${time(l.clockIn)} - ${time(l.clockOut)} · ${l.hours} hours${l.breakMinutes?' · <span style="color:#854d0e;">'+l.breakMinutes+'m break</span>':''}</p><h3>Task summary</h3><p>${e(l.task)}</p>${locCardHtml}${l.justification?`<h3>Justification</h3><p>${e(l.justification)}</p>`:''}${l.remarks?`<h3>Supervisor remarks</h3><p>${e(l.remarks)}</p>`:''}${l.signature?`<p class="small muted">Demo typed signature: ${e(l.signature)}</p>`:''}${u.role==='Student'?`<div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span class="small muted">Testing mode: remove this sample log</span>${button('Delete Test Record','student-delete-log',l.id,'secondary small','trash')}</div>`:''}${review?select('Review decision','status',['Approved','Flagged','Rejected'])+textarea('Review remarks','remarks',l.remarks||'')+field('Typed signature (demo)','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I reviewed this attendance record.</label>':''}`,review?async data=>{ l.status=data.status; l.remarks=data.remarks; l.signature=data.signature; try { const {error, data:updated} = await supabase.from('logs').update({status: data.status, remarks: data.remarks, signature: data.signature}).eq('id', id).select(); if (!error && updated && updated.length > 0) { await syncRemote(supabase, db); } } catch(err) { console.warn('Remote sync note:', err); } notify(l.studentId,'DTR_Event','DTR entry '+data.status.toLowerCase(),date(l.date)+': '+data.remarks); audit('Marked '+(student(l.studentId)?.name||'intern')+' DTR '+data.status); save(); render(); toast('DTR review saved.'); }:null,'Submit review');}
 function studentDetail(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id===id);if(!s)throw new Error('Student is outside your assigned scope.');showModal(e(s.name),`${person(s)}<hr class="hr"><div class="grid-2"><div><span class="small muted">SR code</span><p>${e(s.identifier)}</p><span class="small muted">Host company</span><p>${e(s.company||'Unplaced')}</p></div><div><span class="small muted">Approved hours</span><p>${approvedHours(db,s.id)} / ${s.requiredHours} hours</p><span class="small muted">Accreditation</span><p>${badge(s.badge)}</p></div></div>${progress(approvedHours(db,s.id),s.requiredHours)}<h3 class="mt16">Recent attendance</h3>${dtrTable(db.logs.filter(l=>l.studentId===s.id).slice(-3),{role:'Student'})}${u.role==='Coordinator'?`<hr class="hr">${select('Host company','company',[['','Unplaced'],...db.htes.filter(h=>h.status==='Accredited').map(h=>h.name)],s.company)}${select('Assigned supervisor','supervisorId',[['','Unassigned'],...db.users.filter(v=>v.role==='Supervisor'&&v.status==='Active').map(v=>[v.id,v.name])],s.supervisorId||'')}${select('Accreditation status','badge',['Pre_Seeded','Eligible','Enrolled','Cleared'],s.badge)}${field('Required OJT hours','requiredHours','number',s.requiredHours,'required min="1" max="2000"')}<p class="small muted">Clearance requires completed hours, an appraisal, and no unresolved incidents.</p>${button('Download endorsement','endorsement',s.id,'secondary small','download')}`:''}`,u.role==='Coordinator'?async data=>{const supervisor=student(data.supervisorId);if(data.company&&(!supervisor||supervisor.company!==data.company))throw new Error('Select a supervisor from the chosen host company.');if(!data.company&&data.supervisorId)throw new Error('Assign a host company before a supervisor.');if(data.badge==='Cleared'&&(approvedHours(db,id)<Number(data.requiredHours)||!db.appraisals.some(a=>a.studentId===id)||db.incidents.some(i=>i.studentId===id&&!['Resolved','Dismissed'].includes(i.status))))throw new Error('This student has incomplete clearance requirements.');const { data: updated, error } = await supabase.from('profiles').update({ company: data.company, supervisor_id: data.supervisorId || null, required_hours: Number(data.requiredHours) }).eq('id', id).select();if(error)throw new Error(error.message);if(!updated||updated.length===0)throw new Error('Update failed. You may not have permission.');await syncRemote(supabase, db);notify(s.id,'System','Placement profile updated','Your coordinator updated your placement or accreditation details.');audit('Updated placement for '+s.name);save();toast('Student placement updated.');}:null,'Save placement');}
 function incidentNew(){const u=currentUser(),students=visibleStudents(db,u);showModal(u.role==='Student'?'File an incident claim':'Create disciplinary log',`<p class="note">Document the situation clearly. This demo does not send emergency alerts or contact school staff.</p>${u.role==='Supervisor'?select('Student involved','studentId',students.map(s=>[s.id,s.name])):''}${field('Short title','title','text','','required maxlength="120"')}${select('Priority','priority',['Low','Medium','High'],'Medium')}${textarea('Description','description','','required minlength="20"')}${select('Related DTR (optional)','logId',[['','No linked entry'],...visibleLogs(db,u).map(l=>[l.id,student(l.studentId).name+' · '+date(l.date)])])}${field('Evidence (optional, PDF / PNG / JPEG, up to 10 MB)','evidence','file','','accept="application/pdf,image/png,image/jpeg"')}`,async(data,form)=>{const sid=u.role==='Student'?u.id:data.studentId;if(u.role==='Supervisor'&&!students.some(s=>s.id===sid))throw new Error('Choose an assigned intern.');if(data.logId&&!db.logs.some(l=>l.id===data.logId&&l.studentId===sid))throw new Error('The linked DTR must belong to the selected student.');const incCode = 'IR-'+crypto.randomUUID().slice(0,8).toUpperCase();
 let evidence=null;const file=form.elements.evidence.files[0];if(file){validateUpload(file);evidence=await uploadEvidence(file, incCode);}const incident={id:incCode,studentId:sid,supervisorId:u.role==='Supervisor'?u.id:u.supervisorId,category:u.role==='Student'?'Student_Claim':'Disciplinary_Violation',title:data.title,description:data.description,priority:data.priority,status:'Pending',date:today(),logId:data.logId||null,evidence,notes:[],meeting:null};const { error, data: inserted } = await supabase.from('incidents').insert({
@@ -1886,11 +1911,36 @@ async function action(name,id,el){
     case 'ref-approve': {
         const l = db.logs.find(log => log.id === id);
         if (!l) throw new Error('Log not found.');
-        const { error, data: updated } = await supabase.from('logs').update({ status: 'Approved' }).eq('id', l.id).select();
-        if (error) throw new Error(error.message);
-        if (!updated || updated.length === 0) throw new Error('Update failed or rejected by security rules.');
-        await syncRemote(supabase, db);
+        l.status = 'Approved';
+        l.remarks = l.remarks ? l.remarks.replace('⚠️ Flagged', '✓ Verified') : 'Verified and approved by supervisor.';
+        try {
+          const { error, data: updated } = await supabase.from('logs').update({ status: 'Approved', remarks: l.remarks }).eq('id', l.id).select();
+          if (!error && updated && updated.length > 0) {
+            await syncRemote(supabase, db);
+          }
+        } catch(err) {
+          console.warn('Sync note:', err);
+        }
         toast('DTR Log approved. Hours successfully credited.');
+        save();
+        render();
+        return;
+    }
+    case 'ref-reject': {
+        const l = db.logs.find(log => log.id === id);
+        if (!l) throw new Error('Log not found.');
+        l.status = 'Rejected';
+        l.remarks = 'Shift rejected by supervisor due to unverified attendance.';
+        try {
+          const { error, data: updated } = await supabase.from('logs').update({ status: 'Rejected', remarks: l.remarks }).eq('id', l.id).select();
+          if (!error && updated && updated.length > 0) {
+            await syncRemote(supabase, db);
+          }
+        } catch(err) {
+          console.warn('Sync note:', err);
+        }
+        toast('DTR Log marked as rejected.');
+        save();
         render();
         return;
     }
