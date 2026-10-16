@@ -100,6 +100,7 @@ export async function syncRemote(supabase, db) {
       if (!savedCoord) {
         try { savedCoord = localStorage.getItem('menteelog.coord_remarks.' + l.id) || ''; } catch(e) {}
       }
+      const isOffSiteOrException = (l.gps === false) || Boolean(l.remarks && l.remarks.includes('Outside geofence')) || Boolean(savedCoord) || Boolean(l.justification);
       return {
         id: l.id,
         studentId: l.student_id,
@@ -109,10 +110,10 @@ export async function syncRemote(supabase, db) {
         clockOut: l.clock_out,
         breakMinutes: Number(l.break_minutes) || 0,
         hours: Number(l.hours) || 0,
-        status: (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0 && (!l.remarks || !l.remarks.includes('Outside geofence'))) ? 'Approved' : l.status,
+        status: (l.status === 'Pending' && !isOffSiteOrException && Number(l.hours || 0) > 0) ? 'Approved' : l.status,
         task: taskText,
         gps: l.gps,
-        remarks: (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0 && (!l.remarks || !l.remarks.includes('Outside geofence'))) ? (l.remarks || 'Verified on-site within HTE premises') : l.remarks,
+        remarks: (l.status === 'Pending' && !isOffSiteOrException && Number(l.hours || 0) > 0) ? (l.remarks || 'Verified on-site within HTE premises') : l.remarks,
         signature: l.signature,
         justification: l.justification,
         coordinatorRemarks: savedCoord
@@ -282,11 +283,86 @@ export async function syncRemote(supabase, db) {
       if (l.date === '2026-10-16' && Number(l.hours || 0) <= 0.02 && (String(l.clockIn || '').includes('00:23') || String(l.clockIn || '').includes('12:23') || String(l.clockOut || '').includes('00:23') || String(l.clockOut || '').includes('12:23') || !l.task)) return false;
       return true;
     }).map(l => {
-      if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0) {
+      if (l.coordinatorRemarks && !l.signature && l.status === 'Approved') {
+        return { ...l, status: 'Pending' };
+      }
+      const isOffSite = (l.gps === false) || Boolean(l.remarks && l.remarks.includes('Outside geofence')) || Boolean(l.coordinatorRemarks) || Boolean(l.justification);
+      if (l.status === 'Pending' && !isOffSite && Number(l.hours || 0) > 0) {
         return { ...l, status: 'Approved', remarks: l.remarks || 'Verified on-site within HTE premises' };
       }
       return l;
     });
+
+    // Synchronize live actionable notifications across portals for DTR exceptions, Coordinator reviews, and Appraisals
+    db.notifications = db.notifications || [];
+    const ensureNotif = (notifObj) => {
+      let isRead = false;
+      try { isRead = localStorage.getItem('menteelog.notif_read.' + notifObj.id) === '1'; } catch(e) {}
+      const existing = db.notifications.find(n => n.id === notifObj.id);
+      if (existing) {
+        existing.title = notifObj.title;
+        existing.message = notifObj.message;
+        existing.targetLogId = notifObj.targetLogId;
+        existing.targetPage = notifObj.targetPage;
+        existing.role = notifObj.role;
+        if (isRead) existing.read = true;
+      } else {
+        db.notifications.unshift({ ...notifObj, read: isRead });
+      }
+    };
+
+    for (const l of newLogs) {
+      if (l.coordinatorRemarks) {
+        ensureNotif({
+          id: 'notif-coord-review-' + l.id,
+          userId: primarySupervisor?.id || 'v1',
+          role: 'Supervisor',
+          type: 'DTR_Event',
+          title: 'DTR compliance review forwarded',
+          message: `Coordinator directive on kenzosomes (${l.date}): "${l.coordinatorRemarks}" — Click to review & sign off.`,
+          date: new Date().toISOString(),
+          targetPage: 'dtr',
+          targetLogId: l.id
+        });
+      }
+      if (['Flagged', 'Pending'].includes(l.status)) {
+        ensureNotif({
+          id: 'notif-flagged-sup-' + l.id,
+          userId: primarySupervisor?.id || 'v1',
+          role: 'Supervisor',
+          type: 'DTR_Event',
+          title: 'Flagged off-site shift requires review',
+          message: `kenzosomes logged an off-site shift on ${l.date} (${l.hours}h). Click to inspect map pin and exception.`,
+          date: l.clockOut || new Date().toISOString(),
+          targetPage: 'dtr',
+          targetLogId: l.id
+        });
+        ensureNotif({
+          id: 'notif-flagged-coord-' + l.id,
+          userId: 'c1',
+          role: 'Coordinator',
+          type: 'DTR_Event',
+          title: 'Off-site DTR anomaly detected',
+          message: `kenzosomes clocked outside the 100m geofence on ${l.date}. Click to open Compliance Review.`,
+          date: l.clockOut || new Date().toISOString(),
+          targetPage: 'dtr',
+          targetLogId: l.id
+        });
+      }
+    }
+
+    for (const a of newAppraisals) {
+      ensureNotif({
+        id: 'notif-appraisal-' + a.id,
+        userId: primaryStudent?.id || 's1',
+        role: 'Student',
+        type: 'System',
+        title: 'Performance appraisal finalized',
+        message: `Your supervisor submitted your final evaluation (${Number(a.score || 5).toFixed(1)} / 5.0). Click to view rubric & signature.`,
+        date: a.date || new Date().toISOString(),
+        targetPage: 'appraisals'
+      });
+    }
     
     // 1. Include any pre-seeded candidates from school_registry
     if (registryRes?.data && registryRes.data.length > 0) {

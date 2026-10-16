@@ -433,7 +433,16 @@ function logout(){
   location.hash = '/';
   render();
 }
-function notify(userId,type,title,message){db.notifications.unshift({id:crypto.randomUUID(),userId,type,title,message,date:new Date().toISOString(),read:false});}
+function notify(userId,type,title,message,extra={}){db.notifications.unshift({id:crypto.randomUUID(),userId,type,title,message,date:new Date().toISOString(),read:false,...extra});}
+function isUserNotif(n,u){
+  if(!n||!u)return false;
+  if(n.userId===u.id)return true;
+  if(n.role&&n.role===u.role)return true;
+  if(u.role==='Student'&&['s1','22227dcf-933f-40a9-9340-f66cb9020e5c'].includes(n.userId))return true;
+  if(u.role==='Supervisor'&&n.userId==='v1')return true;
+  if(u.role==='Coordinator'&&n.userId==='c1')return true;
+  return false;
+}
 function audit(action){db.audit.unshift({id:crypto.randomUUID(),actor:currentUser()?.name||'Demo',action,date:new Date().toISOString()});db.audit=db.audit.slice(0,150);}
 function toast(message){const el=$('#toast');el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,5000);}
 const initials=name=>String(name||'ML').split(' ').filter(Boolean).map(n=>n[0]).slice(0,2).join('').toUpperCase();
@@ -842,7 +851,7 @@ document.title='MenteeLog | Your OJT journey, connected';return;}
   if(role!==user.role.toLowerCase()||!canAccess(user.role,page)){location.hash=`/${user.role.toLowerCase()}/dashboard`;toast('This page is not available in your portal.');return;}
   const title=navigation[user.role].find(n=>n[0]===page)?.[1]||({profile:'Profile Setup',notifications:'Notifications',jobs:'Job Management',candidates:user.role==='Coordinator'?'Student Placement':'Candidate Review',applications:user.role==='Coordinator'?'Student Placement':'Candidate Review',dtr:user.role==='Supervisor'?'Log Sheets & Summary':'Attendance & DTR'}[page]);
   document.title=`${title} | MenteeLog`;
-  const unread=db.notifications.filter(n=>n.userId===user.id&&!n.read).length;
+  const unread=db.notifications.filter(n=>isUserNotif(n,user)&&!n.read).length;
   app.innerHTML=`<div class="portal-shell"><aside class="portal-sidebar" id="top-nav-menu" aria-label="Portal navigation"><div class="portal-brand">${brand(false)}<button class="icon-btn mobile-toggle" data-action="menu" aria-label="Close navigation">${icon('close')}</button></div><p class="portal-caption">${user.role} portal</p><nav aria-label="Main navigation">${navigation[user.role].map(([id,label,ico])=>`<a class="nav-link ${page===id?'active':''}" href="#/${role}/${id}" ${page===id?'aria-current="page"':''}>${icon(ico)}<span>${label}</span></a>`).join('')}</nav><div class="portal-account">${person({...user,course:user.role==='Student'?'OJT Student':user.role==='Supervisor'?'Company Supervisor':'Faculty Coordinator'})}</div></aside><button class="portal-scrim" data-action="menu" aria-label="Close navigation" tabindex="-1"></button><div class="workspace"><header class="portal-header"><div class="row"><button class="icon-btn mobile-toggle" data-action="menu" aria-controls="top-nav-menu" aria-label="Open navigation" aria-expanded="false">${icon('menu')}</button><div class="breadcrumb"><span>MenteeLog</span><span>/</span><strong>${title}</strong></div></div><div class="top-actions"><input class="top-search" id="global-search" aria-label="Search portal pages" placeholder="Search pages..." type="search"><button class="icon-btn" data-action="notifications" aria-label="Notifications, ${unread} unread">${icon('bell')}${unread?'<span class="notification-dot"></span>':''}</button><details class="profile-menu"><summary aria-label="Your account"><span class="avatar">${e(initials(user.name))}</span></summary><div class="profile-popover"><strong>${e(user.name)}</strong><small class="account-role">${e(user.role)}</small>${user.role==='Student'?`<a href="#/${role}/profile">Profile Setup</a>`:''}<button class="text-btn" data-action="logout">${icon('logout')} Sign out</button></div></details></div></header><main class="content" id="main" tabindex="-1">${pageContent(page,user)}</main></div></div>`;
 
   if(page === 'dtr' && user.role === 'Student') {
@@ -876,7 +885,9 @@ function landing(){return publicLanding(route().role==='public'?route().page:'ho
 function authPage(mode){return authScreen(mode,authRole,{brand,icon,field,hasRecoverySession: Boolean(recoveryActive || currentUser())});}
 function pageContent(page,u){try{return portals.page(page,u)??({dashboard,applications:applicationsPage,profile:profilePage}[page]||dashboard)(u);}catch(error){return heading('Page unavailable',e(error.message))+link('Back to dashboard','dashboard');}}
 function notificationsMini(u){
-  const unread = db.notifications.filter(n=>n.userId===u.id && !n.read).reverse().slice(0, 5);
+  const allNotes = db.notifications.filter(n => isUserNotif(n, u)).sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+  const unread = allNotes.filter(n => !n.read);
+  const recent = (unread.length ? unread : allNotes).slice(0, 6);
   return `
     <div class="drawer-header">
       <h3>
@@ -887,14 +898,17 @@ function notificationsMini(u){
       ${unread.length ? '<button class="text-btn small" data-action="read-all">Mark all read</button>' : ''}
     </div>
     <div class="drawer-notes-list">
-      ${unread.length ? unread.map(n=>`
-        <div class="notification-card">
+      ${recent.length ? recent.map(n=>`
+        <button type="button" class="notification-card" data-action="read" data-id="${e(n.id)}" style="width:100%;text-align:left;cursor:pointer;display:block;border:1px solid var(--line);background:${n.read ? 'var(--cream)' : 'var(--sand)'};opacity:${n.read ? '0.88' : '1'};transition:background 0.15s ease;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
-            <strong style="color:var(--burgundy);font-size:13px;font-weight:700;">${e(n.title)}</strong>
+            <strong style="color:var(--burgundy);font-size:13px;font-weight:700;">${n.read ? '' : '● '}${e(n.title)}</strong>
             <small style="color:var(--muted);font-size:11px;white-space:nowrap;">${date(n.date)}</small>
           </div>
-          <p style="margin:5px 0 0;font-size:12px;color:var(--ink);line-height:1.45;">${e(n.message)}</p>
-        </div>
+          <p style="margin:5px 0 6px;font-size:12px;color:var(--ink);line-height:1.45;">${e(n.message)}</p>
+          <div style="display:flex;justify-content:flex-end;align-items:center;">
+            <span style="font-size:11px;font-weight:700;color:var(--burgundy);">Click to open &rarr;</span>
+          </div>
+        </button>
       `).join('') : `
         <div class="drawer-empty">
           <div class="drawer-empty-icon">
@@ -904,7 +918,7 @@ function notificationsMini(u){
             </svg>
           </div>
           <p class="drawer-empty-title">You're all caught up!</p>
-          <p class="drawer-empty-sub">No unread notifications at the moment.</p>
+          <p class="drawer-empty-sub">No notifications at the moment.</p>
         </div>
       `}
     </div>
@@ -1381,12 +1395,15 @@ function tkTerminal(id) {
 }
 
 function logDetail(id){
-  const u=currentUser(),l=visibleLogs(db,u).find(l=>l.id===id);
+  const u=currentUser(),l=visibleLogs(db,u).find(l=>l.id===id)||db.logs.find(l=>l.id===id);
   if(!l)throw new Error('Attendance entry unavailable.');
-  const review=u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status);
+  let storedCoord = '';
+  try { storedCoord = localStorage.getItem('menteelog.coord_remarks.' + l.id) || ''; } catch(e) {}
+  const coordNote = l.coordinatorRemarks || storedCoord || (l.remarks && l.remarks.includes(' | [Coordinator Note: ') ? l.remarks.split(' | [Coordinator Note: ')[1].replace(/\]$/, '') : '');
+  const review=u.role==='Supervisor'&&(['Pending','Flagged'].includes(l.status)||Boolean(coordNote&&!l.signature));
   const stu = student(l.studentId) || u;
   const hte = (window.menteelogGps && window.menteelogGps.getHte(stu?.company || 'Accenture Philippines')) || { lat: 10.7167, lng: 122.5458, name: 'Accenture Philippines' };
-  const isApprovedOnSite = l.status === 'Approved' || (l.remarks && l.remarks.includes('Verified on-site'));
+  const isApprovedOnSite = (l.status === 'Approved' && !coordNote) || (l.remarks && l.remarks.includes('Verified on-site') && !coordNote);
   const locBadge = isApprovedOnSite 
     ? '<span class="badge green">✓ Verified On-Site</span>' 
     : '<span class="badge red">⚠️ Outside Geofence (Exception)</span>';
@@ -1416,17 +1433,16 @@ function logDetail(id){
     </div>
   `;
 
-  const statusHeaderBadge = l.status === 'Approved'
+  const statusHeaderBadge = (l.status === 'Approved' && !review)
     ? '<span class="badge green">✓ Verified On-Site (Auto-Credited)</span>'
-    : (l.status === 'Flagged' ? '<span class="badge red">⚠️ Flagged Exception</span>' : badge(l.status));
+    : (l.status === 'Flagged' || review ? '<span class="badge red">⚠️ Flagged Exception</span>' : badge(l.status));
 
   const modalTitle = review
     ? 'Exception Review — Flagged Shift'
     : (u.role === 'Student' ? 'Daily Time Record [Verified]' : 'Verified Shift & Task Summary');
 
-  const coordNote = l.coordinatorRemarks || (l.remarks && l.remarks.includes(' | [Coordinator Note: ') ? l.remarks.split(' | [Coordinator Note: ')[1].replace(/\]$/, '') : '');
   const cleanRemarks = l.remarks ? l.remarks.split(' | [Coordinator Note: ')[0] : '';
-  showModal(modalTitle,`<div class="row between"><strong>${e(student(l.studentId)?.name || 'Intern')}</strong>${statusHeaderBadge}</div><p class="muted mt16">${date(l.date)} · ${time(l.clockIn)} - ${time(l.clockOut)} · ${l.hours} hours${l.breakMinutes?' · <span style="color:#854d0e;">'+l.breakMinutes+'m break</span>':''}</p><h3>Daily Task Summary</h3><p style="background:var(--cream, #fbf8f2); padding:12px 14px; border-radius:8px; border:1px solid var(--line, #e2e8f0); line-height:1.5;">${e(l.task || 'No task summary recorded.')}</p>${locCardHtml}${l.justification?`<h3>Intern Off-Site Justification</h3><p style="background:#fffbeb; padding:10px 14px; border-radius:8px; border:1px solid #fde68a;">${e(l.justification)}</p>`:''}${coordNote?`<h3>Faculty Coordinator Compliance Note</h3><div style="background:#eff6ff; padding:12px 14px; border-radius:8px; border:1px solid #bfdbfe; color:#1e3a8a; font-size:13.5px; line-height:1.5; margin-bottom:14px;"><strong>📋 Coordinator Directive:</strong> ${e(coordNote)}</div>`:''}${cleanRemarks?`<h3>System / Verification Log</h3><p class="small muted">${e(cleanRemarks)}</p>`:''}${l.signature?`<p class="small muted">Supervisor exception sign-off: ${e(l.signature)}</p>`:''}${u.role==='Supervisor'&&isApprovedOnSite?`<div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; margin-top:14px; color:#166534; font-size:12.5px;"><strong>✓ Passive Oversight Mode:</strong> This shift was automatically verified inside the 100m geofence and credited immediately. No manual approval action is needed.</div>`:''}${u.role==='Student'?`<div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span class="small muted">Testing mode: remove this sample log</span>${button('Delete Test Record','student-delete-log',l.id,'secondary small','trash')}</div>`:''}${review?`<hr class="hr"><h3 style="margin-bottom:8px;">Supervisor Exception Decision</h3>`+select('Exception decision','status',['Approved','Flagged','Rejected'])+textarea('Supervisor remarks','remarks',cleanRemarks||'')+field('Typed signature','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I reviewed this off-site exception and justification.</label>':''}`,review?async data=>{ l.status=data.status; l.remarks=coordNote?`${data.remarks} | [Coordinator Note: ${coordNote}]`:data.remarks; l.signature=data.signature; try { const {error, data:updated} = await supabase.from('logs').update({status: data.status, remarks: l.remarks, signature: data.signature}).eq('id', id).select(); if (!error && updated && updated.length > 0) { await syncRemote(supabase, db); } } catch(err) { console.warn('Remote sync note:', err); } notify(l.studentId,'DTR_Event','DTR exception '+data.status.toLowerCase(),date(l.date)+': '+data.remarks); audit('Reviewed exception for '+(student(l.studentId)?.name||'intern')+' DTR: '+data.status); save(); render(); toast('Exception review saved.'); }:null,'Submit Exception Review');}
+  showModal(modalTitle,`<div class="row between"><strong>${e(student(l.studentId)?.name || 'Intern')}</strong>${statusHeaderBadge}</div><p class="muted mt16">${date(l.date)} · ${time(l.clockIn)} - ${time(l.clockOut)} · ${l.hours} hours${l.breakMinutes?' · <span style="color:#854d0e;">'+l.breakMinutes+'m break</span>':''}</p><h3>Daily Task Summary</h3><p style="background:var(--cream, #fbf8f2); padding:12px 14px; border-radius:8px; border:1px solid var(--line, #e2e8f0); line-height:1.5;">${e(l.task || 'No task summary recorded.')}</p>${locCardHtml}${l.justification?`<h3>Intern Off-Site Justification</h3><p style="background:#fffbeb; padding:10px 14px; border-radius:8px; border:1px solid #fde68a;">${e(l.justification)}</p>`:''}${coordNote?`<h3>Faculty Coordinator Compliance Note</h3><div style="background:#eff6ff; padding:12px 14px; border-radius:8px; border:1px solid #bfdbfe; color:#1e3a8a; font-size:13.5px; line-height:1.5; margin-bottom:14px;"><strong>📋 Coordinator Directive:</strong> ${e(coordNote)}</div>`:''}${cleanRemarks?`<h3>System / Verification Log</h3><p class="small muted">${e(cleanRemarks)}</p>`:''}${l.signature?`<p class="small muted">Supervisor exception sign-off: ${e(l.signature)}</p>`:''}${u.role==='Supervisor'&&isApprovedOnSite?`<div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; margin-top:14px; color:#166534; font-size:12.5px;"><strong>✓ Passive Oversight Mode:</strong> This shift was automatically verified inside the 100m geofence and credited immediately. No manual approval action is needed.</div>`:''}${u.role==='Student'?`<div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span class="small muted">Testing mode: remove this sample log</span>${button('Delete Test Record','student-delete-log',l.id,'secondary small','trash')}</div>`:''}${review?`<hr class="hr"><h3 style="margin-bottom:8px;">Supervisor Exception Decision</h3>`+select('Exception decision','status',['Approved','Flagged','Rejected'])+textarea('Supervisor remarks','remarks',cleanRemarks||'')+field('Typed signature','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I reviewed this off-site exception and justification.</label>':''}`,review?async data=>{ l.status=data.status; l.remarks=coordNote?`${data.remarks} | [Coordinator Note: ${coordNote}]`:data.remarks; l.signature=data.signature; try { const {error, data:updated} = await supabase.from('logs').update({status: data.status, remarks: l.remarks, signature: data.signature}).eq('id', id).select(); if (!error && updated && updated.length > 0) { await syncRemote(supabase, db); } } catch(err) { console.warn('Remote sync note:', err); } notify(l.studentId,'DTR_Event','DTR exception '+data.status.toLowerCase(),date(l.date)+': '+data.remarks,{targetPage:'dtr',targetLogId:l.id,role:'Student'}); audit('Reviewed exception for '+(student(l.studentId)?.name||'intern')+' DTR: '+data.status); save(); render(); toast('Exception review saved.'); }:null,'Submit Exception Review');}
 function studentDetail(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id===id);if(!s)throw new Error('Student is outside your assigned scope.');showModal(e(s.name),`${person(s)}<hr class="hr"><div class="grid-2"><div><span class="small muted">SR code</span><p>${e(s.identifier)}</p><span class="small muted">Host company</span><p>${e(s.company||'Unplaced')}</p></div><div><span class="small muted">Approved hours</span><p>${approvedHours(db,s.id)} / ${s.requiredHours} hours</p><span class="small muted">Accreditation</span><p>${badge(s.badge)}</p></div></div>${progress(approvedHours(db,s.id),s.requiredHours)}<h3 class="mt16">Recent attendance</h3>${dtrTable(db.logs.filter(l=>l.studentId===s.id).slice(-3),{role:'Student'})}${u.role==='Coordinator'?`<hr class="hr">${select('Host company','company',[['','Unplaced'],...db.htes.filter(h=>h.status==='Accredited').map(h=>h.name)],s.company)}${select('Assigned supervisor','supervisorId',[['','Unassigned'],...db.users.filter(v=>v.role==='Supervisor'&&v.status==='Active').map(v=>[v.id,v.name])],s.supervisorId||'')}${select('Accreditation status','badge',['Pre_Seeded','Eligible','Enrolled','Cleared'],s.badge)}${field('Required OJT hours','requiredHours','number',s.requiredHours,'required min="1" max="2000"')}<p class="small muted">Clearance requires completed hours, an appraisal, and no unresolved incidents.</p>${button('Download endorsement','endorsement',s.id,'secondary small','download')}`:''}`,u.role==='Coordinator'?async data=>{const supervisor=student(data.supervisorId);if(data.company&&(!supervisor||supervisor.company!==data.company))throw new Error('Select a supervisor from the chosen host company.');if(!data.company&&data.supervisorId)throw new Error('Assign a host company before a supervisor.');if(data.badge==='Cleared'&&(approvedHours(db,id)<Number(data.requiredHours)||!db.appraisals.some(a=>a.studentId===id)||db.incidents.some(i=>i.studentId===id&&!['Resolved','Dismissed'].includes(i.status))))throw new Error('This student has incomplete clearance requirements.');const { data: updated, error } = await supabase.from('profiles').update({ company: data.company, supervisor_id: data.supervisorId || null, required_hours: Number(data.requiredHours) }).eq('id', id).select();if(error)throw new Error(error.message);if(!updated||updated.length===0)throw new Error('Update failed. You may not have permission.');await syncRemote(supabase, db);notify(s.id,'System','Placement profile updated','Your coordinator updated your placement or accreditation details.');audit('Updated placement for '+s.name);save();toast('Student placement updated.');}:null,'Save placement');}
 function incidentNew(){const u=currentUser(),students=visibleStudents(db,u);showModal(u.role==='Student'?'File an incident claim':'Create disciplinary log',`<p class="note">Document the situation clearly. This demo does not send emergency alerts or contact school staff.</p>${u.role==='Supervisor'?select('Student involved','studentId',students.map(s=>[s.id,s.name])):''}${field('Short title','title','text','','required maxlength="120"')}${select('Priority','priority',['Low','Medium','High'],'Medium')}${textarea('Description','description','','required minlength="20"')}${select('Related DTR (optional)','logId',[['','No linked entry'],...visibleLogs(db,u).map(l=>[l.id,student(l.studentId).name+' · '+date(l.date)])])}${field('Evidence (optional, PDF / PNG / JPEG, up to 10 MB)','evidence','file','','accept="application/pdf,image/png,image/jpeg"')}`,async(data,form)=>{const sid=u.role==='Student'?u.id:data.studentId;if(u.role==='Supervisor'&&!students.some(s=>s.id===sid))throw new Error('Choose an assigned intern.');if(data.logId&&!db.logs.some(l=>l.id===data.logId&&l.studentId===sid))throw new Error('The linked DTR must belong to the selected student.');const incCode = 'IR-'+crypto.randomUUID().slice(0,8).toUpperCase();
 let evidence=null;const file=form.elements.evidence.files[0];if(file){validateUpload(file);evidence=await uploadEvidence(file, incCode);}const incident={id:incCode,studentId:sid,supervisorId:u.role==='Supervisor'?u.id:u.supervisorId,category:u.role==='Student'?'Student_Claim':'Disciplinary_Violation',title:data.title,description:data.description,priority:data.priority,status:'Pending',date:today(),logId:data.logId||null,evidence,notes:[],meeting:null};const { error, data: inserted } = await supabase.from('incidents').insert({
@@ -1942,9 +1958,74 @@ async function action(name,id,el){
     case 'menu':togglePortalMenu();return;
     case 'filter':view.filter=id;render();return;
     case 'notifications':{const old=$('#notice-drawer');if(old){old.remove();return;}const drawer=document.createElement('section');drawer.id='notice-drawer';drawer.className='notice-drawer';drawer.setAttribute('aria-label','Recent notifications');drawer.innerHTML=notificationsMini(u);app.append(drawer);return;}
-    case 'read':{const n=db.notifications.find(n=>n.id===id&&n.userId===u.id);if(n)n.read=true;break;}
-    case 'read-all':db.notifications.filter(n=>n.userId===u.id).forEach(n=>n.read=true);toast('All notifications marked as read.');const drawer=$('#notice-drawer');if(drawer)drawer.innerHTML=notificationsMini(u);break;
-    case 'clear-read':db.notifications=db.notifications.filter(n=>n.userId!==u.id||!n.read);toast('Read notifications cleared.');break;
+    case 'read':{
+      const n=db.notifications.find(n=>n.id===id&&isUserNotif(n,u))||db.notifications.find(n=>n.id===id);
+      if(n){
+        n.read=true;
+        try{localStorage.setItem('menteelog.notif_read.'+n.id,'1');}catch(e){}
+      }
+      const drawer=$('#notice-drawer');
+      if(drawer)drawer.remove();
+      save();
+      if(n){
+        const text=`${n.title||''} ${n.message||''}`.toLowerCase();
+        const roleSlug=u.role.toLowerCase();
+        if(n.type==='DTR_Event'||n.targetPage==='dtr'||text.includes('dtr')||text.includes('attendance')||text.includes('shift')||text.includes('geofence')||text.includes('logbook')){
+          const dateMatch=String(n.message||'').match(/\d{4}-\d{2}-\d{2}/);
+          const logs=visibleLogs(db,u);
+          const targetLog=(n.targetLogId&&db.logs.find(l=>l.id===n.targetLogId))
+            ||(dateMatch&&logs.find(l=>l.date===dateMatch[0]))
+            ||logs.find(l=>(l.coordinatorRemarks||(l.remarks&&l.remarks.includes('Coordinator Note')))&&!l.signature)
+            ||logs.find(l=>['Flagged','Pending'].includes(l.status))
+            ||logs[0];
+          if(u.role==='Coordinator'){
+            location.hash=targetLog?`#/coordinator/dtr/review/${targetLog.id}`:'#/coordinator/dtr/flagged';
+            render();
+            return;
+          }
+          const targetHash=`#/${roleSlug}/dtr`;
+          if(location.hash!==targetHash)location.hash=targetHash;
+          setTimeout(()=>{
+            if(u.role==='Supervisor'&&targetLog){
+              const isExc=['Flagged','Pending'].includes(targetLog.status)||Boolean(targetLog.coordinatorRemarks&&!targetLog.signature);
+              view.filter=isExc?'Flagged':'All';
+            }
+            render();
+            if(targetLog){
+              try{
+                if(u.role==='Student'&&['Flagged','Rejected'].includes(targetLog.status)){
+                  portals.action('ref-justify-modal',targetLog.id);
+                }else{
+                  logDetail(targetLog.id);
+                }
+              }catch(e){}
+            }
+          },150);
+          return;
+        }
+        if(n.targetPage==='appraisals'||text.includes('appraisal')||text.includes('evaluation')||text.includes('rubric')){
+          location.hash=`#/${roleSlug}/appraisals`;
+          render();
+          return;
+        }
+        if(n.type==='Application_Status'||text.includes('application')||text.includes('placement')||text.includes('endorsement')){
+          location.hash=u.role==='Student'?'#/student/applications':`#/${roleSlug}/candidates/applications`;
+          render();
+          return;
+        }
+        if(n.type==='Incident_Alert'||text.includes('incident')||text.includes('ir-')||text.includes('claim')||text.includes('disciplinary')||text.includes('mediation')){
+          const incMatch=`${n.title||''} ${n.message||''}`.match(/IR-[A-Z0-9-]+/i);
+          const targetInc=(incMatch&&visibleIncidents(u).find(i=>i.id.toUpperCase()===incMatch[0].toUpperCase()))||visibleIncidents(u)[0];
+          location.hash=targetInc?`#/${roleSlug}/incidents/detail/${targetInc.id}`:`#/${roleSlug}/incidents`;
+          render();
+          return;
+        }
+      }
+      render();
+      return;
+    }
+    case 'read-all':db.notifications.filter(n=>isUserNotif(n,u)).forEach(n=>{n.read=true;try{localStorage.setItem('menteelog.notif_read.'+n.id,'1');}catch(e){}});toast('All notifications marked as read.');const drawer=$('#notice-drawer');if(drawer)drawer.innerHTML=notificationsMini(u);break;
+    case 'clear-read':db.notifications=db.notifications.filter(n=>!isUserNotif(n,u)||!n.read);toast('Read notifications cleared.');break;
     case 'job-detail':openJob(id);return;
     case 'tk-terminal':tkTerminal(id);return;
     case 'dummy-action':toast('This is a visual preview. Assign real interns to use this.');return;
