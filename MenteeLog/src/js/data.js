@@ -27,29 +27,29 @@ export const rubric = scorableCriteria.map(c => (c.num ? `${c.num}. ${c.title}` 
 export const navigation = {
   Student: [
     ['dashboard','Dashboard','grid'],
+    ['documents','Documents','folder'],
     ['jobs','OJT Placement','briefcase'],
     ['applications','My Applications','file'],
-    ['appraisals','Performance Appraisal','star'],
     ['dtr','Attendance & DTR','clock'],
-    ['documents','Documents','folder'],
+    ['appraisals','Performance Appraisal','star'],
     ['incidents','Incident Reports','alert']
   ],
   Supervisor: [
     ['dashboard','Dashboard','grid'],
+    ['jobs','Slot Management','briefcase'],
     ['candidates','Candidate Review','users'],
     ['dtr','Log Sheets & Summary','clock'],
-    ['appraisals','Performance Appraisal','file'],
-    ['jobs','Slot Management','briefcase'],
+    ['appraisals','Performance Appraisal','star'],
     ['incidents','Incident Reports','alert']
   ],
   Coordinator: [
     ['dashboard','Dashboard','grid'],
-    ['jobs','Job Management','briefcase'],
-    ['hte','HTE Accreditation','building'],
-    ['candidates','Student Placement','users'],
-    ['dtr','DTR Compliance','file'],
-    ['reports','Report Generation','chart'],
     ['users','User Management','users'],
+    ['hte','HTE Accreditation','building'],
+    ['jobs','Job Management','briefcase'],
+    ['candidates','Student Placement','users'],
+    ['dtr','DTR Compliance','clock'],
+    ['reports','Report Generation','chart'],
     ['incidents','Incident Reports','alert']
   ]
 };

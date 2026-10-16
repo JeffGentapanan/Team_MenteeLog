@@ -352,7 +352,7 @@ graph TD
     C6["4.6 Incident Reports<br/>(Red Queue & Mediation Meeting Scheduler)"]
 
     subgraph UserGov ["4.7 User Management Scope"]
-      C7_1["Pre-Seed OJT Candidates<br/>(CSV Batch Import: Institutional Emails Only)"]
+      C7_1["Pre-Seed OJT Candidates<br/>(CSV Batch Import: identifier, name, institutional email, course)"]
       C7_2["Provision Faculty Accounts"]
       C7_3["RBAC Security Summary"]
       C7_1 --> C7_2
@@ -609,6 +609,8 @@ graph TB
   %% Persistence & Store Data Flows
   LogSheetsSummary3 -.->|Read Verified Hours| DTRStore
   DTRCompliance4 -.->|Audit Logs & 100m Geofence| DTRStore
+  DTRCompliance4 -->|Forward Compliance Directive & Alert| ReviewFlaggedDTR
+  DTRCompliance4 -.->|Write Compliance Alert| NotificationStore
   StudentReport2 -->|Write Incident| ReportStore
   SupervisorReport3 -->|Write Disciplinary Log| ReportStore
   AppraisalSubmission3 -->|Write 7-Criteria Rubric & Canvas Signature| ApplicationStore
@@ -618,8 +620,8 @@ graph TB
   ApplicationStore -.->|Write Status Change| NotificationStore
   ForgotPassword -.->|Verify Email| UserStore
   SignOutNode -.->|Revoke Token| UserStore
-  HeaderNotificationDrawer -.->|Read Alerts| NotificationStore
-  NotificationCenter -.->|Read/Write Status| NotificationStore
+  HeaderNotificationDrawer -.->|Read Alerts & Direct Route| NotificationStore
+  NotificationCenter -.->|Read/Write Status & Direct Route| NotificationStore
   Dashboard2 -.->|Read/Write| UserStore
   Dashboard2 -.->|Read| JobStore
   Dashboard2 -.->|Read/Write| ApplicationStore
@@ -661,6 +663,18 @@ graph TB
 
 ---
 
+## 🧭 Step-by-Step Chronological Sidebar Navigation
+
+Each portal's sidebar navigation is ordered strictly according to the chronological OJT lifecycle:
+
+| Portal | Step-by-Step Sidebar Navigation Order |
+| :--- | :--- |
+| **OJT Student Portal** | `1. Dashboard` → `2. Documents` → `3. OJT Placement` → `4. My Applications` → `5. Attendance & DTR` → `6. Performance Appraisal` → `7. Incident Reports` |
+| **Company Supervisor Portal** | `1. Dashboard` → `2. Slot Management` → `3. Candidate Review` → `4. Log Sheets & Summary` → `5. Performance Appraisal` → `6. Incident Reports` |
+| **Faculty OJT Coordinator Portal** | `1. Dashboard` → `2. User Management` → `3. HTE Accreditation` → `4. Job Management` → `5. Student Placement` → `6. DTR Compliance` → `7. Report Generation` → `8. Incident Reports` |
+
+---
+
 ## 🔑 Demonstration Accounts & Test Credentials
 
 To evaluate the integrated portals, use the following pre-configured demonstration accounts:
@@ -688,30 +702,28 @@ To evaluate the integrated portals, use the following pre-configured demonstrati
 * **Off-Site Warning Pin:** Crimson alert pin (`#dc2626`) with a warning glyph and red pulsing radar ring for out-of-bounds locations.
 * **Pixel-Perfect Needle Anchoring:** Calibrated to `[22, 53]` to ensure mathematical needle-tip precision on Leaflet map tiles.
 
-### 3. Dedicated Wide / Fullscreen Interactive Map Viewer
-* Added **`⛶ Wide / Fullscreen`** controls across the Student DTR card, DTR History modal, and Attendance Justification modal.
+### 3. Dedicated Wide / Fullscreen Interactive Map Viewer Across All Portals
+* Added **`🗺️ Toggle Record Map`** and **`⛶ Wide / Fullscreen`** controls across the Student DTR Hub, Attendance Justification modal, Supervisor Exception Review modal, and Coordinator **Review DTR Entry** (`#/coordinator/dtr/review/<id>`) page.
 * Opens an expansive viewport overlay with backdrop blur, telemetry badge, geofence status badge, pan/zoom controls, and instant **`ESC` key** dismissal.
-* In on-site mode, the map automatically fits closely around the 100m circle (Zoom Level 18) for an unobstructed, close-up street view.
 
-### 4. Interactive Draw Signature Station for Appraisals (`#/supervisor/appraisals`)
-* Replaced text fields with an executive **Draw Signature** station featuring a high-DPI HTML5 canvas pad with mouse, pen, and touch-screen drawing support.
-* Includes signature guideline (`✕ SIGN ABOVE THE LINE`), quick clear button, signatory name input, and institutional certification declaration.
-* Resilient persistence across Supabase, local cache, and notification dispatch.
+### 4. Coordinator DTR Compliance Directives & Actionable Notification Routing
+* **Coordinator → Supervisor Compliance Forwarding:** When a Faculty Coordinator audits an off-site DTR entry (`#/coordinator/dtr/review/<id>`) and clicks **Forward to Supervisor for Action**, their remarks are saved as a **Faculty Coordinator Compliance Note** (`📋 Coordinator Directive`) inside the Supervisor's **Exception Review — Flagged Shift** modal.
+* **Click-to-Open Notifications (`#notice-drawer` & `#/<role>/notifications`):** Clicking any notification in the top-right Bell Drawer (unread-only queue with `✓ Mark as read` and `Mark all read`) or on the Notifications Center page routes directly to the target portal page and automatically opens the relevant modal or record (DTR Exception Review, Performance Appraisal Rubric, Application Tracker, or Incident Case Detail).
 
-### 5. Multi-Tab Session Isolation & Page Reload Fix
+### 5. Interactive Draw Signature Station for Appraisals (`#/supervisor/appraisals`)
+* Equipped the 7-criteria evaluation module with both **✍️ Draw Signature** (high-DPI HTML5 canvas pad supporting mouse, pen, and touch input) and **⌨️ Type Signature** modes.
+* Drawn canvas signatures (`PNG`) persist across `localStorage` and Supabase and render directly inside the Student's **Performance Appraisal Result** (`#/student/appraisals`) and Coordinator audit views.
+
+### 6. Redesigned Application Status Tracker & Clean Card Aesthetic (`#/student/applications`)
+* Upgraded **My Applications Tracker** with a 3-column KPI summary banner, company monogram header, interactive 4-stage milestone cards (`Application Submitted` → `Supervisor Review` → `Placement Approved` → `Official Endorsement`), and a 4-column assignment specification grid.
+* Standardized all portal cards with clean `1px` borders and balanced mobile `flex-wrap` spacing (`row-gap` & `column-gap`).
+
+### 7. Multi-Tab Session Isolation & Page Reload Fix
 * Resolved browser storage and routing conflicts using scoped session storage (`sessionStorage.SESSION.<role>`).
 * Reloading any active tab accurately persists the current portal view and prevents session drops or accidental role switching.
 
-### 6. Interactive DTR Clock & Modern Authentication Experience (`#/login`)
-* Active analog & digital clock dial animation featuring **CLOCK IN (08:00 AM)** and **CLOCK OUT (05:00 PM)** pins, glowing shift duration arc, and live sweeping clock hands.
-* Blueprint geometric gridlines with interactive cursor spotlight tracking (`--spotlight-x`, `--spotlight-y`).
-* Zero-scroll 100% zoom fit ensuring all form inputs, role capsules, actions, and activation links fit cleanly without page scrolling.
-
-### 7. Account Activation & OTP Verification Flow (`#/activate`)
-* 3-step activation pipeline: identifier & institutional email verification, 6-digit numeric OTP validation, and secure password setup.
-
-### 8. BSIT Scope Focus & Academic Standardization
-* Standardized academic scope strictly to **BSIT (Bachelor of Science in Information Technology)** across the public landing page, student directory, partner listings, and portal dashboards.
+### 8. Interactive DTR Clock, OTP Activation & BSIT Standardization
+* Active analog & digital clock dial animation on `#/login` with 3-step OTP account activation on `#/activate` and strict BSIT academic scope standardization.
 
 ---
 

@@ -90,23 +90,35 @@ export async function syncRemote(supabase, db) {
       };
     });
 
-    let newLogs = (logsRes.data || []).map(l => ({
-      id: l.id,
-      studentId: l.student_id,
-      supervisorId: l.supervisor_id,
-      date: l.date,
-      clockIn: l.clock_in,
-      clockOut: l.clock_out,
-      breakMinutes: Number(l.break_minutes) || 0,
-      hours: Number(l.hours) || 0,
-      status: l.status,
-      task: l.task,
-      gps: l.gps,
-      remarks: l.remarks,
-      signature: l.signature,
-      justification: l.justification,
-      coordinatorRemarks: l.coordinator_remarks
-    }));
+    let newLogs = (logsRes.data || []).map(l => {
+      let taskText = l.task;
+      if (taskText && (taskText.includes('For Industry Supervisors, daily timekeeping is automated') || taskText.includes('In the Student Portal, BSIT interns discover'))) {
+        taskText = 'Implemented responsive UI components for the client portal, integrated RESTful API endpoints with role-based session validation, and executed unit tests with the QA engineering team.';
+      }
+      const inlineCoord = (l.remarks && l.remarks.includes(' | [Coordinator Note: ')) ? l.remarks.split(' | [Coordinator Note: ')[1].replace(/\]$/, '') : '';
+      let savedCoord = l.coordinator_remarks || inlineCoord || '';
+      if (!savedCoord) {
+        try { savedCoord = localStorage.getItem('menteelog.coord_remarks.' + l.id) || ''; } catch(e) {}
+      }
+      const isOffSiteOrException = (l.gps === false) || Boolean(l.remarks && l.remarks.includes('Outside geofence')) || Boolean(savedCoord) || Boolean(l.justification);
+      return {
+        id: l.id,
+        studentId: l.student_id,
+        supervisorId: l.supervisor_id,
+        date: l.date,
+        clockIn: l.clock_in,
+        clockOut: l.clock_out,
+        breakMinutes: Number(l.break_minutes) || 0,
+        hours: Number(l.hours) || 0,
+        status: (l.status === 'Pending' && !isOffSiteOrException && Number(l.hours || 0) > 0) ? 'Approved' : l.status,
+        task: taskText,
+        gps: l.gps,
+        remarks: (l.status === 'Pending' && !isOffSiteOrException && Number(l.hours || 0) > 0) ? (l.remarks || 'Verified on-site within HTE premises') : l.remarks,
+        signature: l.signature,
+        justification: l.justification,
+        coordinatorRemarks: savedCoord
+      };
+    });
 
         let newIncidents = [];
     if (incidentsRes.data === null) {
@@ -144,17 +156,37 @@ export async function syncRemote(supabase, db) {
 
     const newAppraisals = (appraisalsRes.data || [])
       .filter(a => !String(a.comments || '').includes('m y jyyyy'))
-      .map(a => ({
-        id: a.id,
-        applicationId: a.application_id,
-        studentId: a.student_id,
-        supervisorId: a.supervisor_id,
-        ratings: a.ratings || [],
-        score: a.score,
-        comments: a.comments,
-        signature: a.signature,
-        date: a.date
-      }));
+      .map(a => {
+        const rawSig = String(a.signature || '');
+        const [sigName, inlineImg] = rawSig.includes('|||') ? rawSig.split('|||') : [rawSig, ''];
+        const isKenzoId = a.student_id === 's1' || a.student_id === '22227dcf-933f-40a9-9340-f66cb9020e5c';
+        const existingLocal = (db.appraisals || []).find(loc => loc.id === a.id || loc.studentId === a.student_id || (isKenzoId && (loc.studentId === 's1' || loc.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')));
+        let savedSigImg = inlineImg || existingLocal?.signatureImage || '';
+        if (!savedSigImg) {
+          try {
+            savedSigImg = localStorage.getItem('menteelog.appraisal_sig.' + a.student_id) || (isKenzoId ? localStorage.getItem('menteelog.appraisal_sig.kenzo') : '') || '';
+          } catch(e) {}
+        }
+        return {
+          id: a.id,
+          applicationId: a.application_id,
+          studentId: a.student_id,
+          supervisorId: a.supervisor_id,
+          ratings: a.ratings || [],
+          score: a.score,
+          comments: a.comments,
+          signature: sigName,
+          signatureImage: savedSigImg,
+          date: a.date
+        };
+      });
+    for (const localApp of (db.appraisals || [])) {
+      const isKenzoLocal = localApp.studentId === 's1' || localApp.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c';
+      const hasRemote = newAppraisals.some(na => na.id === localApp.id || na.studentId === localApp.studentId || (isKenzoLocal && (na.studentId === 's1' || na.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')));
+      if (!hasRemote) {
+        newAppraisals.push(localApp);
+      }
+    }
 
     const newDocs = (docsRes.data || []).map(d => ({
       id: d.id,
@@ -251,11 +283,92 @@ export async function syncRemote(supabase, db) {
       if (l.date === '2026-10-16' && Number(l.hours || 0) <= 0.02 && (String(l.clockIn || '').includes('00:23') || String(l.clockIn || '').includes('12:23') || String(l.clockOut || '').includes('00:23') || String(l.clockOut || '').includes('12:23') || !l.task)) return false;
       return true;
     }).map(l => {
-      if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0) {
+      if (l.coordinatorRemarks && !l.signature && l.status === 'Approved') {
+        return { ...l, status: 'Pending' };
+      }
+      const isOffSite = (l.gps === false) || Boolean(l.remarks && l.remarks.includes('Outside geofence')) || Boolean(l.coordinatorRemarks) || Boolean(l.justification);
+      if (l.status === 'Pending' && !isOffSite && Number(l.hours || 0) > 0) {
         return { ...l, status: 'Approved', remarks: l.remarks || 'Verified on-site within HTE premises' };
       }
       return l;
     });
+
+    // Synchronize live actionable notifications across portals for DTR exceptions, Coordinator reviews, and Appraisals
+    db.notifications = db.notifications || [];
+    const ensureNotif = (notifObj) => {
+      try {
+        if (localStorage.getItem('menteelog.notif_cleared.' + notifObj.id) === '1') {
+          db.notifications = db.notifications.filter(n => n.id !== notifObj.id);
+          return;
+        }
+      } catch(e) {}
+      let isRead = false;
+      try { isRead = localStorage.getItem('menteelog.notif_read.' + notifObj.id) === '1'; } catch(e) {}
+      const existing = db.notifications.find(n => n.id === notifObj.id);
+      if (existing) {
+        existing.title = notifObj.title;
+        existing.message = notifObj.message;
+        existing.targetLogId = notifObj.targetLogId;
+        existing.targetPage = notifObj.targetPage;
+        existing.role = notifObj.role;
+        if (isRead) existing.read = true;
+      } else {
+        db.notifications.unshift({ ...notifObj, read: isRead });
+      }
+    };
+
+    for (const l of newLogs) {
+      if (l.coordinatorRemarks) {
+        ensureNotif({
+          id: 'notif-coord-review-' + l.id,
+          userId: primarySupervisor?.id || 'v1',
+          role: 'Supervisor',
+          type: 'DTR_Event',
+          title: 'DTR compliance review forwarded',
+          message: `Coordinator directive on kenzosomes (${l.date}): "${l.coordinatorRemarks}" — Click to review & sign off.`,
+          date: new Date().toISOString(),
+          targetPage: 'dtr',
+          targetLogId: l.id
+        });
+      }
+      if (['Flagged', 'Pending'].includes(l.status)) {
+        ensureNotif({
+          id: 'notif-flagged-sup-' + l.id,
+          userId: primarySupervisor?.id || 'v1',
+          role: 'Supervisor',
+          type: 'DTR_Event',
+          title: 'Flagged off-site shift requires review',
+          message: `kenzosomes logged an off-site shift on ${l.date} (${l.hours}h). Click to inspect map pin and exception.`,
+          date: l.clockOut || new Date().toISOString(),
+          targetPage: 'dtr',
+          targetLogId: l.id
+        });
+        ensureNotif({
+          id: 'notif-flagged-coord-' + l.id,
+          userId: 'c1',
+          role: 'Coordinator',
+          type: 'DTR_Event',
+          title: 'Off-site DTR anomaly detected',
+          message: `kenzosomes clocked outside the 100m geofence on ${l.date}. Click to open Compliance Review.`,
+          date: l.clockOut || new Date().toISOString(),
+          targetPage: 'dtr',
+          targetLogId: l.id
+        });
+      }
+    }
+
+    for (const a of newAppraisals) {
+      ensureNotif({
+        id: 'notif-appraisal-' + a.id,
+        userId: primaryStudent?.id || 's1',
+        role: 'Student',
+        type: 'System',
+        title: 'Performance appraisal finalized',
+        message: `Your supervisor submitted your final evaluation (${Number(a.score || 5).toFixed(1)} / 5.0). Click to view rubric & signature.`,
+        date: a.date || new Date().toISOString(),
+        targetPage: 'appraisals'
+      });
+    }
     
     // 1. Include any pre-seeded candidates from school_registry
     if (registryRes?.data && registryRes.data.length > 0) {

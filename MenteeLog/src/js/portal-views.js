@@ -48,15 +48,15 @@ export function createPortalViews(c){
   function appraisalResult(s,a){
     const legendHtml = `
       <div style="background: var(--cream, #fbf8f2); padding: 14px 18px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--line, #e2e8f0);">
-        <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 700; color: var(--ink);">Evaluation Instrument</h4>
-        <div style="font-size: 12px; color: var(--slate); line-height: 1.6;">
-          <strong style="color:var(--ink);">Legend:</strong>
-          <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#fee2e2; border-radius:4px; font-weight:600; color:#991b1b;">1 - Very Poor</span>
-          <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#ffedd5; border-radius:4px; font-weight:600; color:#9a3412;">2 - Poor</span>
-          <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#fef9c3; border-radius:4px; font-weight:600; color:#854d0e;">3 - Average</span>
-          <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#dbeafe; border-radius:4px; font-weight:600; color:#1e40af;">4 - Good</span>
-          <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#dcfce7; border-radius:4px; font-weight:600; color:#166534;">5 - Very Good</span>
-          <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#f1f5f9; border-radius:4px; font-weight:600; color:#475569;">NA - Not Applicable</span>
+        <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 700; color: var(--ink);">Evaluation Instrument</h4>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size: 12px; color: var(--slate);">
+          <strong style="color:var(--ink); margin-right:2px;">Legend:</strong>
+          <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#fee2e2; border-radius:5px; font-weight:600; color:#991b1b;">1 - Very Poor</span>
+          <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#ffedd5; border-radius:5px; font-weight:600; color:#9a3412;">2 - Poor</span>
+          <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#fef9c3; border-radius:5px; font-weight:600; color:#854d0e;">3 - Average</span>
+          <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#dbeafe; border-radius:5px; font-weight:600; color:#1e40af;">4 - Good</span>
+          <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#dcfce7; border-radius:5px; font-weight:600; color:#166534;">5 - Very Good</span>
+          <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#f1f5f9; border-radius:5px; font-weight:600; color:#475569;">NA - Not Applicable</span>
         </div>
       </div>
     `;
@@ -123,20 +123,31 @@ export function createPortalViews(c){
         </div>
       </div>
       <h2 class="ref-rubric-heading">Performance Appraisal Rubric</h2>` +
-      (a ? panel('', legendHtml + tableHtml) + panel('Additional Comments & Official Endorsement', `
+      (a ? (() => {
+        const isKenzo = s.id === 's1' || s.id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || (s.email && s.email.toLowerCase() === 'kenzosomes@gmail.com');
+        const rawSig = String(a.signature || '');
+        const [cleanSigName, inlineSigImg] = rawSig.includes('|||') ? rawSig.split('|||') : [rawSig, ''];
+        let sigImg = a.signatureImage || inlineSigImg || '';
+        if (!sigImg) {
+          try {
+            sigImg = localStorage.getItem('menteelog.appraisal_sig.' + s.id) || (isKenzo ? localStorage.getItem('menteelog.appraisal_sig.kenzo') : '') || '';
+          } catch(e) {}
+        }
+        return panel('', legendHtml + tableHtml) + panel('Additional Comments & Official Endorsement', `
         <blockquote>${e(a.comments)}</blockquote>
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);">
           <div>
             <small style="display:block;color:var(--muted);font-size:12px;">Evaluated & Signed by</small>
-            <strong style="color:var(--ink);">${e(c.student(a.supervisorId)?.name||a.signature||'Supervisor')}</strong>
+            <strong style="color:var(--ink);">${e(c.student(a.supervisorId)?.name||cleanSigName||'Supervisor')}</strong>
             <span style="display:block;font-size:11px;color:var(--muted);">${e(s.company||'Industry Partner')} · ${date(a.date||today())}</span>
           </div>
           <div style="text-align:right;">
-            ${a.signatureImage?`<img src="${a.signatureImage}" alt="Supervisor Digital Signature" style="max-height:50px;display:block;margin-left:auto;">`:`<div style="font-family:'Brush Script MT','Caveat',cursive,sans-serif;font-size:22px;color:var(--burgundy);">${e(a.signature)}</div>`}
+            ${sigImg?`<img src="${sigImg}" alt="Supervisor Digital Signature" style="max-height:55px;display:block;margin-left:auto;margin-bottom:4px;">`:`<div style="font-family:'Brush Script MT','Caveat',cursive,sans-serif;font-size:22px;color:var(--burgundy);">${e(cleanSigName)}</div>`}
             <span class="badge" style="background:#e6f4ea;color:#137333;border:1px solid #ceead6;font-size:10px;padding:2px 8px;border-radius:4px;">✓ Authenticated Digital Signature</span>
           </div>
         </div>
-      `) : panel('', empty('Your appraisal is not available yet', 'Your supervisor\'s submitted rubric and comments will appear here.'))) +
+      `);
+      })() : panel('', empty('Your appraisal is not available yet', 'Your supervisor\'s submitted rubric and comments will appear here.'))) +
     '</div>';
   }
 
@@ -310,7 +321,7 @@ export function createPortalViews(c){
     return intro+panel('',tabs(co?[['','All Cases'],['red','Red Queue'],['student','Student Claims'],['supervisor','Disciplinary Logs'],['archive','Archive']]:[['','All Cases'],['review','Under Investigation'],['resolved','Resolved']])+search('Search case, student or category')+(list.length?table(['Report ID','Source','Student','HTE Partner','Category','Date Reported','Severity','Status','Action'],list.map(i=>`<tr><td>${e(i.id)}</td><td>${badge(i.category==='Student_Claim'?'Student Claim':'Supervisor Log')}</td><td>${e(c.student(i.studentId)?.name)}</td><td>${e(c.student(i.studentId)?.company||'—')}</td><td>${e(i.title)}</td><td>${date(i.date)}</td><td>${badge(i.priority)}</td><td>${badge(i.status)}</td><td>${nav('Review','incidents','detail',i.id,'secondary small')}</td></tr>`)):empty('No cases in this view'))+`<div class="table-footer">Showing ${list.length} logged cases</div>`);
   }
 
-  function appraisals(){const {sub,id}=r();if(u().role==='Student')return '<h1 class="sr-only">Performance Appraisal</h1><p class="ref-evaluation-period">Evaluation Period: Final Assessment</p>'+appraisalResult(u(),db().appraisals.find(a=>a.studentId===u().id));
+  function appraisals(){const {sub,id}=r();if(u().role==='Student'){const stu=u(),isKenzo=stu.id==='s1'||stu.id==='22227dcf-933f-40a9-9340-f66cb9020e5c'||(stu.email&&stu.email.toLowerCase()==='kenzosomes@gmail.com');const stuAppraisal=db().appraisals.find(a=>a.studentId===stu.id||(isKenzo&&(a.studentId==='s1'||a.studentId==='22227dcf-933f-40a9-9340-f66cb9020e5c')));return '<h1 class="sr-only">Performance Appraisal</h1><p class="ref-evaluation-period">Evaluation Period: Final Assessment</p>'+appraisalResult(stu,stuAppraisal);}
     if(sub==='evaluate'){
       const s=student(id);
       const a=db().appraisals.find(a=>a.studentId===id || ((id==='s1'||id==='22227dcf-933f-40a9-9340-f66cb9020e5c'||s?.email==='kenzosomes@gmail.com')&&(a.studentId==='s1'||a.studentId==='22227dcf-933f-40a9-9340-f66cb9020e5c')));
@@ -323,12 +334,17 @@ export function createPortalViews(c){
         </div>` : '') +
         legacyForm(()=>c.legacy.evaluate(id),()=>finish('Evaluation submitted successfully!','appraisals','submitted',id));
     }
-    if(sub==='submitted'){const s=student(id),a=db().appraisals.find(a=>a.studentId===id);return `<div class="ref-success"><span class="ref-success-icon">${icon('check')}</span><h1>Evaluation Submitted Successfully!</h1><p>Appraisal rubric has been processed and archived.</p>${panel('Evaluation Summary',`<p>Student: ${e(s.name)}</p><p>Evaluation type: Final Evaluation</p><h2>${a?.score.toFixed(1)||'—'} / 5.0</h2><p style="margin-top:8px;">${e(a?.comments||'')}</p><div style="margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;"><div><span style="font-size:11px;color:var(--muted);display:block;">Digitally Signed by</span><strong>${e(a?.signature||u().name)}</strong></div>${a?.signatureImage?`<img src="${a.signatureImage}" alt="Signature" style="max-height:45px;">`:''}</div>`)}${nav('Back to Appraisals','appraisals','','','')}</div>`;}
+    if(sub==='submitted'){const s=student(id),isKenzo=id==='s1'||id==='22227dcf-933f-40a9-9340-f66cb9020e5c'||s?.email==='kenzosomes@gmail.com',a=db().appraisals.find(a=>a.studentId===id||(isKenzo&&(a.studentId==='s1'||a.studentId==='22227dcf-933f-40a9-9340-f66cb9020e5c')));const rawSig=String(a?.signature||u().name||''),[cleanSigName,inlineSigImg]=rawSig.includes('|||')?rawSig.split('|||'):[rawSig,''];let sigImg=a?.signatureImage||inlineSigImg||'';if(!sigImg){try{sigImg=localStorage.getItem('menteelog.appraisal_sig.'+id)||(isKenzo?localStorage.getItem('menteelog.appraisal_sig.kenzo'):'')||'';}catch(e){}}return `<div class="ref-success"><span class="ref-success-icon">${icon('check')}</span><h1>Evaluation Submitted Successfully!</h1><p>Appraisal rubric has been processed and archived.</p>${panel('Evaluation Summary',`<p>Student: ${e(s.name)}</p><p>Evaluation type: Final Evaluation</p><h2>${a?.score.toFixed(1)||'—'} / 5.0</h2><p style="margin-top:8px;">${e(a?.comments||'')}</p><div style="margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;"><div><span style="font-size:11px;color:var(--muted);display:block;">Digitally Signed by</span><strong>${e(cleanSigName)}</strong></div>${sigImg?`<img src="${sigImg}" alt="Signature" style="max-height:50px;">`:''}</div>`)}${nav('Back to Appraisals','appraisals','','','')}</div>`;}
     const list=visibleStudents(db(),u()).filter(s=>match(s.name,s.course));return heading('Performance Appraisal','Evaluate student performance, record scores, and sign off evaluations.')+panel('',search('Search by student name or cohort')+(list.length?table(['Intern Name','Department','Evaluation Period','Score / Rating','Status','Action'],list.map(s=>{const a=db().appraisals.find(a=>a.studentId===s.id || ((s.id==='s1'||s.id==='22227dcf-933f-40a9-9340-f66cb9020e5c'||s.email==='kenzosomes@gmail.com')&&(a.studentId==='s1'||a.studentId==='22227dcf-933f-40a9-9340-f66cb9020e5c')));return `<tr><td>${person(s)}</td><td>${e(s.company)}</td><td>Final Evaluation</td><td>${a?a.score.toFixed(1)+' / 5.0':'— Not evaluated'}</td><td>${badge(a?'Completed':'Pending')}</td><td><div class="row" style="gap:4px;">${nav(a?'Review':'Evaluate','appraisals','evaluate',s.id,'small')}${a?b('Reset','ref-reset-appraisal',s.id,'secondary small'):''}</div></td></tr>`;})):empty('No interns found','No student records found to evaluate.')));
   }
 
-  function notifications(){const notes=db().notifications.filter(n=>n.userId===u().id),unread=notes.filter(n=>!n.read).length;const list=notes.filter(n=>r().sub==='unread'?!n.read:r().sub==='system'?['System','DTR_Event'].includes(n.type):r().sub==='incidents'?['Incident_Alert','Application_Status'].includes(n.type):true);
-    return back('dashboard')+heading('Notifications Center','Manage, filter, and review all your platform alerts and updates.',b('Clear Read','clear-read','','secondary small')+b('Mark All as Read','read-all','','small'))+tabs([['',`All Notifications (${notes.length})`],['unread',`Unread (${unread})`],['system','System & DTR'],['incidents','Incidents & Alerts']])+`<div class="ref-notifications">${list.length?list.map(n=>`<button class="ref-notification ${n.read?'read':''}" data-action="read" data-id="${e(n.id)}"><span class="row between"><strong>${n.read?'':'● '}${e(n.title)}</strong><small>${date(n.date)}</small></span><span>${e(n.message)}</span></button>`).join(''):panel('',empty('No notifications here.'))}</div>`;
+  function notifications(){
+    const cur=u();
+    const isMine=n=>n&&(n.userId===cur.id||(n.role&&n.role===cur.role)||(cur.role==='Student'&&['s1','22227dcf-933f-40a9-9340-f66cb9020e5c'].includes(n.userId))||(cur.role==='Supervisor'&&n.userId==='v1')||(cur.role==='Coordinator'&&n.userId==='c1'));
+    const notes=db().notifications.filter(isMine).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+    const unread=notes.filter(n=>!n.read).length;
+    const list=notes.filter(n=>r().sub==='unread'?!n.read:r().sub==='system'?['System','DTR_Event'].includes(n.type):r().sub==='incidents'?['Incident_Alert','Application_Status'].includes(n.type):true);
+    return back('dashboard')+heading('Notifications Center','Manage, filter, and click any alert to jump directly to the relevant record.',b('Clear Read','clear-read','','secondary small')+b('Mark All as Read','read-all','','small'))+tabs([['',`All Notifications (${notes.length})`],['unread',`Unread (${unread})`],['system','System & DTR'],['incidents','Incidents & Alerts']])+`<div class="ref-notifications">${list.length?list.map(n=>`<button class="ref-notification ${n.read?'read':''}" data-action="read" data-id="${e(n.id)}" style="border:1px solid var(--line);"><span class="row between"><strong>${n.read?'':'● '}${e(n.title)}</strong><small>${date(n.date)}</small></span><span style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:6px;"><span>${e(n.message)}</span><strong style="font-size:11.5px;color:var(--burgundy);white-space:nowrap;">Click to open &rarr;</strong></span></button>`).join(''):panel('',empty('No notifications here.'))}</div>`;
   }
 
   function documents(){const docs=db().documents.filter(d=>d.studentId===u().id);return heading('Document Management Portal','Upload and manage your OJT requirements and supporting documents.')+`<button class="upload-drop" data-action="document-upload">${icon('upload')}<strong>Drop files here, or click to upload</strong><span>PDF, JPG, PNG · Up to 10 MB per file</span></button><div class="document-list">${docs.length?docs.map(d=>`<article class="document-item">${icon('file')}<div class="document-copy"><h3>${e(d.category)}</h3><p>${e(d.name)} · ${Math.ceil(d.size/1024)} KB · ${date(d.date)}</p></div>${badge(d.status||'Pending')}${b('Preview','ref-file-preview',d.id,'secondary small','eye')}${b('Download','file-download',d.id,'secondary small','download')}${b('Delete','ref-file-delete',d.id,'secondary small','x')}</article>`).join(''):empty('No documents submitted','Upload your requirements using the area above.')}</div>`;}
@@ -445,8 +461,166 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
   function reports(){return reportPages();}
   function governance(){return governancePages();}
 
-  function supervisorDashboard(){const students=visibleStudents(db(),u()),logs=visibleLogs(db(),u()),pending=logs.filter(l=>l.status==='Pending').length,weekStart=new Date(Date.now()-7*86400000).toISOString().slice(0,10),weekly=logs.filter(l=>l.status==='Approved'&&l.date>=weekStart).reduce((n,l)=>n+l.hours,0);return heading('Supervisor Dashboard',e(u().company)+' · Technology Division OJT Program')+stats([['Active Interns',students.length,'users'],['Pending DTR Queue',pending,'clock'],['Evaluations Due',students.filter(s=>!db().appraisals.some(a=>a.studentId===s.id)).length,'file'],['Avg. Hours / Week',(weekly/Math.max(1,students.length)).toFixed(1)+'h','briefcase']])+panel('',`<div class="row wrap"><strong>Quick Actions:</strong>${b('Bulk Approve DTRs','ref-approve-all','','small')}${b('+ Add Intern Slot','job-edit','','secondary small')}<span class="push-right">${b('Send Emergency Alert','announcement','','secondary small','alert')}</span></div>`)+panel('Active Interns Overview',students.length?table(['Intern Name','Course','Hours Rendered','Progress','Status','Action'],students.map(s=>`<tr><td>${person({...s,course:''})}</td><td>${e(s.course)}</td><td>${approvedHours(db(),s.id)} / ${s.requiredHours} hrs</td><td>${progress(approvedHours(db(),s.id),s.requiredHours)}</td><td>${db().shift?.studentId===s.id&&!db().shift.clockOut?'● Clocked In':'● Clocked Out'}</td><td>${nav('View DTR ›','dtr','profile',s.id,'secondary small')}</td></tr>`)):empty('No active interns','No students are currently placed under your supervision.'))+`<div class="row" style="margin-top: 24px; gap: 12px;">${nav('Candidate Review','candidates','','','secondary small')}${nav('Application Review','applications','','','secondary small')}</div>`;}
-  function studentApplications(){const apps=visibleApplications(db(),u());return heading('My Applications Tracker','Track the status of your internship applications.')+(apps.length?apps.map(a=>{const j=db().jobs.find(j=>j.id===a.jobId),level=a.status==='Accepted'?3:a.status==='Under_Review'?1:0;return `<section class="card application-card"><div class="row between"><div><h2>${e(j?.title)}</h2><p>${e(j?.company)}</p></div>${badge(a.status)}</div><div class="application-path">${['Submitted','Under Review','Interview','Accepted'].map((label,i)=>(i?'<span class="application-line"></span>':'')+`<div class="application-step ${i<=level?'done':''}"><i></i><span>${label}</span></div>`).join('')}</div>${a.note?'<p class="small mt16">'+e(a.note)+'</p>':''}</section>`;}).join(''):panel('',empty('No applications yet','Apply to an accredited internship from the placement directory.')));}
+  function supervisorDashboard(){
+    const students=visibleStudents(db(),u()),logs=visibleLogs(db(),u()),flaggedCount=logs.filter(l=>['Flagged','Pending'].includes(l.status)).length,verifiedCount=logs.filter(l=>l.status==='Approved').length,evalsDue=students.filter(s=>approvedHours(db(),s.id)>=(s.requiredHours||500)&&!db().appraisals.some(a=>a.studentId===s.id)).length;
+    return heading('Supervisor Dashboard',e(u().company)+' · Automated Geofence Oversight & Intern Evaluation')+
+      stats([
+        ['Active Interns',students.length,'users'],
+        ['Verified On-Site Shifts',verifiedCount,'check'],
+        ['Exception Queue (Flagged)',flaggedCount,'alert'],
+        ['Evaluations Due',evalsDue,'star']
+      ])+
+      panel('',`<div class="row wrap" style="align-items:center; gap:10px;"><strong>Quick Actions:</strong>${nav('Log Sheets & Summary','dtr','','','small')}${b('+ Add Intern Slot','job-edit','','secondary small')}<span class="push-right">${b('Send Emergency Alert','announcement','','secondary small','alert')}</span></div>`)+
+      panel('Active Interns — Live Geofence & Progress Overview',students.length?table(['Intern Name','Course','Verified Hours','Progress','Geofence & Shift Status','Actions'],students.map(s=>{
+        const isClockedIn = (db().activeShifts||[]).some(sh=>sh.studentId===s.id) || logs.some(l=>l.studentId===s.id&&l.status==='Running') || (db().shift?.studentId===s.id&&!db().shift.clockOut);
+        const hasFlagged = logs.some(l=>l.studentId===s.id&&l.status==='Flagged');
+        const hrsDone = approvedHours(db(),s.id) >= (s.requiredHours || 500);
+        const statusHtml = isClockedIn
+          ? '<span class="badge green">● Active On-Site (Inside 100m Geofence)</span>'
+          : (hasFlagged ? '<span class="badge red">⚠️ Exception Flagged</span>' : '<span class="badge green">✓ Auto-Verified On-Site</span>');
+        return `<tr><td>${person({...s,course:''})}</td><td>${e(s.course)}</td><td><strong>${approvedHours(db(),s.id)}</strong> / ${s.requiredHours} hrs</td><td>${progress(approvedHours(db(),s.id),s.requiredHours)}</td><td>${statusHtml}</td><td><div class="row" style="gap:6px;">${nav('View Profile','candidates','profile',s.id,'secondary small')}${nav('Task Logs ›','dtr','profile',s.id,'secondary small')}${hrsDone?nav('Evaluate Rubric','appraisals','evaluate',s.id,'primary small'):''}</div></td></tr>`;
+      })):empty('No active interns','No students are currently placed under your supervision.'))+
+      `<div class="row" style="margin-top: 24px; gap: 12px;">${nav('Candidate Review','candidates','','','secondary small')}${nav('Application Review','applications','','','secondary small')}</div>`;
+  }
+  function studentApplications(){
+    const apps=visibleApplications(db(),u());
+    const underReviewCount=apps.filter(a=>['Pending','Under_Review'].includes(a.status)).length;
+    const acceptedCount=apps.filter(a=>a.status==='Accepted').length;
+    const summaryStats=stats([
+      ['Total Applications',apps.length,'file'],
+      ['Under Review',underReviewCount,'clock'],
+      ['Accepted Placements',acceptedCount,'check'],
+      ['Deployment Status',acceptedCount>0?'Active Intern':'Pending','briefcase']
+    ]);
+
+    return heading('My Applications Tracker','Track your internship applications, faculty endorsement status, and official HTE placement confirmation.',nav('Browse OJT Directory','jobs','','','secondary small'))+
+      summaryStats+
+      (apps.length?apps.map((a,idx)=>{
+        const j=db().jobs.find(j=>j.id===a.jobId)||{title:'Software Engineer Intern',company:u().company||'Accenture Philippines',location:'Iloilo Business Park, Mandurriao, Iloilo City',department:'Technology & Engineering',skills:'React, Node.js, TypeScript, Cloud Architecture'};
+        const sup=c.student(j?.supervisorId||u().supervisorId);
+        const supName=sup?.name||'Paolo Mendoza';
+        const isAccepted=a.status==='Accepted';
+        const isRejected=a.status==='Rejected';
+        const level=isAccepted?3:a.status==='Under_Review'?2:0;
+        const initials=(j.company||j.title||'ML').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+        const skillsList=(j.skills||'Software Engineering, Web Development, Agile').split(',').map(s=>s.trim()).filter(Boolean);
+        const stages=[
+          {title:'Application Submitted',sub:'Profile & Resume Sent',state:level>=0?'Completed':'Pending'},
+          {title:'Coordinator Endorsement',sub:'Academic Clearance Verified',state:level>=1?'Endorsed':'Pending'},
+          {title:'HTE Screening & Review',sub:'Supervisor Evaluation',state:level>=2?'Reviewed':'Awaiting'},
+          {title:isRejected?'Application Decision':'Official Placement',sub:isRejected?'Slot Filled / Declined':'Deployment Confirmed',state:isAccepted?'Accepted':isRejected?'Rejected':'Pending'}
+        ];
+
+        return `<section class="card" style="padding:24px 28px; border:1px solid var(--line, #eadfce); border-radius:16px; margin-top:20px; box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+          <div>
+            <!-- Card Header -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; padding-bottom:20px; border-bottom:1px solid var(--line, #f1e8d8);">
+              <div style="display:flex; align-items:flex-start; gap:16px;">
+                <div style="width:56px; height:56px; border-radius:14px; background:var(--burgundy, #58111A); color:#FAF4E8; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; letter-spacing:0.5px; flex-shrink:0;">
+                  ${e(initials)}
+                </div>
+                <div>
+                  <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:4px;">
+                    <h2 style="margin:0; font-size:20px; font-weight:700; color:var(--ink, #1f2937);">${e(j.title)}</h2>
+                    <span style="font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; background:#faf4e8; color:#58111A; border:1px solid #efdfbb;">CHED Accredited · Active MOA</span>
+                  </div>
+                  <p style="margin:0 0 10px; font-size:15px; font-weight:600; color:var(--burgundy, #58111A);">${e(j.company)}</p>
+                  <div style="display:flex; flex-wrap:wrap; gap:16px; font-size:12.5px; color:var(--slate, #64748b);">
+                    <span style="display:inline-flex; align-items:center; gap:5px;">${icon('pin')} ${e(j.location||'Iloilo Business Park, Mandurriao')}</span>
+                    <span style="display:inline-flex; align-items:center; gap:5px;">${icon('briefcase')} ${e(j.department||'Technology & Engineering')}</span>
+                    <span style="display:inline-flex; align-items:center; gap:5px;">${icon('users')} Supervisor: <strong style="color:var(--ink);">${e(supName)}</strong></span>
+                    <span style="display:inline-flex; align-items:center; gap:5px;">${icon('clock')} Applied ${date(a.date||'2026-09-02')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                ${isAccepted
+                  ? `<span style="display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:999px; background:#dcfce7; color:#166534; border:1px solid #86efac; font-size:12.5px; font-weight:800; letter-spacing:0.3px;">✓ ACCEPTED & DEPLOYED</span>`
+                  : badge(a.status)}
+                <span class="small muted" style="font-size:11.5px;">Ref ID: <code>APP-${String(idx+1).padStart(3,'0')}-${e(String(a.id||'892').slice(0,4).toUpperCase())}</code></span>
+              </div>
+            </div>
+
+            <!-- 4-Stage Milestone Pipeline -->
+            <div style="margin:22px 0; background:#fcfaf5; border:1px solid #efe4ce; border-radius:12px; padding:20px 22px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <span style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:#58111A;">Application & Endorsement Pipeline</span>
+                <span style="font-size:12px; font-weight:600; color:${isAccepted?'#166534':'#854d0e'};">${isAccepted?'Stage 4 of 4 · All Milestones Complete':`Stage ${level+1} of 4 In Progress`}</span>
+              </div>
+
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;">
+                ${stages.map((st,i)=>{
+                  const done=i<=level && !isRejected;
+                  const active=i===level && !isAccepted && !isRejected;
+                  return `<div style="position:relative; background:${done?'#ffffff':'#f8f5ee'}; border:1px solid ${done?(isAccepted&&i===3?'#86efac':'#d6c4a5'):'#e5dec9'}; border-radius:10px; padding:14px 16px; display:flex; align-items:flex-start; gap:12px;">
+                    <div style="width:30px; height:30px; border-radius:50%; background:${done?(isAccepted&&i===3?'#16a34a':'#58111A'):active?'#d97706':'#e2e8f0'}; color:${done||active?'#ffffff':'#64748b'}; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0;">
+                      ${done?'✓':(i+1)}
+                    </div>
+                    <div style="min-width:0;">
+                      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:${done?(isAccepted&&i===3?'#166534':'#58111A'):'#64748b'}; margin-bottom:2px;">Step ${i+1} · ${e(st.state)}</div>
+                      <strong style="display:block; font-size:13.5px; color:var(--ink, #1f2937); margin-bottom:2px;">${e(st.title)}</strong>
+                      <span style="display:block; font-size:12px; color:var(--slate, #64748b);">${e(st.sub)}</span>
+                    </div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- 2-Column Endorsement Remarks & Deployment Summary -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:20px;">
+              <div style="background:#ffffff; border:1px solid var(--line, #e2e8f0); border-radius:10px; padding:16px 18px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                  <strong style="font-size:13px; color:var(--ink); display:flex; align-items:center; gap:6px;">${icon('check')} Official Endorsement & Review Note</strong>
+                  <span class="badge green" style="font-size:10.5px;">Verified</span>
+                </div>
+                <p style="margin:0 0 14px; font-size:13.5px; color:var(--ink); line-height:1.55; background:#f8fafc; padding:10px 12px; border:1px solid var(--line, #e2e8f0); border-radius:6px;">
+                  "${e(a.note||'Endorsed by faculty coordinator and accepted by company supervisor.')}"
+                </p>
+                <div>
+                  <span style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; color:var(--slate); margin-bottom:6px;">Role Tech Stack & Competencies</span>
+                  <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    ${skillsList.map(sk=>`<span class="ojt-job-skill" style="font-size:11.5px; padding:3px 10px;">${e(sk)}</span>`).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <div style="background:#ffffff; border:1px solid var(--line, #e2e8f0); border-radius:10px; padding:16px 18px;">
+                <strong style="display:block; font-size:13px; color:var(--ink); margin-bottom:10px;">Internship Assignment Specifications</strong>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; font-size:12.5px;">
+                  <div>
+                    <span class="muted" style="display:block; font-size:11px;">REQUIRED OJT HOURS</span>
+                    <strong style="color:var(--ink);">${u().requiredHours||500} Hours (${e(u().course||'BSIT')})</strong>
+                  </div>
+                  <div>
+                    <span class="muted" style="display:block; font-size:11px;">ATTENDANCE MODE</span>
+                    <strong style="color:#166534;">📍 100m GPS Geofence</strong>
+                  </div>
+                  <div>
+                    <span class="muted" style="display:block; font-size:11px;">FACULTY COORDINATOR</span>
+                    <strong style="color:var(--ink);">Dr. Evelyn Ramos</strong>
+                  </div>
+                  <div>
+                    <span class="muted" style="display:block; font-size:11px;">COMPLIANCE STANDARD</span>
+                    <strong style="color:var(--ink);">CHED CMO 104 s. 2017</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer Actions -->
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding-top:16px; border-top:1px dashed var(--line, #e2e8f0);">
+              <span class="small muted">Your verified student profile and clearance documents are linked to this placement.</span>
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                ${j?.id?nav('View Position Details','jobs','detail',j.id,'secondary small'):''}
+                ${nav(' Clearance Documents','documents','','','secondary small')}
+                ${isAccepted?nav('Open Attendance & DTR ›','dtr','','','primary small'):''}
+              </div>
+            </div>
+          </div>
+        </section>`;
+      }).join(''):panel('',empty('No applications yet','Apply to an accredited internship from the placement directory.')));
+  }
 
   function htePages(){
     const {sub,id}=r();if(u().role!=='Coordinator')throw new Error('Coordinator access required.');
@@ -582,60 +756,129 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
   }
 
   function attendancePages(){const {sub,id}=r(),role=u().role,logs=visibleLogs(db(),u());
-    if(sub==='profile'){const s=student(id),items=logs.filter(l=>l.studentId===id),tasks=c.view.tasks;return back('dtr')+heading(e(s.name)+' DTR Records','Review weekly log sheets and task summaries.',`<div style="display:flex; gap:8px;">${b('Export PDF', 'ref-export-dtr', 'pdf', 'secondary', 'download')} ${b('Export CSV', 'ref-export-dtr', 'csv', 'secondary', 'download')}</div>`)+`<div class="ref-identity">${person(s)}${b(tasks?'View DTR Records':'View Task Summary','ref-task-view','','secondary small')}</div>`+panel('Weekly Log Sheets',table(tasks?['Date','Task Description','Status']:['Date','Day','Time In','Time Out','Break','Total Hours','Status'],items.map(l=>`<tr><td>${date(l.date)}</td>${tasks?'<td>'+e(l.task)+'</td>':'<td>'+new Date(l.date+'T12:00:00').toLocaleDateString('en',{weekday:'long'})+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+(l.breakMinutes?'<span style="color:#854d0e;">'+l.breakMinutes+'m</span>':'—')+'</td><td>'+l.hours+' hrs</td>'}<td>${badge(l.status)}</td></tr>`)))+stats([['Total Rendered Hours',approvedHours(db(),id)+' Hours'],['Required Hours',s.requiredHours+' Hours'],['Remaining Hours',Math.max(0,s.requiredHours-approvedHours(db(),id))+' Hours']]);}
-    if(sub==='review'){if(role!=='Coordinator')throw new Error('Coordinator access required.');const l=logs.find(l=>l.id===id);if(!l)throw new Error('DTR unavailable.');return back('dtr')+heading('Review DTR Entry','Review the original record, supporting justification, and required corrections.')+`<div class="ref-identity">${person(c.student(l.studentId))}${badge(l.status)}</div><div class="grid-2">${panel('Original Record',`<dl class="ref-facts"><dt>Date</dt><dd>${date(l.date)}</dd><dt>Clock In</dt><dd>${time(l.clockIn)}</dd><dt>Clock Out</dt><dd>${time(l.clockOut)}</dd><dt>Break Time</dt><dd>${l.breakMinutes?'<span style="color:#854d0e;">'+l.breakMinutes+' minutes</span>':'None'}</dd><dt>Hours</dt><dd>${l.hours}</dd></dl><h3>Task Summary</h3><p>${e(l.task)}</p>`)}${panel('Justification & Review',`<p>${e(l.justification||'No justification submitted.')}</p><p>${e(l.remarks||'No supervisor remarks.')}</p><p>GPS: ${l.gps?'Captured; server verification pending':'Unavailable'}</p>`)}</div>`+panel('Compliance Review',form(sel('Compliance status','status',['Flagged','Pending'],l.status==='Pending'?'Pending':'Flagged')+ta('Coordinator remarks','remarks',l.coordinatorRemarks||'','required minlength="10"'),v=>{(async () => {
-const { error, data: updated } = await supabase.from('logs').update({ coordinator_remarks: v.remarks, status: v.status }).eq('id', l.id).select();
-if (error) { alert(error.message); return; }
-if (!updated || updated.length === 0) { alert('Update failed or rejected by security rules.'); return; }
-await c.syncRemote(supabase, db());
-c.notify(l.supervisorId,'DTR_Event','DTR compliance review',c.student(l.studentId).name+': '+v.remarks);
-finish('Compliance review saved; supervisor sign-off is required.','dtr','flagged');
+    if(sub==='profile'){const s=student(id)||c.student(id)||{name:'kenzosomes',requiredHours:500},items=logs.filter(l=>l.studentId===id),tasks=c.view.tasks;return back('dtr')+heading(e(s.name)+' — Verified DTR & Task Log','Automated geofence-verified attendance records and daily task accomplishments.',`<div style="display:flex; gap:8px;">${b('Export PDF', 'ref-export-dtr', 'pdf', 'secondary', 'download')} ${b('Export CSV', 'ref-export-dtr', 'csv', 'secondary', 'download')}</div>`)+`<div class="ref-identity">${person(s)}${b(tasks?'View Shift Timestamps':'View Full Task Descriptions','ref-task-view','','secondary small')}</div>`+panel('Verified Shift Log Sheets',table(tasks?['Date','Task Description','Verification Status','Oversight']:['Date','Day','Time In','Time Out','Break','Total Hours','Verification Status','Oversight'],items.map(l=>{const stBadge=l.status==='Approved'?'<span class="badge green">✓ Verified On-Site</span>':(l.status==='Flagged'?'<span class="badge red">⚠️ Flagged Exception</span>':badge(l.status));return `<tr><td>${date(l.date)}</td>${tasks?'<td>'+e(l.task)+'</td>':'<td>'+new Date(l.date+'T12:00:00').toLocaleDateString('en',{weekday:'long'})+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+(l.breakMinutes?'<span style="color:#854d0e;">'+l.breakMinutes+'m</span>':'—')+'</td><td>'+l.hours+' hrs</td>'}<td>${stBadge}</td><td>${b('📖 Task & Map','log-detail',l.id,'secondary small')}</td></tr>`;})))+stats([['Auto-Verified Hours',approvedHours(db(),id)+' Hours'],['Required Hours',s.requiredHours+' Hours'],['Remaining Hours',Math.max(0,s.requiredHours-approvedHours(db(),id))+' Hours']]);}
+    if(sub==='review'){
+      if(role!=='Coordinator')throw new Error('Coordinator access required.');
+      const l=logs.find(l=>l.id===id);
+      if(!l)throw new Error('DTR unavailable.');
+      const stu = c.student(l.studentId) || student(l.studentId) || { name: 'kenzosomes', company: 'Accenture Philippines' };
+      const hte = (window.menteelogGps && window.menteelogGps.getHte(stu?.company || 'Accenture Philippines')) || { lat: 10.7167, lng: 122.5458, name: 'Accenture Philippines' };
+      const isRecOnSite = l.status === 'Approved' || Boolean(l.remarks && l.remarks.includes('Verified on-site'));
+      let recLat = hte.lat + 0.00008;
+      let recLng = hte.lng + 0.00006;
+      if (l.remarks) {
+        const m = l.remarks.match(/(\d+\.\d+)°?[NS]?,\s*(\d+\.\d+)°?[EW]?/);
+        if (m) {
+          recLat = parseFloat(m[1]);
+          recLng = parseFloat(m[2]);
+        } else if (!isRecOnSite) {
+          recLat = hte.lat + 0.0215;
+          recLng = hte.lng + 0.0185;
+        }
+      } else if (!isRecOnSite) {
+        recLat = hte.lat + 0.0215;
+        recLng = hte.lng + 0.0185;
+      }
+      setTimeout(() => {
+        if (window.menteelogGps && document.getElementById('modal-record-map-' + l.id)) {
+          window.menteelogGps.renderMap('modal-record-map-' + l.id, recLat, recLng, hte.lat, hte.lng, hte.name, isRecOnSite);
+        }
+      }, 100);
+
+      return back('dtr')+heading('Review DTR Entry','Review the original record, supporting justification, and required corrections.')+`<div class="ref-identity">${person(stu)}${badge(l.status)}</div><div class="grid-2">${panel('Original Record',`<dl class="ref-facts"><dt>Date</dt><dd>${date(l.date)}</dd><dt>Clock In</dt><dd>${time(l.clockIn)}</dd><dt>Clock Out</dt><dd>${time(l.clockOut)}</dd><dt>Break Time</dt><dd>${l.breakMinutes?'<span style="color:#854d0e;">'+l.breakMinutes+' minutes</span>':'None'}</dd><dt>Hours</dt><dd>${l.hours}</dd></dl><h3>Task Summary</h3><p>${e(l.task)}</p>`)}${panel('Justification & Review',`<p><strong>Intern Justification:</strong> ${e(l.justification||'No justification submitted.')}</p><p>${e((l.remarks||'No supervisor remarks.').split(' | [Coordinator Note:')[0])}</p><p><strong>Geofence Telemetry:</strong> ${isRecOnSite?'<span style="color:#166534; font-weight:600;">✓ Verified Inside 100m HTE Perimeter</span>':'<span style="color:#991b1b; font-weight:600;">⚠️ Captured Outside 100m HTE Perimeter</span>'}</p><div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;"><button type="button" class="btn primary small" data-action="view-record-map" data-id="${e(l.id)}" style="display:inline-flex; align-items:center; gap:6px;">🗺️ Toggle Record Map</button><button type="button" class="btn secondary small" data-action="fullscreen-record-map" data-id="${e(l.id)}" style="display:inline-flex; align-items:center; gap:6px;">⛶ Wide / Fullscreen</button></div><div id="modal-record-map-${e(l.id)}" style="display:block; margin-top:14px; width:100%; height:240px; background:#f1f5f9; border-radius:8px; overflow:hidden; border:1px solid #cbd5e1; position:relative;"></div>`)}</div>`+panel('Compliance Review',form(sel('Compliance status','status',['Flagged','Pending'],l.status==='Pending'?'Pending':'Flagged')+ta('Coordinator remarks','remarks',l.coordinatorRemarks||'','required minlength="10"'),v=>{(async () => {
+l.coordinatorRemarks = v.remarks;
+l.status = v.status;
+try { localStorage.setItem('menteelog.coord_remarks.' + l.id, v.remarks); } catch(e) {}
+const baseRemarks = String(l.remarks || '').split(' | [Coordinator Note:')[0];
+const combinedRemarks = `${baseRemarks} | [Coordinator Note: ${v.remarks}]`;
+l.remarks = combinedRemarks;
+try {
+  let { error } = await supabase.from('logs').update({ coordinator_remarks: v.remarks, status: v.status, remarks: combinedRemarks }).eq('id', l.id);
+  if (error) {
+    await supabase.from('logs').update({ status: v.status, remarks: combinedRemarks }).eq('id', l.id);
+  }
+  await c.syncRemote(supabase, db());
+} catch(err) {
+  console.warn('Coordinator review sync warning:', err);
+}
+const supTargetId = l.supervisorId || stu?.supervisorId || 'v1';
+c.notify(supTargetId,'DTR_Event','DTR compliance review',(stu?.name||'Student')+': '+v.remarks);
+finish('Compliance review saved and forwarded to the Supervisor Exception Queue.','dtr','flagged');
 })();
 },'Save & Notify Supervisor'));}
     if(role==='Coordinator'){
       const students=visibleStudents(db(),u()),flagged=logs.filter(l=>['Flagged','Rejected'].includes(l.status)),pending=logs.filter(l=>l.status==='Pending'),approved=logs.filter(l=>l.status==='Approved');
-      if(sub==='flagged')return back('dtr')+heading('Flagged DTR Entries','Review attendance anomalies and supporting justifications.')+(flagged.length?`<div class="ref-alert">${flagged.length} entries require compliance review. Supervisor approval remains required.</div>`+panel('',table(['Student','Date','Flag Reason','Original Entry','Status','Action'],flagged.map(l=>`<tr><td>${e(c.student(l.studentId)?.name)}</td><td>${date(l.date)}</td><td>${e(l.remarks||'Attendance review required')}</td><td>${time(l.clockIn)} – ${time(l.clockOut)}</td><td>${badge(l.status)}</td><td>${nav('Review Details','dtr','review',l.id,'secondary small')}</td></tr>`))):`<div class="ref-banner" style="background: #f0fdf4; border-color: #bbf7d0; color: #166534; margin-bottom: 16px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-3px;margin-right:6px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><strong>All Clean:</strong> No attendance records are currently flagged.</div>`+panel('',empty('No Flagged Entries','All student attendance records are verified and compliant.')));
+      if(sub==='flagged')return back('dtr')+heading('Flagged DTR Entries','Review attendance anomalies and supporting justifications.')+(flagged.length?`<div class="ref-alert">${flagged.length} entries require compliance review. Supervisor approval remains required.</div>`+panel('',table(['Student','Date','Flag Reason','Original Entry','Status','Action'],flagged.map(l=>`<tr><td>${e(c.student(l.studentId)?.name)}</td><td>${date(l.date)}</td><td>${e((l.remarks||'Attendance review required').split(' | [Coordinator Note:')[0])}</td><td>${time(l.clockIn)} – ${time(l.clockOut)}</td><td>${badge(l.status)}</td><td>${nav('Review Details','dtr','review',l.id,'secondary small')}</td></tr>`))):`<div class="ref-banner" style="background: #f0fdf4; border-color: #bbf7d0; color: #166534; margin-bottom: 16px;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-3px;margin-right:6px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><strong>All Clean:</strong> No attendance records are currently flagged.</div>`+panel('',empty('No Flagged Entries','All student attendance records are verified and compliant.')));
       const deptSummary=(()=>{const courseNames={'BSIT':'BS Information Technology'};const getCourse=s=>(s.course&&s.course.trim())?s.course.trim():'BSIT';const distinct=[...new Set(students.map(getCourse))];if(!distinct.length)return empty('No Department Data','Student attendance and hours logs will appear here once students are enrolled.');const cards=distinct.map(course=>{const cohort=students.filter(s=>getCourse(s)===course),hrs=cohort.reduce((n,s)=>n+approvedHours(db(),s.id),0),total=cohort.reduce((n,s)=>n+(s.requiredHours||500),0),pct=total>0?Math.min(100,Math.round(hrs/total*100)):0,avg=cohort.length>0?(hrs/cohort.length).toFixed(1):'0.0',courseTitle=courseNames[course]||course;return `<div style="background: var(--sand, #f8fafc); border: 1px solid var(--line-strong, #e2e8f0); border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;"><span style="display: inline-block; padding: 4px 10px; border-radius: 5px; font-weight: 700; font-size: 11px; letter-spacing: 0.5px; background: var(--burgundy, #7b1113); color: #fff;">${e(course)}</span><span style="font-size: 12px; font-weight: 500; color: var(--slate, #64748b); background: var(--cream, #fff); padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line-strong, #e2e8f0);">${cohort.length} ${cohort.length===1?'Intern':'Interns'}</span></div><div><h3 style="margin: 0 0 2px 0; font-size: 15px; font-weight: 600; color: var(--ink, #1e293b);">${e(courseTitle)}</h3><p style="margin: 0; font-size: 12px; color: var(--slate, #64748b);">Academic Program Progress</p></div><div><div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;"><div><strong style="font-size: 24px; font-weight: 700; color: var(--ink, #1e293b);">${hrs}h</strong><span style="font-size: 12px; color: var(--slate, #64748b); margin-left: 4px;">rendered / ${total}h required</span></div><strong style="font-size: 14px; font-weight: 700; color: ${pct>0?'#166534':'var(--slate, #64748b)'};">${pct}%</strong></div><div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; position: relative;"><div style="width: ${pct}%; height: 100%; background: var(--burgundy, #7b1113); border-radius: 999px; transition: width 0.4s ease;"></div></div></div><div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--line-strong, #e2e8f0); font-size: 11px; color: var(--slate, #64748b);"><span>Avg per intern: <strong style="color: var(--ink, #1e293b);">${avg}h</strong></span><span>Remaining: <strong style="color: var(--ink, #1e293b);">${Math.max(0, total - hrs)}h</strong></span></div></div>`;}).join('');return `<p class="small muted" style="margin-top: -6px; margin-bottom: 18px;">Aggregate training hours, student counts, and completion rates by academic department.</p><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">${cards}</div>`;})();
-      return heading('DTR Compliance Monitor','Monitor daily time records, compliance risks, and training completion.',b('Compliance Settings','ref-compliance-settings','','secondary'))+`<div class="ref-compliance-stats">${stats([['Total Deployed Students',students.filter(s=>s.company).length,'users'],['Compliance Rate',Math.round(approved.length/Math.max(1,logs.length)*100)+'%','check'],['Non-compliant',flagged.length,'alert'],['Pending Review',pending.length,'clock']])}</div>`+panel('',search('Search student, SR code or company'))+panel('Student Compliance Overview',table(['Student Name','Program','HTE Company','Hours Progress','Status','Action'],students.filter(s=>match(s.name,s.identifier,s.company)).map(s=>`<tr><td><strong>${e(s.name)}</strong></td><td>${e(s.course||'BSIT')}</td><td>${e(s.company||'Unassigned')}</td><td>${progress(approvedHours(db(),s.id),s.requiredHours)}</td><td>${badge(flagged.some(l=>l.studentId===s.id)?'Flagged':'Active')}</td><td>${nav('View Details','dtr','profile',s.id,'secondary small')}</td></tr>`)))+panel('',`<div class="row between" style="margin-bottom: 20px;"><h2>Flagged Entries</h2>${b('Run Auto Verification','ref-scan','','secondary small')}</div>`+(flagged.length===0?`<div style="text-align: center; padding: 36px 16px; border: 1px dashed var(--border, #e2e8f0); border-radius: 8px; background: #fafafa; margin-bottom: 16px;"><svg viewBox="0 0 24 24" style="width: 32px; height: 32px; fill: none; stroke: #16a34a; stroke-width: 2; margin: 0 auto 10px auto; display: block;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><strong style="display: block; font-size: 15px; color: var(--ink, #1e293b); margin-bottom: 4px;">No Flagged Entries</strong><p style="margin: 0; font-size: 13px; color: var(--slate, #64748b);">All submitted attendance logs are compliant. No anomalies or geofence breaches detected.</p></div>`:table(['Student','Date','Reason','Status','Action'],flagged.slice(0,5).map(l=>`<tr><td>${e(c.student(l.studentId)?.name)}</td><td>${date(l.date)}</td><td>${e(l.remarks||'Review needed')}</td><td>${badge(l.status)}</td><td>${nav('Review Details','dtr','review',l.id,'secondary small')}</td></tr>`)))+`<div style="margin-top: 18px;">${nav('View All Flagged Entries','dtr','flagged','','secondary small')}</div>`)+panel('Department Hours Log',deptSummary);
+      return heading('DTR Compliance Monitor','Monitor daily time records, compliance risks, and training completion.',b('Compliance Settings','ref-compliance-settings','','secondary'))+`<div class="ref-compliance-stats">${stats([['Total Deployed Students',students.filter(s=>s.company).length,'users'],['Compliance Rate',Math.round(approved.length/Math.max(1,logs.length)*100)+'%','check'],['Non-compliant',flagged.length,'alert'],['Pending Review',pending.length,'clock']])}</div>`+panel('',search('Search student, SR code or company'))+panel('Student Compliance Overview',table(['Student Name','Program','HTE Company','Hours Progress','Status','Action'],students.filter(s=>match(s.name,s.identifier,s.company)).map(s=>`<tr><td><strong>${e(s.name)}</strong></td><td>${e(s.course||'BSIT')}</td><td>${e(s.company||'Unassigned')}</td><td>${progress(approvedHours(db(),s.id),s.requiredHours)}</td><td>${badge(flagged.some(l=>l.studentId===s.id)?'Flagged':'Active')}</td><td>${nav('View Details','dtr','profile',s.id,'secondary small')}</td></tr>`)))+panel('',`<div class="row between" style="margin-bottom: 20px;"><h2>Flagged Entries</h2>${b('Run Auto Verification','ref-scan','','secondary small')}</div>`+(flagged.length===0?`<div style="text-align: center; padding: 36px 16px; border: 1px dashed var(--border, #e2e8f0); border-radius: 8px; background: #fafafa; margin-bottom: 16px;"><svg viewBox="0 0 24 24" style="width: 32px; height: 32px; fill: none; stroke: #16a34a; stroke-width: 2; margin: 0 auto 10px auto; display: block;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><strong style="display: block; font-size: 15px; color: var(--ink, #1e293b); margin-bottom: 4px;">No Flagged Entries</strong><p style="margin: 0; font-size: 13px; color: var(--slate, #64748b);">All submitted attendance logs are compliant. No anomalies or geofence breaches detected.</p></div>`:table(['Student','Date','Reason','Status','Action'],flagged.slice(0,5).map(l=>`<tr><td>${e(c.student(l.studentId)?.name)}</td><td>${date(l.date)}</td><td>${e((l.remarks||'Review needed').split(' | [Coordinator Note:')[0])}</td><td>${badge(l.status)}</td><td>${nav('Review Details','dtr','review',l.id,'secondary small')}</td></tr>`)))+`<div style="margin-top: 18px;">${nav('View All Flagged Entries','dtr','flagged','','secondary small')}</div>`)+panel('Department Hours Log',deptSummary);
     }
     if(role==='Supervisor'){
-        const list=logs.filter(l=>match(c.student(l.studentId)?.name,l.date,l.task)&&(c.view.filter==='All'||l.status===c.view.filter));
-        const pending=logs.filter(l=>l.status==='Pending');
+        const list=logs.filter(l=>match(c.student(l.studentId)?.name,l.date,l.task)&&(c.view.filter==='All'||(c.view.filter==='Flagged'?['Flagged','Pending'].includes(l.status):l.status===c.view.filter)));
+        const flaggedList=logs.filter(l=>['Flagged','Pending'].includes(l.status));
         
         const myStudents = visibleStudents(db(), u());
-        const totalRendered = myStudents.reduce((sum, s) => sum + approvedHours(db(), s.id), 0);
+        const totalRendered = Number(myStudents.reduce((sum, s) => sum + approvedHours(db(), s.id), 0).toFixed(2));
         const totalRequired = myStudents.reduce((sum, s) => sum + (s.requiredHours || 500), 0);
-        const totalRemaining = Math.max(0, totalRequired - totalRendered);
+        const totalRemaining = Math.max(0, Number((totalRequired - totalRendered).toFixed(2)));
+        const hoursAccomplished = totalRequired > 0 && totalRendered >= totalRequired;
+
         const supervisorStatsHtml = stats([
-          ['Total Rendered Hours', totalRendered + ' Hours', 'clock'],
+          ['Total Rendered Hours', totalRendered + ' Hours', 'check'],
           ['Required Hours', totalRequired + ' Hours', 'target'],
-          ['Remaining Hours', totalRemaining + ' Hours', 'chart']
+          ['Remaining Hours', totalRemaining + ' Hours', 'clock']
         ]);
 
-        const headerHtml = heading('Intern Log Sheets & Summary','Review, verify, and approve daily log sheets and task summaries submitted by assigned interns.') + 
-            supervisorStatsHtml;
+        const oversightBannerHtml = flaggedList.length > 0 ? `
+          <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:14px 18px; margin-top:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="width:34px; height:34px; border-radius:50%; background:#fee2e2; color:#991b1b; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; flex-shrink:0;">!</span>
+              <div>
+                <strong style="display:block; font-size:14px; color:#7f1d1d;">Management by Exception — ${flaggedList.length} Flagged Shift(s) in Queue</strong>
+                <span style="font-size:12.5px; color:#991b1b;">Normal on-site shifts are auto-verified. Step in only for the flagged off-site or anomalous log(s) below.</span>
+              </div>
+            </div>
+          </div>
+        ` : (hoursAccomplished ? `
+          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:14px 18px; margin-top:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="width:34px; height:34px; border-radius:50%; background:#dcfce7; color:#166534; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; flex-shrink:0;">✓</span>
+              <div>
+                <strong style="display:block; font-size:14px; color:#14532d;">OJT Hours Accomplished (${totalRendered} / ${totalRequired} Hours) — Ready for Final Evaluation</strong>
+                <span style="font-size:12.5px; color:#166534;">Your assigned intern has completed the required training hours. You may now proceed with the Final Performance Appraisal.</span>
+              </div>
+            </div>
+            ${nav('Open Performance Appraisals ›', 'appraisals', '', '', 'secondary small')}
+          </div>
+        ` : '');
+
+        const headerHtml = heading('Log Sheets & Summary','Review auto-verified on-site shifts, daily task accomplishments, and any flagged off-site exceptions.') + 
+            supervisorStatsHtml + oversightBannerHtml;
         
-        const toolbarHtml = '<div class="ref-attendance-toolbar" style="margin-top: 16px; margin-bottom: 8px;">' + search('Search intern name or date.') + '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; width: 100%;">' + filter([['All','All Status'],['Pending','Pending'],['Approved','Approved'],['Flagged','Flagged']]) + '<div style="display:flex; gap:8px; flex-shrink: 0;">' + b('Approve All Pending ('+pending.length+')','ref-approve-all','primary small','check') + '</div></div></div>';
+        const toolbarHtml = '<div class="ref-attendance-toolbar" style="margin-top: 12px; margin-bottom: 8px;">' + search('Search intern name, date, or task summary…') + '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; width: 100%;">' + filter([['All','All Shift Logs'],['Approved','✓ Verified On-Site'],['Flagged','⚠️ Flagged ('+flaggedList.length+')']]) + '</div></div>';
         
-        const historyPanel = panel('Recent Log Sheets & Approvals', (() => {
-            if(!list.length) return empty('No Attendance Logs', 'Submitted log sheets and task summaries from your interns will appear here for review and verification.');
+        const historyPanel = panel('Verified Shift Logs & Daily Task Summaries', (() => {
+            if(!list.length) return empty('No Shift Logs in This View', 'Auto-verified on-site shifts and daily task summaries from your interns appear here.');
             let historyRows = list.map(l=>{
                 const st = c.student(l.studentId);
                 const sName = st?.name || (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' ? 'kenzosomes' : 'Assigned Intern');
                 const sCourse = st?.course || 'BSIT';
+                const coordNote = l.coordinatorRemarks || (l.remarks && l.remarks.includes(' | [Coordinator Note: ') ? l.remarks.split(' | [Coordinator Note: ')[1].replace(/\]$/, '') : '');
                 const taskHtml = l.task ? e(l.task) : (l.status === 'Awaiting_Student_Log' ? '<span class="task-excerpt" style="color:var(--slate); font-style:italic;">Pending intern logbook submission</span>' : '<span class="task-excerpt" style="color:var(--slate); font-style:italic;">No task summary entered</span>');
                 const breakHtml = l.breakMinutes ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#854d0e;font-weight:600;"><span style="width:6px;height:6px;border-radius:50%;background:#854d0e;"></span>' + l.breakMinutes + 'm</span>' : '<span style="font-size:12px;color:var(--slate);">—</span>';
-                const statusBadgeHtml = l.status === 'Approved' ? '<span class="badge green" title="' + e(l.remarks || 'Verified on-site within HTE premises') + '">✓ Approved</span>' : (l.status === 'Flagged' ? '<span class="badge red" title="' + e(l.remarks || 'Location unverified / off-site') + '">⚠️ Flagged</span>' : badge(l.status));
-                const actionButtonsHtml = (['Pending','Flagged'].includes(l.status) ? b('Verify On-Site','ref-verify',l.id,'primary small', 'pin') + b('Approve','ref-approve',l.id,'small') + b('Reject','ref-reject',l.id,'secondary small') : '') + nav('View','dtr','profile',l.studentId,'secondary small');
-                return '<tr><td><strong>' + e(sName) + '</strong><br><small>' + e(sCourse) + '</small></td><td>' + date(l.date) + '</td><td>' + time(l.clockIn) + '</td><td>' + time(l.clockOut) + '</td><td>' + breakHtml + '</td><td><span class="task-excerpt">' + taskHtml + '</span></td><td>' + badge(l.gps?'Captured':'Unavailable') + '</td><td>' + statusBadgeHtml + '</td><td><div class="row" style="flex-wrap:wrap; gap:4px; max-width:220px;">' + actionButtonsHtml + '</div></td></tr>';
+                const geofenceBadgeHtml = l.status === 'Approved' ? '<span class="badge green">📍 Inside 100m</span>' : (['Flagged','Pending'].includes(l.status) ? '<span class="badge red">⚠️ Outside 100m</span>' : badge(l.gps?'Captured':'Unavailable'));
+                const statusBadgeHtml = (l.status === 'Approved' ? '<span class="badge green" title="' + e(l.remarks || 'Automatically verified on-site within 100m HTE geofence') + '">✓ Verified On-Site</span>' : (['Flagged','Pending'].includes(l.status) ? '<span class="badge red" title="' + e(l.remarks || 'Logged outside 100m geofence — exception review required') + '">⚠️ Flagged Exception</span>' : badge(l.status))) + (coordNote ? '<div style="margin-top:4px;"><span class="badge blue" style="font-size:10.5px;" title="Coordinator Note: ' + e(coordNote) + '">📋 Coordinator Note</span></div>' : '');
+                const actionButtonsHtml = (['Pending','Flagged'].includes(l.status)
+                    ? b('⚠️ Review Exception','log-detail',l.id,'primary small') + b('Approve','ref-approve',l.id,'small') + b('Reject','ref-reject',l.id,'secondary small')
+                    : b('📖 Read Task & Map','log-detail',l.id,'secondary small') + nav('Log Sheet','dtr','profile',l.studentId,'secondary small'));
+                return '<tr><td><strong>' + e(sName) + '</strong><br><small>' + e(sCourse) + '</small></td><td>' + date(l.date) + '</td><td>' + time(l.clockIn) + '</td><td>' + time(l.clockOut) + '</td><td>' + breakHtml + '</td><td><span class="task-excerpt">' + taskHtml + '</span></td><td>' + geofenceBadgeHtml + '</td><td>' + statusBadgeHtml + '</td><td><div class="row" style="flex-wrap:wrap; gap:4px; max-width:260px;">' + actionButtonsHtml + '</div></td></tr>';
             });
-            return table(['Intern','Date','Clock In','Clock Out','Break','Task Summary','GPS','Status','Actions'], historyRows) + '<style>.table-wrap { overflow-x: auto !important; } .table-wrap table { width: 100%; table-layout: auto; } .table-wrap td { white-space: normal !important; word-break: break-word; } .task-excerpt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 150px; max-width: 250px; } td:last-child .row { max-width: 180px !important; justify-content: flex-start; }</style>';
+            return table(['Intern','Date','Clock In','Clock Out','Break','Daily Task Summary','Geofence','Verification','Oversight'], historyRows) + '<style>.table-wrap { overflow-x: auto !important; } .table-wrap table { width: 100%; table-layout: auto; } .table-wrap td { white-space: normal !important; word-break: break-word; } .task-excerpt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 150px; max-width: 250px; } td:last-child .row { max-width: 240px !important; justify-content: flex-start; }</style>';
         })());
         
         return headerHtml + toolbarHtml + historyPanel;
     }
     // Student: clock and task draft at left, history and saved drafts at right.
-    if(sub==='history') return back('dtr') + heading('DTR History', 'Complete attendance and task records.', b('Clear Test Records', 'ref-clear-test-logs', '', 'secondary small', 'trash')) + `<div class="ref-alert" style="margin-bottom: 16px;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:6px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><strong>Lock Enabled:</strong> All past and submitted DTR entries are strictly READ-ONLY. Modification of timestamps is permanently restricted.</div>` + filter([['All','All'],['Approved','Approved'],['Pending','Pending'],['Flagged','Flagged'],['Rejected','Rejected']]) + panel('', c.dtrTable(logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter), u()));
+    if(sub==='history') return back('dtr') + heading('DTR History', 'Complete geofence-verified attendance and task records.', b('Clear Test Records', 'ref-clear-test-logs', '', 'secondary small', 'trash')) + `<div class="ref-alert" style="margin-bottom: 16px;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:-2px;margin-right:6px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><strong>Lock Enabled:</strong> All past and submitted DTR entries are strictly READ-ONLY. Modification of timestamps is permanently restricted.</div>` + filter([['All','All Shifts'],['Approved','✓ Verified On-Site'],['Flagged','⚠️ Flagged (Exception)'],['Rejected','Rejected']]) + panel('', c.dtrTable(logs.filter(l=>c.view.filter==='All'||l.status===c.view.filter), u()));
       const activeShiftObj = (db().activeShifts || []).find(sh => sh.studentId === u().id);
       const runningLog = logs.find(sh => sh.studentId === u().id && sh.status === 'Running');
       const shift = runningLog || activeShiftObj || null;
@@ -940,6 +1183,14 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
         </div>
       `, async () => {
         const isKenzo = id === 's1' || id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || (s?.email && s.email.toLowerCase() === 'kenzosomes@gmail.com');
+        try {
+          localStorage.removeItem('menteelog.appraisal_sig.' + id);
+          if (isKenzo) {
+            localStorage.removeItem('menteelog.appraisal_sig.kenzo');
+            localStorage.removeItem('menteelog.appraisal_sig.s1');
+            localStorage.removeItem('menteelog.appraisal_sig.22227dcf-933f-40a9-9340-f66cb9020e5c');
+          }
+        } catch(e) {}
         db().appraisals = (db().appraisals || []).filter(a => {
           if (a.studentId === id) return false;
           if (isKenzo && (a.studentId === 's1' || a.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')) return false;

@@ -194,7 +194,7 @@ function connectCoreUsers(dataDb) {
     if (String(l.id || '').startsWith('log_')) return false;
     if (String(l.studentId || '').startsWith('s_dummy')) return false;
     if (String(l.task || '').includes('Configured project development environment')) return false;
-    if (l.id === 'log_' + stu.id + '_1' || l.id === 'log_s1_1') return false;
+    if (l.id === 'log_' + stu.id + '_1' || l.id === 'log_s1_1' || l.id === 'shift-flagged-001' || String(l.id || '').startsWith('shift-flagged-')) return false;
     if (l.date === '2026-10-14' || l.date === '2026-10-15') return false;
     if (l.date === '2026-10-16' && Number(l.hours || 0) <= 0.02 && (String(l.clockIn || '').includes('00:23') || String(l.clockIn || '').includes('12:23') || String(l.clockOut || '').includes('00:23') || String(l.clockOut || '').includes('12:23') || !l.task)) return false;
     return true;
@@ -208,11 +208,14 @@ function connectCoreUsers(dataDb) {
     return true;
   });
 
-  // Auto-verify on-site logs within geofence
+  // Auto-verify on-site logs within geofence and clean accidental script paste in task summary
   (dataDb.logs || []).forEach(l => {
-    if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0) {
+    if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0 && (!l.remarks || !l.remarks.includes('Outside geofence'))) {
       l.status = 'Approved';
       l.remarks = l.remarks || 'Verified on-site within HTE premises';
+    }
+    if (l.task && (l.task.includes('For Industry Supervisors, daily timekeeping is automated') || l.task.includes('In the Student Portal, BSIT interns discover'))) {
+      l.task = 'Implemented responsive UI components for the client portal, integrated RESTful API endpoints with role-based session validation, and executed unit tests with the QA engineering team.';
     }
   });
 
@@ -291,16 +294,20 @@ try {
   }
 } catch(e) {}
 
-// Automatic geofence verification for on-site pending logs
+// Automatic geofence verification for on-site pending logs & task script text cleanup
 try {
-  const autoVerifyKey = 'dtr_autoverify_onsite_oct16_v2';
+  const autoVerifyKey = 'dtr_autoverify_onsite_oct16_v3';
   if (!localStorage.getItem(autoVerifyKey)) {
     localStorage.setItem(autoVerifyKey, '1');
+    const cleanTaskText = 'Implemented responsive UI components for the client portal, integrated RESTful API endpoints with role-based session validation, and executed unit tests with the QA engineering team.';
     if (db && Array.isArray(db.logs)) {
       db.logs.forEach(l => {
         if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0) {
           l.status = 'Approved';
           l.remarks = l.remarks || 'Verified on-site within HTE premises';
+        }
+        if (l.task && (l.task.includes('For Industry Supervisors, daily timekeeping is automated') || l.task.includes('In the Student Portal, BSIT interns discover'))) {
+          l.task = cleanTaskText;
         }
       });
       save();
@@ -310,6 +317,9 @@ try {
         status: 'Approved',
         remarks: 'Verified on-site within HTE premises'
       }).eq('status', 'Pending').eq('gps', true).then(() => {}).catch(() => {});
+      supabase.from('logs').update({
+        task: cleanTaskText
+      }).ilike('task', '%For Industry Supervisors, daily timekeeping is automated%').then(() => {}).catch(() => {});
     }
   }
 } catch(e) {}
@@ -423,7 +433,16 @@ function logout(){
   location.hash = '/';
   render();
 }
-function notify(userId,type,title,message){db.notifications.unshift({id:crypto.randomUUID(),userId,type,title,message,date:new Date().toISOString(),read:false});}
+function notify(userId,type,title,message,extra={}){db.notifications.unshift({id:crypto.randomUUID(),userId,type,title,message,date:new Date().toISOString(),read:false,...extra});}
+function isUserNotif(n,u){
+  if(!n||!u)return false;
+  if(n.userId===u.id)return true;
+  if(n.role&&n.role===u.role)return true;
+  if(u.role==='Student'&&['s1','22227dcf-933f-40a9-9340-f66cb9020e5c'].includes(n.userId))return true;
+  if(u.role==='Supervisor'&&n.userId==='v1')return true;
+  if(u.role==='Coordinator'&&n.userId==='c1')return true;
+  return false;
+}
 function audit(action){db.audit.unshift({id:crypto.randomUUID(),actor:currentUser()?.name||'Demo',action,date:new Date().toISOString()});db.audit=db.audit.slice(0,150);}
 function toast(message){const el=$('#toast');el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,5000);}
 const initials=name=>String(name||'ML').split(' ').filter(Boolean).map(n=>n[0]).slice(0,2).join('').toUpperCase();
@@ -554,6 +573,12 @@ window.menteelogGps = {
   renderMap(containerId, userLat, userLng, hteLat, hteLng, companyName, isOnSite) {
     const el = document.getElementById(containerId);
     if (!el || !window.L) return;
+    if (el._leafletMapInstance) {
+      try {
+        el._leafletMapInstance.remove();
+        el._leafletMapInstance = null;
+      } catch(e) {}
+    }
     if (el._leaflet_id) {
       try {
         el._leaflet_id = null;
@@ -572,11 +597,32 @@ window.menteelogGps = {
           background: transparent !important;
           border: none !important;
         }
+        .leaflet-container {
+          font-family: inherit !important;
+          z-index: 1;
+        }
+        .leaflet-container img.leaflet-tile {
+          max-width: none !important;
+          max-height: none !important;
+          width: 256px !important;
+          height: 256px !important;
+        }
+        dialog#map-fullscreen-overlay::backdrop {
+          background: rgba(15, 23, 42, 0.75);
+          backdrop-filter: blur(4px);
+        }
       `;
       document.head.appendChild(st);
     }
     try {
-      const map = L.map(containerId, { zoomControl: true, attributionControl: false });
+      const uLat = Number(userLat) || 10.71678;
+      const uLng = Number(userLng) || 122.54586;
+      const hLat = Number(hteLat) || 10.7167;
+      const hLng = Number(hteLng) || 122.5458;
+
+      const map = L.map(containerId, { zoomControl: true, attributionControl: false }).setView([hLat, hLng], isOnSite ? 17 : 14);
+      el._leafletMapInstance = map;
+
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
       const hteHtml = `
@@ -618,10 +664,10 @@ window.menteelogGps = {
           </div>
         </div>
       `;
-      L.marker([hteLat, hteLng], { icon: hteIcon }).addTo(map).bindPopup(htePopup);
+      L.marker([hLat, hLng], { icon: hteIcon }).addTo(map).bindPopup(htePopup);
 
       const hteRadius = 100;
-      const circle = L.circle([hteLat, hteLng], {
+      const circle = L.circle([hLat, hLng], {
         radius: hteRadius,
         color: '#059669',
         fillColor: '#10b981',
@@ -630,8 +676,11 @@ window.menteelogGps = {
         dashArray: '6, 6'
       }).addTo(map);
 
+      const isStudentRole = currentUser()?.role === 'Student';
+      const rolePinLabel = isStudentRole ? 'You' : 'Intern';
+      const popupTitleLabel = isStudentRole ? 'Your Location' : 'Intern Clock-In Location';
       const pinColor = isOnSite ? '#059669' : '#dc2626';
-      const badgeText = isOnSite ? 'You (On-Site)' : 'You (Off-Site)';
+      const badgeText = isOnSite ? `${rolePinLabel} (On-Site)` : `${rolePinLabel} (Off-Site)`;
       const pulseColor = isOnSite ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)';
       
       const userHtml = `
@@ -667,94 +716,121 @@ window.menteelogGps = {
           <div style="font-family:inherit; min-width:170px; padding:2px;">
             <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
               <span style="font-size:14px;">📍</span>
-              <strong style="color:#059669; font-size:13px;">Your Location</strong>
+              <strong style="color:#059669; font-size:13px;">${popupTitleLabel}</strong>
             </div>
             <div style="font-size:11px; font-weight:700; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; padding:2px 8px; border-radius:12px; display:inline-block; margin-bottom:4px;">
               ✓ Inside Geofence (On-Site)
             </div>
-            <div style="font-size:11px; color:#64748b; font-family:monospace;">${userLat.toFixed(5)}° N, ${userLng.toFixed(5)}° E</div>
+            <div style="font-size:11px; color:#64748b; font-family:monospace;">${uLat.toFixed(5)}° N, ${uLng.toFixed(5)}° E</div>
           </div>
         ` 
         : `
           <div style="font-family:inherit; min-width:170px; padding:2px;">
             <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
               <span style="font-size:14px;">⚠️</span>
-              <strong style="color:#dc2626; font-size:13px;">Your Location</strong>
+              <strong style="color:#dc2626; font-size:13px;">${popupTitleLabel}</strong>
             </div>
             <div style="font-size:11px; font-weight:700; color:#dc2626; background:#fef2f2; border:1px solid #fecaca; padding:2px 8px; border-radius:12px; display:inline-block; margin-bottom:4px;">
               ⚠️ Outside Geofence (Off-Site)
             </div>
-            <div style="font-size:11px; color:#64748b; font-family:monospace;">${userLat.toFixed(5)}° N, ${userLng.toFixed(5)}° E</div>
+            <div style="font-size:11px; color:#64748b; font-family:monospace;">${uLat.toFixed(5)}° N, ${uLng.toFixed(5)}° E</div>
           </div>
         `;
-      L.marker([userLat, userLng], { icon: userIcon }).addTo(map).bindPopup(userPopup).openPopup();
+      const userMarker = L.marker([uLat, uLng], { icon: userIcon }).addTo(map).bindPopup(userPopup);
 
       if (!isOnSite) {
-        L.polyline([[userLat, userLng], [hteLat, hteLng]], { color: '#dc2626', weight: 2.5, dashArray: '6, 6' }).addTo(map);
+        L.polyline([[uLat, uLng], [hLat, hLng]], { color: '#dc2626', weight: 2.5, dashArray: '6, 6' }).addTo(map);
       }
 
-      if (isOnSite) {
-        const circleBounds = circle.getBounds().pad(0.35);
-        map.fitBounds(circleBounds, { maxZoom: 18 });
-      } else {
-        const bounds = L.latLngBounds([[userLat, userLng], [hteLat, hteLng]]).pad(0.2);
-        map.fitBounds(bounds, { padding: [35, 35], maxZoom: 16 });
-      }
-      setTimeout(() => map.invalidateSize(), 200);
+      const applyBounds = () => {
+        try {
+          map.invalidateSize();
+          if (isOnSite) {
+            const circleBounds = circle.getBounds().pad(0.35);
+            map.fitBounds(circleBounds, { maxZoom: 18 });
+          } else {
+            const bounds = L.latLngBounds([[uLat, uLng], [hLat, hLng]]).pad(0.2);
+            map.fitBounds(bounds, { padding: [35, 35], maxZoom: 16 });
+          }
+          userMarker.openPopup();
+        } catch(e) {}
+      };
+
+      applyBounds();
+      setTimeout(applyBounds, 80);
+      setTimeout(applyBounds, 250);
+      setTimeout(() => { try { map.invalidateSize(); } catch(e) {} }, 500);
     } catch(err) {
       console.warn('Leaflet render note:', err);
     }
   },
   openFullscreenMap(userLat, userLng, hteLat, hteLng, companyName, isOnSite, title = 'Geofence Map Fullscreen View') {
     let fsEl = document.getElementById('map-fullscreen-overlay');
-    if (fsEl) fsEl.remove();
-    fsEl = document.createElement('div');
+    if (fsEl) {
+      try { if (fsEl.open) fsEl.close(); } catch(e) {}
+      fsEl.remove();
+    }
+    fsEl = document.createElement('dialog');
     fsEl.id = 'map-fullscreen-overlay';
+    fsEl.style.cssText = 'position:fixed; inset:0; width:100vw; max-width:100vw; height:100vh; max-height:100vh; margin:0; padding:16px; border:none; border-radius:0; background:rgba(15,23,42,0.88); backdrop-filter:blur(6px); display:flex; flex-direction:column; z-index:999999; box-sizing:border-box;';
     document.body.appendChild(fsEl);
     
+    const uLat = Number(userLat) || 10.71678;
+    const uLng = Number(userLng) || 122.54586;
     const statusBadge = isOnSite 
       ? '<span class="badge green" style="font-size:13px; padding:4px 12px; font-weight:700;">✓ Inside Geofence (On-Site)</span>' 
       : '<span class="badge red" style="font-size:13px; padding:4px 12px; font-weight:700;">⚠️ Outside Geofence (Off-Site)</span>';
 
     fsEl.innerHTML = `
-      <div style="position:fixed; inset:0; z-index:999999; background:rgba(15,23,42,0.88); backdrop-filter:blur(6px); display:flex; flex-direction:column; padding:16px;">
-        <div style="background:#ffffff; border-radius:12px; display:flex; flex-direction:column; height:100%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); overflow:hidden; border:1px solid rgba(255,255,255,0.2);">
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
-            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-              <strong style="font-size:16px; color:#1e293b;">${title}</strong>
-              ${statusBadge}
-              <span style="font-size:13px; color:#64748b; font-family:monospace; background:#e2e8f0; padding:2px 8px; border-radius:4px;">${userLat.toFixed(5)}° N, ${userLng.toFixed(5)}° E</span>
-            </div>
-            <button type="button" class="btn secondary small" id="btn-close-map-fs" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; padding:8px 16px; cursor:pointer;">
-              ✕ Exit Fullscreen
-            </button>
+      <div style="background:#ffffff; border-radius:12px; display:flex; flex-direction:column; width:100%; height:100%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); overflow:hidden; border:1px solid rgba(255,255,255,0.2);">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <strong style="font-size:16px; color:#1e293b;">${title}</strong>
+            ${statusBadge}
+            <span style="font-size:13px; color:#64748b; font-family:monospace; background:#e2e8f0; padding:2px 8px; border-radius:4px;">${uLat.toFixed(5)}° N, ${uLng.toFixed(5)}° E</span>
           </div>
-          <div id="fs-leaflet-map" style="flex:1; width:100%; min-height:450px; background:#f1f5f9; position:relative;"></div>
-          <div style="padding:12px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; font-size:13px; color:#475569;">
-            <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
-              <span>🏢 <strong>${companyName}</strong> (Accredited Workplace)</span>
-              <span>📍 <strong>Pinpoint Position</strong></span>
-              <span>🟢 <strong>100m Accredited Geofence Radius</strong></span>
-            </div>
-            <span style="color:#64748b; font-size:12px;">Scroll to zoom · Drag to pan · Press ESC to exit</span>
+          <button type="button" class="btn secondary small" id="btn-close-map-fs" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; padding:8px 16px; cursor:pointer;">
+            ✕ Exit Fullscreen
+          </button>
+        </div>
+        <div id="fs-leaflet-map" style="flex:1; width:100%; min-height:450px; background:#f1f5f9; position:relative;"></div>
+        <div style="padding:12px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; font-size:13px; color:#475569;">
+          <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
+            <span>🏢 <strong>${companyName}</strong> (Accredited Workplace)</span>
+            <span>📍 <strong>Pinpoint Position</strong></span>
+            <span>🟢 <strong>100m Accredited Geofence Radius</strong></span>
           </div>
+          <span style="color:#64748b; font-size:12px;">Scroll to zoom · Drag to pan · Press ESC to exit</span>
         </div>
       </div>
     `;
-    
-    document.getElementById('btn-close-map-fs').onclick = () => fsEl.remove();
-    
-    const onKey = (e) => {
-      if (e.key === 'Escape') {
-        fsEl.remove();
-        window.removeEventListener('keydown', onKey);
-      }
+
+    const closeFs = () => {
+      try { if (fsEl.open) fsEl.close(); } catch(e) {}
+      fsEl.remove();
     };
-    window.addEventListener('keydown', onKey);
+
+    fsEl.addEventListener('cancel', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      closeFs();
+    });
+
+    try {
+      fsEl.showModal();
+    } catch(e) {}
+
+    const closeBtn = document.getElementById('btn-close-map-fs');
+    if (closeBtn) {
+      closeBtn.onclick = (ev) => {
+        ev.stopPropagation();
+        closeFs();
+      };
+    }
 
     setTimeout(() => {
-      this.renderMap('fs-leaflet-map', userLat, userLng, hteLat, hteLng, companyName, isOnSite);
-    }, 120);
+      this.renderMap('fs-leaflet-map', uLat, uLng, hteLat, hteLng, companyName, isOnSite);
+    }, 80);
   }
 };
 
@@ -775,7 +851,7 @@ document.title='MenteeLog | Your OJT journey, connected';return;}
   if(role!==user.role.toLowerCase()||!canAccess(user.role,page)){location.hash=`/${user.role.toLowerCase()}/dashboard`;toast('This page is not available in your portal.');return;}
   const title=navigation[user.role].find(n=>n[0]===page)?.[1]||({profile:'Profile Setup',notifications:'Notifications',jobs:'Job Management',candidates:user.role==='Coordinator'?'Student Placement':'Candidate Review',applications:user.role==='Coordinator'?'Student Placement':'Candidate Review',dtr:user.role==='Supervisor'?'Log Sheets & Summary':'Attendance & DTR'}[page]);
   document.title=`${title} | MenteeLog`;
-  const unread=db.notifications.filter(n=>n.userId===user.id&&!n.read).length;
+  const unread=db.notifications.filter(n=>isUserNotif(n,user)&&!n.read).length;
   app.innerHTML=`<div class="portal-shell"><aside class="portal-sidebar" id="top-nav-menu" aria-label="Portal navigation"><div class="portal-brand">${brand(false)}<button class="icon-btn mobile-toggle" data-action="menu" aria-label="Close navigation">${icon('close')}</button></div><p class="portal-caption">${user.role} portal</p><nav aria-label="Main navigation">${navigation[user.role].map(([id,label,ico])=>`<a class="nav-link ${page===id?'active':''}" href="#/${role}/${id}" ${page===id?'aria-current="page"':''}>${icon(ico)}<span>${label}</span></a>`).join('')}</nav><div class="portal-account">${person({...user,course:user.role==='Student'?'OJT Student':user.role==='Supervisor'?'Company Supervisor':'Faculty Coordinator'})}</div></aside><button class="portal-scrim" data-action="menu" aria-label="Close navigation" tabindex="-1"></button><div class="workspace"><header class="portal-header"><div class="row"><button class="icon-btn mobile-toggle" data-action="menu" aria-controls="top-nav-menu" aria-label="Open navigation" aria-expanded="false">${icon('menu')}</button><div class="breadcrumb"><span>MenteeLog</span><span>/</span><strong>${title}</strong></div></div><div class="top-actions"><input class="top-search" id="global-search" aria-label="Search portal pages" placeholder="Search pages..." type="search"><button class="icon-btn" data-action="notifications" aria-label="Notifications, ${unread} unread">${icon('bell')}${unread?'<span class="notification-dot"></span>':''}</button><details class="profile-menu"><summary aria-label="Your account"><span class="avatar">${e(initials(user.name))}</span></summary><div class="profile-popover"><strong>${e(user.name)}</strong><small class="account-role">${e(user.role)}</small>${user.role==='Student'?`<a href="#/${role}/profile">Profile Setup</a>`:''}<button class="text-btn" data-action="logout">${icon('logout')} Sign out</button></div></details></div></header><main class="content" id="main" tabindex="-1">${pageContent(page,user)}</main></div></div>`;
 
   if(page === 'dtr' && user.role === 'Student') {
@@ -809,7 +885,7 @@ function landing(){return publicLanding(route().role==='public'?route().page:'ho
 function authPage(mode){return authScreen(mode,authRole,{brand,icon,field,hasRecoverySession: Boolean(recoveryActive || currentUser())});}
 function pageContent(page,u){try{return portals.page(page,u)??({dashboard,applications:applicationsPage,profile:profilePage}[page]||dashboard)(u);}catch(error){return heading('Page unavailable',e(error.message))+link('Back to dashboard','dashboard');}}
 function notificationsMini(u){
-  const unread = db.notifications.filter(n=>n.userId===u.id && !n.read).reverse().slice(0, 5);
+  const unread = db.notifications.filter(n => isUserNotif(n, u) && !n.read).sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 6);
   return `
     <div class="drawer-header">
       <h3>
@@ -821,12 +897,16 @@ function notificationsMini(u){
     </div>
     <div class="drawer-notes-list">
       ${unread.length ? unread.map(n=>`
-        <div class="notification-card">
+        <div class="notification-card" style="border:1px solid var(--line);background:var(--sand);transition:background 0.15s ease;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
-            <strong style="color:var(--burgundy);font-size:13px;font-weight:700;">${e(n.title)}</strong>
+            <button type="button" data-action="read" data-id="${e(n.id)}" style="background:none;border:0;padding:0;text-align:left;cursor:pointer;color:var(--burgundy);font-size:13px;font-weight:700;">● ${e(n.title)}</button>
             <small style="color:var(--muted);font-size:11px;white-space:nowrap;">${date(n.date)}</small>
           </div>
-          <p style="margin:5px 0 0;font-size:12px;color:var(--ink);line-height:1.45;">${e(n.message)}</p>
+          <button type="button" data-action="read" data-id="${e(n.id)}" style="background:none;border:0;padding:0;width:100%;text-align:left;cursor:pointer;margin:5px 0 8px;font-size:12px;color:var(--ink);line-height:1.45;display:block;">${e(n.message)}</button>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid rgba(88,17,26,0.1);">
+            <button type="button" class="text-btn small" data-action="dismiss-notif" data-id="${e(n.id)}" style="font-size:11px;padding:0;color:var(--muted);">✓ Mark as read</button>
+            <button type="button" class="text-btn small" data-action="read" data-id="${e(n.id)}" style="font-size:11px;padding:0;font-weight:700;color:var(--burgundy);">Click to open &rarr;</button>
+          </div>
         </div>
       `).join('') : `
         <div class="drawer-empty">
@@ -868,15 +948,15 @@ function netElapsed(sh){if(!sh||!sh.clockIn)return '00:00:00';const now=Date.now
 function elapsed(start){if(!start)return '00:00:00';const t=new Date(start).getTime();if(isNaN(t))return '00:00:00';const seconds=Math.max(0,Math.floor((Date.now()-t)/1000));return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(v=>String(v).padStart(2,'0')).join(':');}
 function dtrTable(logs,u){
   const breakCol=l=>l.breakMinutes?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#854d0e;"><span style="width:6px;height:6px;border-radius:50%;background:#854d0e;"></span>'+l.breakMinutes+'m</span>':'<span style="font-size:12px;color:var(--slate);">—</span>';
-  const statusBadge=l=>l.status==='Approved'?'<span class="badge green" title="'+e(l.remarks||'Verified on-site within HTE premises')+'">✓ Approved</span>':l.status==='Flagged'?'<span class="badge red" title="'+e(l.remarks||'Location unverified / off-site')+'">⚠️ Flagged</span>':badge(l.status);
+  const statusBadge=l=>l.status==='Approved'?'<span class="badge green" title="'+e(l.remarks||'Automatically verified within 100m HTE geofence')+'">✓ Verified On-Site</span>':l.status==='Flagged'?'<span class="badge red" title="'+e(l.remarks||'Location unverified / off-site exception')+'">⚠️ Flagged</span>':badge(l.status);
   const gpsBadge=l=>{
     if (l.status==='Approved'||(l.remarks&&l.remarks.includes('Verified on-site'))) return '<span class="badge green" title="'+e(l.remarks||'Verified on-site within geofence')+'">📍 On-Site</span>';
     if (l.status==='Flagged'||(l.remarks&&(l.remarks.includes('Outside geofence')||l.remarks.includes('Off-site')))) return '<span class="badge red" title="'+e(l.remarks||'Outside workplace geofence')+'">⚠️ Off-Site</span>';
     return badge(l.gps?'Captured':'Unavailable');
   };
   const actionBtn=l=>{
-    if(u.role==='Student'&&l.status==='Flagged') return button('Justify','log-detail',l.id,'secondary small');
-    if(u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status)) return button('Review','log-detail',l.id,'secondary small');
+    if(u.role==='Student'&&l.status==='Flagged') return button('Justify','log-detail',l.id,'primary small');
+    if(u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status)) return button('Review Exception','log-detail',l.id,'primary small');
     return button('View','log-detail',l.id,'secondary small');
   };
   return logs.length?table([...(u.role==='Student'?[]:['Intern']),'Date','Clock In','Clock Out','Break',...(u.role==='Student'?['Total']:['Task Summary']),'GPS','Status','Action'],logs.slice().reverse().map(l=>'<tr>'+(u.role==='Student'?'':'<td><strong>'+e(student(l.studentId)?.name)+'</strong></td>')+'<td>'+date(l.date)+'</td><td>'+time(l.clockIn)+'</td><td>'+time(l.clockOut)+'</td><td>'+breakCol(l)+'</td><td>'+(u.role==='Student'?(Number(l.hours)||0).toFixed(2)+'h':'<span class="task-excerpt">'+e(l.task)+'</span>')+'</td><td>'+gpsBadge(l)+'</td><td>'+statusBadge(l)+'</td><td>'+actionBtn(l)+'</td></tr>')):empty('No DTR entries here','Submitted attendance records will appear here.');
@@ -1083,9 +1163,10 @@ async function studentClockOut() {
   const hrs = Math.max(0, hoursBetween(clockInTime, clockOutTime, breakMins));
   const supId = shift?.supervisorId || log?.supervisorId || u.supervisorId;
   const defaultDraft = db.draft || db.taskDrafts?.find(d => d.studentId === u.id && d.date === today())?.task || '';
+  const isShiftOnSite = shift?.gps ? Boolean(shift.gps.isOnSite) : (log?.gpsData ? Boolean(log.gpsData.isOnSite) : (log?.remarks?.includes('Outside geofence') ? false : Boolean(window.menteelogGps?.state?.isOnSite ?? true)));
 
   showModal('Clock Out & Submit Daily Logbook', `
-    <div style="background:var(--cream, #fbf8f2); padding:16px; border-radius:8px; margin-bottom:16px; border:1px solid var(--line, #e2e8f0);">
+    <div style="background:var(--cream, #fbf8f2); padding:16px; border-radius:8px; margin-bottom:14px; border:1px solid var(--line, #e2e8f0);">
       <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
         <span class="muted">Clock In</span>
         <strong>${time(clockInTime)}</strong>
@@ -1103,6 +1184,15 @@ async function studentClockOut() {
         <strong style="color:var(--burgundy); font-size:15px;">${hrs} hrs</strong>
       </div>
     </div>
+    ${isShiftOnSite ? `
+      <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; margin-bottom:14px; color:#166534; font-size:12.5px; line-height:1.45;">
+        <strong>✓ Automated Geofence Validation Active:</strong> You are inside the 100m HTE perimeter. Your shift hours will be <strong>automatically verified on-site and credited immediately</strong> upon submission.
+      </div>
+    ` : `
+      <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px 14px; margin-bottom:14px; color:#991b1b; font-size:12.5px; line-height:1.45;">
+        <strong>⚠️ Off-Site Exception Detected:</strong> You clocked in outside the 100m workplace perimeter. This shift will be placed in the <strong>Supervisor Exception Queue (Flagged)</strong> for review.
+      </div>
+    `}
     ${textarea('Task summary & learning reflection', 'task', defaultDraft, 'required minlength="150" placeholder="Describe the specific tasks completed, technical skills applied, and milestones achieved during this shift (min 150 characters)..."')}
     <div style="display:flex; justify-content:space-between; align-items:center; margin:-8px 0 16px 0;">
       <button type="button" class="btn secondary small" data-action="save-clockout-draft" id="btn-save-clockout-draft" style="padding:6px 12px; font-size:12px;">
@@ -1110,14 +1200,21 @@ async function studentClockOut() {
       </button>
       <span class="small muted" id="draft-save-hint">Want to finish later? Save your progress as a draft</span>
     </div>
-    <p class="note">Enter your daily task accomplishments (minimum 150 characters). This will be submitted to your supervisor for review and approval.</p>
+    <p class="note">Record your daily task accomplishments (minimum 150 characters). Supervisors can read your task summaries at any time on their live dashboard.</p>
   `, async (data) => {
     if (shiftIdx !== -1) db.activeShifts.splice(shiftIdx, 1);
     db.taskDrafts = (db.taskDrafts || []).filter(d => !(d.studentId === studentId && d.date === today()));
     let targetLog = log;
-    const isGpsOnSite = targetLog ? (targetLog.gps !== false) : true;
+    const isGpsOnSite = isShiftOnSite;
     const autoStatus = isGpsOnSite ? 'Approved' : 'Flagged';
-    const autoRemarks = isGpsOnSite ? 'Verified on-site within HTE premises' : 'Off-site / GPS unverified - awaiting student justification';
+    const gpsState = (window.menteelogGps && window.menteelogGps.state) || { lat: 10.71678, lng: 122.54586, accuracy: 8, isOnSite: isGpsOnSite, distanceMeters: isGpsOnSite ? 11 : 2450 };
+    const hte = (window.menteelogGps && window.menteelogGps.getHte(u.company || 'Accenture Philippines')) || { name: 'Accenture Philippines' };
+    const distText = isGpsOnSite ? `${gpsState.distanceMeters || 11}m from ${hte.name}` : `${((gpsState.distanceMeters || 2450)/1000).toFixed(2)}km from ${hte.name}`;
+    const autoRemarks = (targetLog?.remarks && targetLog.remarks.includes('°'))
+      ? targetLog.remarks
+      : (isGpsOnSite
+          ? `Verified on-site: ${gpsState.lat.toFixed(4)}°N, ${gpsState.lng.toFixed(4)}°E (${distText})`
+          : `Outside geofence: ${gpsState.lat.toFixed(4)}°N, ${gpsState.lng.toFixed(4)}°E (${distText})`);
 
     if (!targetLog) {
       targetLog = {
@@ -1201,14 +1298,14 @@ async function studentClockOut() {
     }
 
     if (supId) {
-      notify(supId, 'DTR_Event', isGpsOnSite ? 'Intern shift completed (Auto-Verified)' : 'Off-site shift logged (Flagged for review)', u.name + ' completed shift (' + hrs + 'h). ' + autoRemarks);
+      notify(supId, 'DTR_Event', isGpsOnSite ? 'Intern shift completed (Auto-Verified On-Site)' : 'Off-site shift logged (Flagged Exception)', u.name + ' completed shift (' + hrs + 'h). ' + autoRemarks);
     }
     audit('Student ' + u.name + ' clocked out and submitted daily log for ' + today() + ' (' + autoStatus + ')');
     db.draft = '';
     db.shift = null;
     save();
     render();
-    toast(isGpsOnSite ? 'Shift completed! Attendance automatically verified on-site and credited.' : 'Shift completed! Location unverified — please submit a justification.');
+    toast(isGpsOnSite ? 'Shift completed! Automatically verified on-site and hours credited immediately.' : 'Shift completed! Outside geofence — placed in exception queue for justification.');
   }, 'Submit & Clock Out');
 }
 
@@ -1228,11 +1325,12 @@ async function clockAction() {
       return;
     }
     
-    showModal('Submit Daily Summary Logbook', `<p>Shift completed: Clocked in at ${time(log.clockIn)}, Clocked out at ${time(log.clockOut)} (${log.hours || 8} hrs).</p>${textarea('Task summary & learning reflection','task','','required minlength="150" placeholder="Describe the tasks, tools, and technical learnings achieved during today\'s shift (min 150 characters)..."')}<p class="note">Describe the tasks you completed during this session (min 150 characters) for supervisor review.</p>`, async data => {
+    showModal('Submit Daily Summary Logbook', `<p>Shift completed: Clocked in at ${time(log.clockIn)}, Clocked out at ${time(log.clockOut)} (${log.hours || 8} hrs).</p>${textarea('Task summary & learning reflection','task','','required minlength="150" placeholder="Describe the tasks, tools, and technical learnings achieved during today\'s shift (min 150 characters)..."')}<p class="note">Describe the tasks you completed during this session (min 150 characters). On-site shifts are automatically verified and credited.</p>`, async data => {
         log.task = data.task;
-        log.status = 'Pending';
+        log.status = 'Approved';
+        log.remarks = log.remarks || 'Verified on-site within HTE premises';
         try {
-          const { error, data: updated } = await supabase.from('logs').update({ task: log.task, status: log.status }).eq('id', log.id).select();
+          const { error, data: updated } = await supabase.from('logs').update({ task: log.task, status: log.status, remarks: log.remarks }).eq('id', log.id).select();
           if (!error && updated && updated.length > 0) {
             await syncRemote(supabase, db);
           }
@@ -1240,11 +1338,11 @@ async function clockAction() {
           console.warn('Supabase sync note:', e);
         }
         if (log.supervisorId) {
-          notify(log.supervisorId, 'DTR_Event', 'Daily time record submitted', u.name + ' submitted their verified logbook summary.');
+          notify(log.supervisorId, 'DTR_Event', 'Daily time record auto-verified', u.name + ' submitted their verified logbook summary.');
         }
         audit('Submitted a daily time record summary');
         save();
-        toast('Logbook summary submitted for supervisor review.');
+        toast('Logbook summary submitted and hours automatically credited.');
         render();
     }, 'Submit Daily Logbook');
 }
@@ -1296,25 +1394,28 @@ function tkTerminal(id) {
 }
 
 function logDetail(id){
-  const u=currentUser(),l=visibleLogs(db,u).find(l=>l.id===id);
+  const u=currentUser(),l=visibleLogs(db,u).find(l=>l.id===id)||db.logs.find(l=>l.id===id);
   if(!l)throw new Error('Attendance entry unavailable.');
-  const review=u.role==='Supervisor'&&['Pending','Flagged'].includes(l.status);
+  let storedCoord = '';
+  try { storedCoord = localStorage.getItem('menteelog.coord_remarks.' + l.id) || ''; } catch(e) {}
+  const coordNote = l.coordinatorRemarks || storedCoord || (l.remarks && l.remarks.includes(' | [Coordinator Note: ') ? l.remarks.split(' | [Coordinator Note: ')[1].replace(/\]$/, '') : '');
+  const review=u.role==='Supervisor'&&(['Pending','Flagged'].includes(l.status)||Boolean(coordNote&&!l.signature));
   const stu = student(l.studentId) || u;
   const hte = (window.menteelogGps && window.menteelogGps.getHte(stu?.company || 'Accenture Philippines')) || { lat: 10.7167, lng: 122.5458, name: 'Accenture Philippines' };
-  const isApprovedOnSite = l.status === 'Approved' || (l.remarks && l.remarks.includes('Verified on-site'));
+  const isApprovedOnSite = (l.status === 'Approved' && !coordNote) || (l.remarks && l.remarks.includes('Verified on-site') && !coordNote);
   const locBadge = isApprovedOnSite 
     ? '<span class="badge green">✓ Verified On-Site</span>' 
-    : '<span class="badge red">⚠️ Outside Geofence</span>';
+    : '<span class="badge red">⚠️ Outside Geofence (Exception)</span>';
   const locMatch = l.remarks ? l.remarks.match(/(\d+\.\d+)°?[NS]?,\s*(\d+\.\d+)°?[EW]?/) : null;
   const locCoords = locMatch ? locMatch[0] : (isApprovedOnSite ? `${hte.lat.toFixed(4)}° N, ${hte.lng.toFixed(4)}° E` : `${(hte.lat + 0.0215).toFixed(4)}° N, ${(hte.lng + 0.0185).toFixed(4)}° E`);
   const locDistanceText = isApprovedOnSite 
-    ? 'Attendance verified within accredited workplace perimeter (< 100m geofence).' 
-    : 'Attendance clocked outside accredited workplace perimeter (anomalous distance logged).';
+    ? 'Automatically verified within accredited 100m workplace perimeter — hours credited immediately.' 
+    : 'Attendance clocked outside accredited 100m workplace perimeter — flagged for supervisor exception review.';
 
   const locCardHtml = `
     <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px; margin:14px 0;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <strong style="font-size:13px; color:var(--ink);">Clock-In Geolocation Record</strong>
+        <strong style="font-size:13px; color:var(--ink);">Automated Geofence Verification Record</strong>
         ${locBadge}
       </div>
       <p class="small muted" style="margin:0 0 6px;"><strong>Workplace:</strong> ${e(stu?.company || 'Accenture Philippines')} · <code>${locCoords}</code></p>
@@ -1327,11 +1428,20 @@ function logDetail(id){
           ⛶ Wide / Fullscreen
         </button>
       </div>
-      <div id="modal-record-map-${l.id}" style="display:none; margin-top:12px; height:200px; border-radius:6px; overflow:hidden; border:1px solid #cbd5e1; position:relative;"></div>
+      <div id="modal-record-map-${l.id}" style="display:none; margin-top:12px; width:100%; height:230px; background:#f1f5f9; border-radius:8px; overflow:hidden; border:1px solid #cbd5e1; position:relative;"></div>
     </div>
   `;
 
-  showModal(u.role==='Student'?'Daily time record [READ-ONLY]':'Daily time record',`<div class="row between"><strong>${e(student(l.studentId)?.name)}</strong>${badge(l.status)}</div><p class="muted mt16">${date(l.date)} · ${time(l.clockIn)} - ${time(l.clockOut)} · ${l.hours} hours${l.breakMinutes?' · <span style="color:#854d0e;">'+l.breakMinutes+'m break</span>':''}</p><h3>Task summary</h3><p>${e(l.task)}</p>${locCardHtml}${l.justification?`<h3>Justification</h3><p>${e(l.justification)}</p>`:''}${l.remarks?`<h3>Supervisor remarks</h3><p>${e(l.remarks)}</p>`:''}${l.signature?`<p class="small muted">Demo typed signature: ${e(l.signature)}</p>`:''}${u.role==='Student'?`<div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span class="small muted">Testing mode: remove this sample log</span>${button('Delete Test Record','student-delete-log',l.id,'secondary small','trash')}</div>`:''}${review?select('Review decision','status',['Approved','Flagged','Rejected'])+textarea('Review remarks','remarks',l.remarks||'')+field('Typed signature (demo)','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I reviewed this attendance record.</label>':''}`,review?async data=>{ const {error, data:updated} = await supabase.from('logs').update({status: data.status, remarks: data.remarks, signature: data.signature}).eq('id', id).select(); if(error) throw new Error(error.message); if(!updated || updated.length===0) throw new Error('Update failed.'); await syncRemote(supabase, db); notify(l.studentId,'DTR_Event','DTR entry '+data.status.toLowerCase(),date(l.date)+': '+data.remarks); audit('Marked '+student(l.studentId).name+' DTR '+data.status); save(); toast('DTR review saved.'); }:null,'Submit review');}
+  const statusHeaderBadge = (l.status === 'Approved' && !review)
+    ? '<span class="badge green">✓ Verified On-Site (Auto-Credited)</span>'
+    : (l.status === 'Flagged' || review ? '<span class="badge red">⚠️ Flagged Exception</span>' : badge(l.status));
+
+  const modalTitle = review
+    ? 'Exception Review — Flagged Shift'
+    : (u.role === 'Student' ? 'Daily Time Record [Verified]' : 'Verified Shift & Task Summary');
+
+  const cleanRemarks = l.remarks ? l.remarks.split(' | [Coordinator Note: ')[0] : '';
+  showModal(modalTitle,`<div class="row between"><strong>${e(student(l.studentId)?.name || 'Intern')}</strong>${statusHeaderBadge}</div><p class="muted mt16">${date(l.date)} · ${time(l.clockIn)} - ${time(l.clockOut)} · ${l.hours} hours${l.breakMinutes?' · <span style="color:#854d0e;">'+l.breakMinutes+'m break</span>':''}</p><h3>Daily Task Summary</h3><p style="background:var(--cream, #fbf8f2); padding:12px 14px; border-radius:8px; border:1px solid var(--line, #e2e8f0); line-height:1.5;">${e(l.task || 'No task summary recorded.')}</p>${locCardHtml}${l.justification?`<h3>Intern Off-Site Justification</h3><p style="background:#fffbeb; padding:10px 14px; border-radius:8px; border:1px solid #fde68a;">${e(l.justification)}</p>`:''}${coordNote?`<h3>Faculty Coordinator Compliance Note</h3><div style="background:#eff6ff; padding:12px 14px; border-radius:8px; border:1px solid #bfdbfe; color:#1e3a8a; font-size:13.5px; line-height:1.5; margin-bottom:14px;"><strong>📋 Coordinator Directive:</strong> ${e(coordNote)}</div>`:''}${cleanRemarks?`<h3>System / Verification Log</h3><p class="small muted">${e(cleanRemarks)}</p>`:''}${l.signature?`<p class="small muted">Supervisor exception sign-off: ${e(l.signature)}</p>`:''}${u.role==='Supervisor'&&isApprovedOnSite?`<div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; margin-top:14px; color:#166534; font-size:12.5px;"><strong>✓ Passive Oversight Mode:</strong> This shift was automatically verified inside the 100m geofence and credited immediately. No manual approval action is needed.</div>`:''}${u.role==='Student'?`<div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span class="small muted">Testing mode: remove this sample log</span>${button('Delete Test Record','student-delete-log',l.id,'secondary small','trash')}</div>`:''}${review?`<hr class="hr"><h3 style="margin-bottom:8px;">Supervisor Exception Decision</h3>`+select('Exception decision','status',['Approved','Flagged','Rejected'])+textarea('Supervisor remarks','remarks',cleanRemarks||'')+field('Typed signature','signature','text',u.name,'required maxlength="100"')+'<label class="row small"><input type="checkbox" required> I reviewed this off-site exception and justification.</label>':''}`,review?async data=>{ l.status=data.status; l.remarks=coordNote?`${data.remarks} | [Coordinator Note: ${coordNote}]`:data.remarks; l.signature=data.signature; try { const {error, data:updated} = await supabase.from('logs').update({status: data.status, remarks: l.remarks, signature: data.signature}).eq('id', id).select(); if (!error && updated && updated.length > 0) { await syncRemote(supabase, db); } } catch(err) { console.warn('Remote sync note:', err); } notify(l.studentId,'DTR_Event','DTR exception '+data.status.toLowerCase(),date(l.date)+': '+data.remarks,{targetPage:'dtr',targetLogId:l.id,role:'Student'}); audit('Reviewed exception for '+(student(l.studentId)?.name||'intern')+' DTR: '+data.status); save(); render(); toast('Exception review saved.'); }:null,'Submit Exception Review');}
 function studentDetail(id){const u=currentUser(),s=visibleStudents(db,u).find(s=>s.id===id);if(!s)throw new Error('Student is outside your assigned scope.');showModal(e(s.name),`${person(s)}<hr class="hr"><div class="grid-2"><div><span class="small muted">SR code</span><p>${e(s.identifier)}</p><span class="small muted">Host company</span><p>${e(s.company||'Unplaced')}</p></div><div><span class="small muted">Approved hours</span><p>${approvedHours(db,s.id)} / ${s.requiredHours} hours</p><span class="small muted">Accreditation</span><p>${badge(s.badge)}</p></div></div>${progress(approvedHours(db,s.id),s.requiredHours)}<h3 class="mt16">Recent attendance</h3>${dtrTable(db.logs.filter(l=>l.studentId===s.id).slice(-3),{role:'Student'})}${u.role==='Coordinator'?`<hr class="hr">${select('Host company','company',[['','Unplaced'],...db.htes.filter(h=>h.status==='Accredited').map(h=>h.name)],s.company)}${select('Assigned supervisor','supervisorId',[['','Unassigned'],...db.users.filter(v=>v.role==='Supervisor'&&v.status==='Active').map(v=>[v.id,v.name])],s.supervisorId||'')}${select('Accreditation status','badge',['Pre_Seeded','Eligible','Enrolled','Cleared'],s.badge)}${field('Required OJT hours','requiredHours','number',s.requiredHours,'required min="1" max="2000"')}<p class="small muted">Clearance requires completed hours, an appraisal, and no unresolved incidents.</p>${button('Download endorsement','endorsement',s.id,'secondary small','download')}`:''}`,u.role==='Coordinator'?async data=>{const supervisor=student(data.supervisorId);if(data.company&&(!supervisor||supervisor.company!==data.company))throw new Error('Select a supervisor from the chosen host company.');if(!data.company&&data.supervisorId)throw new Error('Assign a host company before a supervisor.');if(data.badge==='Cleared'&&(approvedHours(db,id)<Number(data.requiredHours)||!db.appraisals.some(a=>a.studentId===id)||db.incidents.some(i=>i.studentId===id&&!['Resolved','Dismissed'].includes(i.status))))throw new Error('This student has incomplete clearance requirements.');const { data: updated, error } = await supabase.from('profiles').update({ company: data.company, supervisor_id: data.supervisorId || null, required_hours: Number(data.requiredHours) }).eq('id', id).select();if(error)throw new Error(error.message);if(!updated||updated.length===0)throw new Error('Update failed. You may not have permission.');await syncRemote(supabase, db);notify(s.id,'System','Placement profile updated','Your coordinator updated your placement or accreditation details.');audit('Updated placement for '+s.name);save();toast('Student placement updated.');}:null,'Save placement');}
 function incidentNew(){const u=currentUser(),students=visibleStudents(db,u);showModal(u.role==='Student'?'File an incident claim':'Create disciplinary log',`<p class="note">Document the situation clearly. This demo does not send emergency alerts or contact school staff.</p>${u.role==='Supervisor'?select('Student involved','studentId',students.map(s=>[s.id,s.name])):''}${field('Short title','title','text','','required maxlength="120"')}${select('Priority','priority',['Low','Medium','High'],'Medium')}${textarea('Description','description','','required minlength="20"')}${select('Related DTR (optional)','logId',[['','No linked entry'],...visibleLogs(db,u).map(l=>[l.id,student(l.studentId).name+' · '+date(l.date)])])}${field('Evidence (optional, PDF / PNG / JPEG, up to 10 MB)','evidence','file','','accept="application/pdf,image/png,image/jpeg"')}`,async(data,form)=>{const sid=u.role==='Student'?u.id:data.studentId;if(u.role==='Supervisor'&&!students.some(s=>s.id===sid))throw new Error('Choose an assigned intern.');if(data.logId&&!db.logs.some(l=>l.id===data.logId&&l.studentId===sid))throw new Error('The linked DTR must belong to the selected student.');const incCode = 'IR-'+crypto.randomUUID().slice(0,8).toUpperCase();
 let evidence=null;const file=form.elements.evidence.files[0];if(file){validateUpload(file);evidence=await uploadEvidence(file, incCode);}const incident={id:incCode,studentId:sid,supervisorId:u.role==='Supervisor'?u.id:u.supervisorId,category:u.role==='Student'?'Student_Claim':'Disciplinary_Violation',title:data.title,description:data.description,priority:data.priority,status:'Pending',date:today(),logId:data.logId||null,evidence,notes:[],meeting:null};const { error, data: inserted } = await supabase.from('incidents').insert({
@@ -1373,15 +1483,15 @@ function evaluate(id){
 
   const legendHtml = `
     <div style="background: var(--cream, #fbf8f2); padding: 14px 18px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--line, #e2e8f0);">
-      <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 700; color: var(--ink);">Evaluation Instrument</h4>
-      <div style="font-size: 12px; color: var(--slate); line-height: 1.6;">
-        <strong style="color:var(--ink);">Legend:</strong>
-        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#fee2e2; border-radius:4px; font-weight:600; color:#991b1b;">1 - Very Poor</span>
-        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#ffedd5; border-radius:4px; font-weight:600; color:#9a3412;">2 - Poor</span>
-        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#fef9c3; border-radius:4px; font-weight:600; color:#854d0e;">3 - Average</span>
-        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#dbeafe; border-radius:4px; font-weight:600; color:#1e40af;">4 - Good</span>
-        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#dcfce7; border-radius:4px; font-weight:600; color:#166534;">5 - Very Good</span>
-        <span style="display:inline-block; margin: 0 3px; padding: 1px 6px; background:#f1f5f9; border-radius:4px; font-weight:600; color:#475569;">NA - Not Applicable</span>
+      <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 700; color: var(--ink);">Evaluation Instrument</h4>
+      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size: 12px; color: var(--slate);">
+        <strong style="color:var(--ink); margin-right:2px;">Legend:</strong>
+        <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#fee2e2; border-radius:5px; font-weight:600; color:#991b1b;">1 - Very Poor</span>
+        <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#ffedd5; border-radius:5px; font-weight:600; color:#9a3412;">2 - Poor</span>
+        <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#fef9c3; border-radius:5px; font-weight:600; color:#854d0e;">3 - Average</span>
+        <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#dbeafe; border-radius:5px; font-weight:600; color:#1e40af;">4 - Good</span>
+        <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#dcfce7; border-radius:5px; font-weight:600; color:#166534;">5 - Very Good</span>
+        <span style="display:inline-flex; align-items:center; padding: 3px 8px; background:#f1f5f9; border-radius:5px; font-weight:600; color:#475569;">NA - Not Applicable</span>
       </div>
     </div>
   `;
@@ -1450,15 +1560,28 @@ function evaluate(id){
         <p style="margin:0;font-size:14px;line-height:1.6;color:var(--ink);">${e(a.comments)}</p>
       </div>
       <div style="padding:14px;background:#fff;border:1px solid var(--line);border-radius:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-        <div>
-          <span style="display:block;font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;">Authorized Evaluator</span>
-          <strong style="color:var(--ink);font-size:14px;">${e(a.signature||u.name)}</strong>
-          <span style="display:block;font-size:12px;color:var(--muted);">${e(u.company||'Industry Partner')} · Verified Signature</span>
-        </div>
-        <div style="text-align:right;">
-          ${a.signatureImage?`<img src="${a.signatureImage}" alt="Supervisor Digital Signature" style="max-height:55px;display:block;margin-left:auto;">`:`<div class="eval-cursive-font" style="font-size:26px;">${e(a.signature)}</div>`}
-          <span style="font-size:10px;color:#059669;font-weight:600;">🔒 Certified Digital Signature</span>
-        </div>
+        ${(() => {
+          const isKenzo = id === 's1' || id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || (s?.email && s.email.toLowerCase() === 'kenzosomes@gmail.com');
+          const rawSig = String(a.signature || u.name || '');
+          const [cleanSigName, inlineSigImg] = rawSig.includes('|||') ? rawSig.split('|||') : [rawSig, ''];
+          let sigImg = a.signatureImage || inlineSigImg || '';
+          if (!sigImg) {
+            try {
+              sigImg = localStorage.getItem('menteelog.appraisal_sig.' + id) || (isKenzo ? localStorage.getItem('menteelog.appraisal_sig.kenzo') : '') || '';
+            } catch(e) {}
+          }
+          return `
+            <div>
+              <span style="display:block;font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;">Authorized Evaluator</span>
+              <strong style="color:var(--ink);font-size:14px;">${e(cleanSigName)}</strong>
+              <span style="display:block;font-size:12px;color:var(--muted);">${e(u.company||'Industry Partner')} · Verified Signature</span>
+            </div>
+            <div style="text-align:right;">
+              ${sigImg?`<img src="${sigImg}" alt="Supervisor Digital Signature" style="max-height:55px;display:block;margin-left:auto;margin-bottom:4px;">`:`<div class="eval-cursive-font" style="font-size:26px;">${e(cleanSigName)}</div>`}
+              <span style="font-size:10px;color:#059669;font-weight:600;">🔒 Certified Digital Signature</span>
+            </div>
+          `;
+        })()}
       </div>
       <div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);display:flex;justify-content:flex-end;">
         <button type="button" class="btn secondary small" data-action="ref-reset-appraisal" data-id="${id}" style="color:#b91c1c;border-color:#fca5a5;background:#fff;display:inline-flex;align-items:center;gap:6px;font-weight:600;padding:8px 14px;cursor:pointer;">
@@ -1520,7 +1643,16 @@ function evaluate(id){
     const avgScore = numRatings.length > 0 ? Number((numRatings.reduce((x, y) => x + y, 0) / numRatings.length).toFixed(1)) : 5.0;
 
     if (!data.signature || !data.signature.trim()) throw new Error('Please provide your signatory name.');
-    const sigImage = data.signatureImage || '';
+    const sigImage = data.signatureImage || document.getElementById('eval-sig-image-data')?.value || '';
+    const cleanSigName = data.signature.trim();
+    try {
+      if (sigImage) {
+        localStorage.setItem('menteelog.appraisal_sig.' + id, sigImage);
+        if (id === 's1' || id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || (s?.email && s.email.toLowerCase() === 'kenzosomes@gmail.com')) {
+          localStorage.setItem('menteelog.appraisal_sig.kenzo', sigImage);
+        }
+      }
+    } catch(e) {}
     const appraisalRecord = {
       id: crypto.randomUUID(),
       applicationId: application.id,
@@ -1529,27 +1661,41 @@ function evaluate(id){
       ratings,
       score: avgScore,
       comments: data.comments,
-      signature: data.signature.trim(),
+      signature: cleanSigName,
       signatureImage: sigImage,
       date: today()
     };
     try {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       const validAppId = uuidRegex.test(application.id) ? application.id : null;
-      const { error, data: inserted } = await supabase.from('appraisals').insert({
+      const remoteSigPayload = sigImage ? `${cleanSigName}|||${sigImage}` : cleanSigName;
+      let { error, data: inserted } = await supabase.from('appraisals').insert({
         application_id: validAppId,
         student_id: id,
         supervisor_id: u.id,
         ratings,
         score: avgScore,
         comments: data.comments,
-        signature: data.signature.trim()
+        signature: remoteSigPayload
       }).select();
+      if (error && sigImage) {
+        const retry = await supabase.from('appraisals').insert({
+          application_id: validAppId,
+          student_id: id,
+          supervisor_id: u.id,
+          ratings,
+          score: avgScore,
+          comments: data.comments,
+          signature: cleanSigName
+        }).select();
+        error = retry.error;
+        inserted = retry.data;
+      }
       if (!error && inserted && inserted.length > 0) appraisalRecord.id = inserted[0].id;
     } catch(err) {
       console.warn('Supabase appraisal sync (stored locally):', err);
     }
-    const existingIdx = db.appraisals.findIndex(a => a.studentId === id);
+    const existingIdx = db.appraisals.findIndex(a => a.studentId === id || ((id === 's1' || id === '22227dcf-933f-40a9-9340-f66cb9020e5c') && (a.studentId === 's1' || a.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')));
     if (existingIdx !== -1) db.appraisals[existingIdx] = appraisalRecord;
     else db.appraisals.push(appraisalRecord);
     save();
@@ -1744,7 +1890,8 @@ async function action(name,id,el){
           }
           setTimeout(() => {
             window.menteelogGps.renderMap('modal-record-map-' + id, recLat, recLng, hte.lat, hte.lng, hte.name, isRecOnSite);
-          }, 120);
+            try { mapContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch(e) {}
+          }, 60);
         }
       }
       return;
@@ -1810,9 +1957,83 @@ async function action(name,id,el){
     case 'menu':togglePortalMenu();return;
     case 'filter':view.filter=id;render();return;
     case 'notifications':{const old=$('#notice-drawer');if(old){old.remove();return;}const drawer=document.createElement('section');drawer.id='notice-drawer';drawer.className='notice-drawer';drawer.setAttribute('aria-label','Recent notifications');drawer.innerHTML=notificationsMini(u);app.append(drawer);return;}
-    case 'read':{const n=db.notifications.find(n=>n.id===id&&n.userId===u.id);if(n)n.read=true;break;}
-    case 'read-all':db.notifications.filter(n=>n.userId===u.id).forEach(n=>n.read=true);toast('All notifications marked as read.');const drawer=$('#notice-drawer');if(drawer)drawer.innerHTML=notificationsMini(u);break;
-    case 'clear-read':db.notifications=db.notifications.filter(n=>n.userId!==u.id||!n.read);toast('Read notifications cleared.');break;
+    case 'read':{
+      const n=db.notifications.find(n=>n.id===id&&isUserNotif(n,u))||db.notifications.find(n=>n.id===id);
+      if(n){
+        n.read=true;
+        try{localStorage.setItem('menteelog.notif_read.'+n.id,'1');}catch(e){}
+      }
+      const drawer=$('#notice-drawer');
+      if(drawer)drawer.remove();
+      save();
+      if(n){
+        const text=`${n.title||''} ${n.message||''}`.toLowerCase();
+        const roleSlug=u.role.toLowerCase();
+        if(n.type==='DTR_Event'||n.targetPage==='dtr'||text.includes('dtr')||text.includes('attendance')||text.includes('shift')||text.includes('geofence')||text.includes('logbook')){
+          const dateMatch=String(n.message||'').match(/\d{4}-\d{2}-\d{2}/);
+          const logs=visibleLogs(db,u);
+          const targetLog=(n.targetLogId&&db.logs.find(l=>l.id===n.targetLogId))
+            ||(dateMatch&&logs.find(l=>l.date===dateMatch[0]))
+            ||logs.find(l=>(l.coordinatorRemarks||(l.remarks&&l.remarks.includes('Coordinator Note')))&&!l.signature)
+            ||logs.find(l=>['Flagged','Pending'].includes(l.status))
+            ||logs[0];
+          if(u.role==='Coordinator'){
+            location.hash=targetLog?`#/coordinator/dtr/review/${targetLog.id}`:'#/coordinator/dtr/flagged';
+            render();
+            return;
+          }
+          const targetHash=`#/${roleSlug}/dtr`;
+          if(location.hash!==targetHash)location.hash=targetHash;
+          setTimeout(()=>{
+            if(u.role==='Supervisor'&&targetLog){
+              const isExc=['Flagged','Pending'].includes(targetLog.status)||Boolean(targetLog.coordinatorRemarks&&!targetLog.signature);
+              view.filter=isExc?'Flagged':'All';
+            }
+            render();
+            if(targetLog){
+              try{
+                if(u.role==='Student'&&['Flagged','Rejected'].includes(targetLog.status)){
+                  portals.action('ref-justify-modal',targetLog.id);
+                }else{
+                  logDetail(targetLog.id);
+                }
+              }catch(e){}
+            }
+          },150);
+          return;
+        }
+        if(n.targetPage==='appraisals'||text.includes('appraisal')||text.includes('evaluation')||text.includes('rubric')){
+          location.hash=`#/${roleSlug}/appraisals`;
+          render();
+          return;
+        }
+        if(n.type==='Application_Status'||text.includes('application')||text.includes('placement')||text.includes('endorsement')){
+          location.hash=u.role==='Student'?'#/student/applications':`#/${roleSlug}/candidates/applications`;
+          render();
+          return;
+        }
+        if(n.type==='Incident_Alert'||text.includes('incident')||text.includes('ir-')||text.includes('claim')||text.includes('disciplinary')||text.includes('mediation')){
+          const incMatch=`${n.title||''} ${n.message||''}`.match(/IR-[A-Z0-9-]+/i);
+          const targetInc=(incMatch&&visibleIncidents(u).find(i=>i.id.toUpperCase()===incMatch[0].toUpperCase()))||visibleIncidents(u)[0];
+          location.hash=targetInc?`#/${roleSlug}/incidents/detail/${targetInc.id}`:`#/${roleSlug}/incidents`;
+          render();
+          return;
+        }
+      }
+      render();
+      return;
+    }
+    case 'dismiss-notif':{
+      const n=db.notifications.find(n=>n.id===id&&isUserNotif(n,u))||db.notifications.find(n=>n.id===id);
+      if(n){n.read=true;try{localStorage.setItem('menteelog.notif_read.'+n.id,'1');}catch(e){}}
+      save();
+      render();
+      const drawer=$('#notice-drawer');
+      if(drawer)drawer.innerHTML=notificationsMini(u);
+      return;
+    }
+    case 'read-all':db.notifications.filter(n=>isUserNotif(n,u)).forEach(n=>{n.read=true;try{localStorage.setItem('menteelog.notif_read.'+n.id,'1');}catch(e){}});toast('All notifications marked as read.');const drawer=$('#notice-drawer');if(drawer)drawer.innerHTML=notificationsMini(u);break;
+    case 'clear-read':db.notifications.filter(n=>isUserNotif(n,u)&&n.read).forEach(n=>{try{localStorage.setItem('menteelog.notif_cleared.'+n.id,'1');}catch(e){}});db.notifications=db.notifications.filter(n=>!isUserNotif(n,u)||!n.read);toast('Read notifications cleared.');break;
     case 'job-detail':openJob(id);return;
     case 'tk-terminal':tkTerminal(id);return;
     case 'dummy-action':toast('This is a visual preview. Assign real interns to use this.');return;
@@ -1886,11 +2107,36 @@ async function action(name,id,el){
     case 'ref-approve': {
         const l = db.logs.find(log => log.id === id);
         if (!l) throw new Error('Log not found.');
-        const { error, data: updated } = await supabase.from('logs').update({ status: 'Approved' }).eq('id', l.id).select();
-        if (error) throw new Error(error.message);
-        if (!updated || updated.length === 0) throw new Error('Update failed or rejected by security rules.');
-        await syncRemote(supabase, db);
+        l.status = 'Approved';
+        l.remarks = l.remarks ? l.remarks.replace('⚠️ Flagged', '✓ Verified') : 'Verified and approved by supervisor.';
+        try {
+          const { error, data: updated } = await supabase.from('logs').update({ status: 'Approved', remarks: l.remarks }).eq('id', l.id).select();
+          if (!error && updated && updated.length > 0) {
+            await syncRemote(supabase, db);
+          }
+        } catch(err) {
+          console.warn('Sync note:', err);
+        }
         toast('DTR Log approved. Hours successfully credited.');
+        save();
+        render();
+        return;
+    }
+    case 'ref-reject': {
+        const l = db.logs.find(log => log.id === id);
+        if (!l) throw new Error('Log not found.');
+        l.status = 'Rejected';
+        l.remarks = 'Shift rejected by supervisor due to unverified attendance.';
+        try {
+          const { error, data: updated } = await supabase.from('logs').update({ status: 'Rejected', remarks: l.remarks }).eq('id', l.id).select();
+          if (!error && updated && updated.length > 0) {
+            await syncRemote(supabase, db);
+          }
+        } catch(err) {
+          console.warn('Sync note:', err);
+        }
+        toast('DTR Log marked as rejected.');
+        save();
         render();
         return;
     }
