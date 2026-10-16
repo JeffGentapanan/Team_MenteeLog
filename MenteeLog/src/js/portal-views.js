@@ -351,7 +351,7 @@ export function createPortalViews(c){
   }
 
   async function action(name,id,el){
-    if(['toggle-live-map','sim-gps-onsite','sim-gps-offsite','view-record-map'].includes(name)) return false;
+    if(['toggle-live-map','sim-gps-onsite','sim-gps-offsite','view-record-map','fullscreen-live-map','fullscreen-record-map'].includes(name)) return false;
     if(name==='application-detail'&&u().role!=='Student'){const a=visibleApplications(db(),u()).find(a=>a.id===id);if(!a)throw new Error('Application outside your scope.');const captured=c.capture(()=>c.legacy.applicationDetail(id));c.showModal(captured.title,captured.body+(a.resumeId?b('Preview Applicant Resume','ref-file-preview',a.resumeId,'secondary full'):''),captured.onSubmit,captured.label);return true;}
     if((name==='log-detail'||name==='ref-justify-modal')&&u().role==='Student'){
       const l=visibleLogs(db(),u()).find(l=>l.id===id);
@@ -369,9 +369,14 @@ export function createPortalViews(c){
             </div>
             <p class="small muted" style="margin:0 0 6px;"><strong>Workplace:</strong> ${e(stu?.company || 'Accenture Philippines')} · <code>${locCoords}</code></p>
             <p class="small" style="margin:0 0 10px; color:#991b1b;">Shift was recorded outside the 500m geofence perimeter. Please provide an official justification.</p>
-            <button type="button" class="btn secondary small" data-action="view-record-map" data-id="${l.id}" style="width:100%; display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600;">
-              🗺️ View Clock-In Location Map
-            </button>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn secondary small" data-action="view-record-map" data-id="${l.id}" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600;">
+                🗺️ Toggle Record Map
+              </button>
+              <button type="button" class="btn secondary small" data-action="fullscreen-record-map" data-id="${l.id}" style="display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600;" title="Open Wide Fullscreen View">
+                ⛶ Wide / Fullscreen
+              </button>
+            </div>
             <div id="modal-record-map-${l.id}" style="display:none; margin-top:12px; height:200px; border-radius:6px; overflow:hidden; border:1px solid #cbd5e1;"></div>
           </div>
         `;
@@ -791,9 +796,14 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
                 ? '<span class="badge green" style="padding:4px 10px; font-weight:700;">✓ Inside Geofence (On-Site)</span>' 
                 : '<span class="badge red" style="padding:4px 10px; font-weight:700;">⚠️ Outside Geofence (Off-Site)</span>'}
             </div>
-            <button type="button" class="btn secondary small" data-action="toggle-live-map" style="display:inline-flex; align-items:center; gap:6px; font-weight:600;">
-              🗺️ ${gps.isMapExpanded ? 'Hide Map ▴' : 'Expand Geofence Map ▾'}
-            </button>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="btn secondary small" data-action="toggle-live-map" style="display:inline-flex; align-items:center; gap:6px; font-weight:600;">
+                🗺️ ${gps.isMapExpanded ? 'Hide Map ▴' : 'Expand Geofence Map ▾'}
+              </button>
+              <button type="button" class="btn secondary small" data-action="fullscreen-live-map" style="display:inline-flex; align-items:center; gap:6px; font-weight:600;" title="Open Wide Fullscreen View">
+                ⛶ Wide / Fullscreen
+              </button>
+            </div>
           </div>
 
           <div style="margin-bottom:12px;">
@@ -822,7 +832,10 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
           </div>
 
           ${gps.isMapExpanded ? `
-            <div style="margin-top:16px;">
+            <div style="margin-top:16px; position:relative;">
+              <button type="button" class="btn secondary small" data-action="fullscreen-live-map" style="position:absolute; top:10px; right:10px; z-index:1000; background:#ffffff; box-shadow:0 2px 6px rgba(0,0,0,0.25); font-weight:700; font-size:12px; padding:5px 10px; border-radius:6px; cursor:pointer;" title="Open Wide Fullscreen View">
+                ⛶ Fullscreen
+              </button>
               <div id="dtr-live-map" style="width:100%; height:230px; border-radius:8px; border:1px solid #cbd5e1; overflow:hidden; background:#f1f5f9;"></div>
               <p class="small muted" style="margin:6px 0 0; text-align:right;">Green circle indicates accredited 500m HTE geofence perimeter.</p>
             </div>

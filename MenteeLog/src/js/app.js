@@ -603,6 +603,57 @@ window.menteelogGps = {
     } catch(err) {
       console.warn('Leaflet render note:', err);
     }
+  },
+  openFullscreenMap(userLat, userLng, hteLat, hteLng, companyName, isOnSite, title = 'Geofence Map Fullscreen View') {
+    let fsEl = document.getElementById('map-fullscreen-overlay');
+    if (fsEl) fsEl.remove();
+    fsEl = document.createElement('div');
+    fsEl.id = 'map-fullscreen-overlay';
+    document.body.appendChild(fsEl);
+    
+    const statusBadge = isOnSite 
+      ? '<span class="badge green" style="font-size:13px; padding:4px 12px; font-weight:700;">✓ Inside Geofence (On-Site)</span>' 
+      : '<span class="badge red" style="font-size:13px; padding:4px 12px; font-weight:700;">⚠️ Outside Geofence (Off-Site)</span>';
+
+    fsEl.innerHTML = `
+      <div style="position:fixed; inset:0; z-index:999999; background:rgba(15,23,42,0.88); backdrop-filter:blur(6px); display:flex; flex-direction:column; padding:16px;">
+        <div style="background:#ffffff; border-radius:12px; display:flex; flex-direction:column; height:100%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); overflow:hidden; border:1px solid rgba(255,255,255,0.2);">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <strong style="font-size:16px; color:#1e293b;">${title}</strong>
+              ${statusBadge}
+              <span style="font-size:13px; color:#64748b; font-family:monospace; background:#e2e8f0; padding:2px 8px; border-radius:4px;">${userLat.toFixed(5)}° N, ${userLng.toFixed(5)}° E</span>
+            </div>
+            <button type="button" class="btn secondary small" id="btn-close-map-fs" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; padding:8px 16px; cursor:pointer;">
+              ✕ Exit Fullscreen
+            </button>
+          </div>
+          <div id="fs-leaflet-map" style="flex:1; width:100%; min-height:450px; background:#f1f5f9; position:relative;"></div>
+          <div style="padding:12px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; font-size:13px; color:#475569;">
+            <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
+              <span>🏢 <strong>${companyName}</strong> (Accredited Workplace)</span>
+              <span>📍 <strong>Pinpoint Position</strong></span>
+              <span>🟢 <strong>500m Accredited Geofence Radius</strong></span>
+            </div>
+            <span style="color:#64748b; font-size:12px;">Scroll to zoom · Drag to pan · Press ESC to exit</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('btn-close-map-fs').onclick = () => fsEl.remove();
+    
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        fsEl.remove();
+        window.removeEventListener('keydown', onKey);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+
+    setTimeout(() => {
+      this.renderMap('fs-leaflet-map', userLat, userLng, hteLat, hteLng, companyName, isOnSite);
+    }, 120);
   }
 };
 
@@ -1167,10 +1218,15 @@ function logDetail(id){
       </div>
       <p class="small muted" style="margin:0 0 6px;"><strong>Workplace:</strong> ${e(stu?.company || 'Accenture Philippines')} · <code>${locCoords}</code></p>
       <p class="small" style="margin:0 0 10px; color:${isApprovedOnSite ? '#166534' : '#991b1b'}; font-weight:500;">${locDistanceText}</p>
-      <button type="button" class="btn secondary small" data-action="view-record-map" data-id="${l.id}" style="width:100%; display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600;">
-        🗺️ View Clock-In Location Map
-      </button>
-      <div id="modal-record-map-${l.id}" style="display:none; margin-top:12px; height:200px; border-radius:6px; overflow:hidden; border:1px solid #cbd5e1;"></div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn secondary small" data-action="view-record-map" data-id="${l.id}" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600;">
+          🗺️ Toggle Record Map
+        </button>
+        <button type="button" class="btn secondary small" data-action="fullscreen-record-map" data-id="${l.id}" style="display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600;" title="Open Wide Fullscreen View">
+          ⛶ Wide / Fullscreen
+        </button>
+      </div>
+      <div id="modal-record-map-${l.id}" style="display:none; margin-top:12px; height:200px; border-radius:6px; overflow:hidden; border:1px solid #cbd5e1; position:relative;"></div>
     </div>
   `;
 
@@ -1520,7 +1576,7 @@ async function uploadEvidence(file, incCode) {
 const putFile=(id,file)=>fileOp('put',id,file);
 function documentUpload(){const u=currentUser();showModal('Upload a document',select('Document category','category',['Endorsement letter','Training agreement','Accomplishment report','Certificate','Other'])+field('Choose a file','file','file','','required accept="application/pdf,image/png,image/jpeg"')+'<p class="small muted">PDF, PNG, or JPEG · Up to 10 MB. Stored only in this browser.</p>',async(data,form)=>{const file=form.elements.file.files[0];validateUpload(file);const id=crypto.randomUUID();if(!uuidRegex.test(u.id))throw new Error('Demo records cannot be saved to the live database.');const ext=file.name.split('.').pop()||'';const filePath=`${u.id}/${id}_${file.name.replace(/[^a-zA-Z0-9.-]/g,'_')}`;const {error:storageErr}=await supabase.storage.from('documents').upload(filePath,file);if(storageErr)throw new Error('Upload failed: '+storageErr.message);const {error:dbErr,data:rows}=await supabase.from('documents').insert({id,student_id:u.id,category:data.category,name:file.name,file_path:filePath,file_size:file.size,mime_type:file.type,doc_date:today(),status:'Pending'}).select();if(dbErr||!rows||!rows.length){await supabase.storage.from('documents').remove([filePath]);throw new Error(dbErr?dbErr.message:'Insert failed.');}await syncRemote(supabase,db);audit('Uploaded a document');save();toast('Document uploaded successfully.');},'Upload document');}
 function exportReport(type){let rows;const students=db.users.filter(s=>s.role==='Student');switch(type){case 'completion':rows=[['Student','SR code','Approved hours','Required hours','Completion percent'],...students.map(s=>[s.name,s.identifier,approvedHours(db,s.id),s.requiredHours,Math.round(approvedHours(db,s.id)/s.requiredHours*100)])];break;case 'compliance':rows=[['Student','Date','Hours','Status','Location captured','Justification','Reviewer remarks'],...db.logs.map(l=>[student(l.studentId)?.name,l.date,l.hours,l.status,l.gps?'Yes (unverified)':'No',l.justification||'',l.remarks])];break;case 'hte':rows=[['Company','Industry','Accreditation','MOA expiry','Placed students'],...db.htes.map(h=>[h.name,h.industry,h.status,h.expiry,students.filter(s=>s.company===h.name).length])];break;case 'incidents':rows=[['Case','Student','Category','Priority','Status','Reported'],...db.incidents.map(i=>[i.id,student(i.studentId)?.name,i.category,i.priority,i.status,i.date])];break;default:rows=[['Student','SR code','Course','Host company','Supervisor','Accreditation','Approved hours','Required hours'],...students.map(s=>[s.name,s.identifier,s.course,s.company,student(s.supervisorId)?.name||'',s.badge,approvedHours(db,s.id),s.requiredHours])];}download('MenteeLog-'+type+'-DEMO.csv',csvText(rows));toast('Sample data report downloaded.');}
-const actionRoles={ 'job-edit':['Supervisor','Coordinator'],'student-detail':['Supervisor','Coordinator'],'evaluate':['Supervisor'],'reset-appraisal':['Supervisor','Coordinator'],'ref-reset-appraisal':['Supervisor','Coordinator'],'hte-edit':['Coordinator'],'user-new':['Coordinator'],'user-status':['Coordinator'],'import-users':['Coordinator'],'csv-template':['Coordinator'],'announcement':['Supervisor','Coordinator'],'document-upload':['Student'],'document-remove':['Student'],'clock':['Student'],'student-clock-in':['Student'],'student-toggle-break':['Student'],'student-clock-out':['Student'],'ref-clock-out':['Student'],'incident-new':['Student','Supervisor'],'report':['Coordinator'],'export-students':['Supervisor','Coordinator'],'endorsement':['Coordinator'],'toggle-live-map':['Student'],'sim-gps-onsite':['Student'],'sim-gps-offsite':['Student'],'view-record-map':['Student','Supervisor','Coordinator']};
+const actionRoles={ 'job-edit':['Supervisor','Coordinator'],'student-detail':['Supervisor','Coordinator'],'evaluate':['Supervisor'],'reset-appraisal':['Supervisor','Coordinator'],'ref-reset-appraisal':['Supervisor','Coordinator'],'hte-edit':['Coordinator'],'user-new':['Coordinator'],'user-status':['Coordinator'],'import-users':['Coordinator'],'csv-template':['Coordinator'],'announcement':['Supervisor','Coordinator'],'document-upload':['Student'],'document-remove':['Student'],'clock':['Student'],'student-clock-in':['Student'],'student-toggle-break':['Student'],'student-clock-out':['Student'],'ref-clock-out':['Student'],'incident-new':['Student','Supervisor'],'report':['Coordinator'],'export-students':['Supervisor','Coordinator'],'endorsement':['Coordinator'],'toggle-live-map':['Student'],'sim-gps-onsite':['Student'],'sim-gps-offsite':['Student'],'view-record-map':['Student','Supervisor','Coordinator'],'fullscreen-live-map':['Student'],'fullscreen-record-map':['Student','Supervisor','Coordinator']};
 async function action(name,id,el){
   const publicActions=['demo','auth-role','forgot','login','toggle-password','close','watch-demo','privacy','team-connect'];
   const u=currentUser();
@@ -1531,6 +1587,12 @@ async function action(name,id,el){
     case 'toggle-live-map': {
       window.menteelogGps.state.isMapExpanded = !window.menteelogGps.state.isMapExpanded;
       render();
+      return;
+    }
+    case 'fullscreen-live-map': {
+      const hte = window.menteelogGps.getHte(u.company || 'Accenture Philippines');
+      const s = window.menteelogGps.state;
+      window.menteelogGps.openFullscreenMap(s.lat, s.lng, hte.lat, hte.lng, hte.name, s.isOnSite, 'Live HTE Geofence Map — Wide Screen View');
       return;
     }
     case 'sim-gps-onsite': {
@@ -1584,6 +1646,27 @@ async function action(name,id,el){
           }, 120);
         }
       }
+      return;
+    }
+    case 'fullscreen-record-map': {
+      const l = db.logs.find(x => x.id === id);
+      const stu = student(l?.studentId) || u;
+      const hte = window.menteelogGps.getHte(stu?.company || 'Accenture Philippines');
+      let recLat = hte.lat + 0.00015;
+      let recLng = hte.lng + 0.00010;
+      let isRecOnSite = l ? l.status === 'Approved' || (l.remarks && l.remarks.includes('Verified on-site')) : true;
+      if (l && l.remarks) {
+        const match = l.remarks.match(/(\d+\.\d+)°?[NS]?,\s*(\d+\.\d+)°?[EW]?/);
+        if (match) {
+          recLat = parseFloat(match[1]);
+          recLng = parseFloat(match[2]);
+        } else if (!isRecOnSite) {
+          recLat = hte.lat + 0.0215;
+          recLng = hte.lng + 0.0185;
+        }
+      }
+      const dateStr = l ? date(l.date) : 'Shift Record';
+      window.menteelogGps.openFullscreenMap(recLat, recLng, hte.lat, hte.lng, hte.name, isRecOnSite, `Clock-In Geolocation Map — ${dateStr}`);
       return;
     }
     case 'watch-demo':showModal('Explore MenteeLog','<p>Follow the OJT journey through three connected portals.</p><ol><li>Student: find a placement, submit attendance, and view feedback.</li><li>Supervisor: review applications, attendance, and appraisals.</li><li>Coordinator: manage placements, compliance, and user governance.</li></ol><p>This is an interactive frontend preview. No video was supplied.</p><a class="btn full" href="#/login">Open Authentication Hub</a>');return;
