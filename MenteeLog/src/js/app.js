@@ -1543,15 +1543,28 @@ function evaluate(id){
         <p style="margin:0;font-size:14px;line-height:1.6;color:var(--ink);">${e(a.comments)}</p>
       </div>
       <div style="padding:14px;background:#fff;border:1px solid var(--line);border-radius:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-        <div>
-          <span style="display:block;font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;">Authorized Evaluator</span>
-          <strong style="color:var(--ink);font-size:14px;">${e(a.signature||u.name)}</strong>
-          <span style="display:block;font-size:12px;color:var(--muted);">${e(u.company||'Industry Partner')} · Verified Signature</span>
-        </div>
-        <div style="text-align:right;">
-          ${a.signatureImage?`<img src="${a.signatureImage}" alt="Supervisor Digital Signature" style="max-height:55px;display:block;margin-left:auto;">`:`<div class="eval-cursive-font" style="font-size:26px;">${e(a.signature)}</div>`}
-          <span style="font-size:10px;color:#059669;font-weight:600;">🔒 Certified Digital Signature</span>
-        </div>
+        ${(() => {
+          const isKenzo = id === 's1' || id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || (s?.email && s.email.toLowerCase() === 'kenzosomes@gmail.com');
+          const rawSig = String(a.signature || u.name || '');
+          const [cleanSigName, inlineSigImg] = rawSig.includes('|||') ? rawSig.split('|||') : [rawSig, ''];
+          let sigImg = a.signatureImage || inlineSigImg || '';
+          if (!sigImg) {
+            try {
+              sigImg = localStorage.getItem('menteelog.appraisal_sig.' + id) || (isKenzo ? localStorage.getItem('menteelog.appraisal_sig.kenzo') : '') || '';
+            } catch(e) {}
+          }
+          return `
+            <div>
+              <span style="display:block;font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;">Authorized Evaluator</span>
+              <strong style="color:var(--ink);font-size:14px;">${e(cleanSigName)}</strong>
+              <span style="display:block;font-size:12px;color:var(--muted);">${e(u.company||'Industry Partner')} · Verified Signature</span>
+            </div>
+            <div style="text-align:right;">
+              ${sigImg?`<img src="${sigImg}" alt="Supervisor Digital Signature" style="max-height:55px;display:block;margin-left:auto;margin-bottom:4px;">`:`<div class="eval-cursive-font" style="font-size:26px;">${e(cleanSigName)}</div>`}
+              <span style="font-size:10px;color:#059669;font-weight:600;">🔒 Certified Digital Signature</span>
+            </div>
+          `;
+        })()}
       </div>
       <div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);display:flex;justify-content:flex-end;">
         <button type="button" class="btn secondary small" data-action="ref-reset-appraisal" data-id="${id}" style="color:#b91c1c;border-color:#fca5a5;background:#fff;display:inline-flex;align-items:center;gap:6px;font-weight:600;padding:8px 14px;cursor:pointer;">
@@ -1613,7 +1626,16 @@ function evaluate(id){
     const avgScore = numRatings.length > 0 ? Number((numRatings.reduce((x, y) => x + y, 0) / numRatings.length).toFixed(1)) : 5.0;
 
     if (!data.signature || !data.signature.trim()) throw new Error('Please provide your signatory name.');
-    const sigImage = data.signatureImage || '';
+    const sigImage = data.signatureImage || document.getElementById('eval-sig-image-data')?.value || '';
+    const cleanSigName = data.signature.trim();
+    try {
+      if (sigImage) {
+        localStorage.setItem('menteelog.appraisal_sig.' + id, sigImage);
+        if (id === 's1' || id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || (s?.email && s.email.toLowerCase() === 'kenzosomes@gmail.com')) {
+          localStorage.setItem('menteelog.appraisal_sig.kenzo', sigImage);
+        }
+      }
+    } catch(e) {}
     const appraisalRecord = {
       id: crypto.randomUUID(),
       applicationId: application.id,
@@ -1622,27 +1644,41 @@ function evaluate(id){
       ratings,
       score: avgScore,
       comments: data.comments,
-      signature: data.signature.trim(),
+      signature: cleanSigName,
       signatureImage: sigImage,
       date: today()
     };
     try {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       const validAppId = uuidRegex.test(application.id) ? application.id : null;
-      const { error, data: inserted } = await supabase.from('appraisals').insert({
+      const remoteSigPayload = sigImage ? `${cleanSigName}|||${sigImage}` : cleanSigName;
+      let { error, data: inserted } = await supabase.from('appraisals').insert({
         application_id: validAppId,
         student_id: id,
         supervisor_id: u.id,
         ratings,
         score: avgScore,
         comments: data.comments,
-        signature: data.signature.trim()
+        signature: remoteSigPayload
       }).select();
+      if (error && sigImage) {
+        const retry = await supabase.from('appraisals').insert({
+          application_id: validAppId,
+          student_id: id,
+          supervisor_id: u.id,
+          ratings,
+          score: avgScore,
+          comments: data.comments,
+          signature: cleanSigName
+        }).select();
+        error = retry.error;
+        inserted = retry.data;
+      }
       if (!error && inserted && inserted.length > 0) appraisalRecord.id = inserted[0].id;
     } catch(err) {
       console.warn('Supabase appraisal sync (stored locally):', err);
     }
-    const existingIdx = db.appraisals.findIndex(a => a.studentId === id);
+    const existingIdx = db.appraisals.findIndex(a => a.studentId === id || ((id === 's1' || id === '22227dcf-933f-40a9-9340-f66cb9020e5c') && (a.studentId === 's1' || a.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')));
     if (existingIdx !== -1) db.appraisals[existingIdx] = appraisalRecord;
     else db.appraisals.push(appraisalRecord);
     save();

@@ -150,17 +150,37 @@ export async function syncRemote(supabase, db) {
 
     const newAppraisals = (appraisalsRes.data || [])
       .filter(a => !String(a.comments || '').includes('m y jyyyy'))
-      .map(a => ({
-        id: a.id,
-        applicationId: a.application_id,
-        studentId: a.student_id,
-        supervisorId: a.supervisor_id,
-        ratings: a.ratings || [],
-        score: a.score,
-        comments: a.comments,
-        signature: a.signature,
-        date: a.date
-      }));
+      .map(a => {
+        const rawSig = String(a.signature || '');
+        const [sigName, inlineImg] = rawSig.includes('|||') ? rawSig.split('|||') : [rawSig, ''];
+        const isKenzoId = a.student_id === 's1' || a.student_id === '22227dcf-933f-40a9-9340-f66cb9020e5c';
+        const existingLocal = (db.appraisals || []).find(loc => loc.id === a.id || loc.studentId === a.student_id || (isKenzoId && (loc.studentId === 's1' || loc.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')));
+        let savedSigImg = inlineImg || existingLocal?.signatureImage || '';
+        if (!savedSigImg) {
+          try {
+            savedSigImg = localStorage.getItem('menteelog.appraisal_sig.' + a.student_id) || (isKenzoId ? localStorage.getItem('menteelog.appraisal_sig.kenzo') : '') || '';
+          } catch(e) {}
+        }
+        return {
+          id: a.id,
+          applicationId: a.application_id,
+          studentId: a.student_id,
+          supervisorId: a.supervisor_id,
+          ratings: a.ratings || [],
+          score: a.score,
+          comments: a.comments,
+          signature: sigName,
+          signatureImage: savedSigImg,
+          date: a.date
+        };
+      });
+    for (const localApp of (db.appraisals || [])) {
+      const isKenzoLocal = localApp.studentId === 's1' || localApp.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c';
+      const hasRemote = newAppraisals.some(na => na.id === localApp.id || na.studentId === localApp.studentId || (isKenzoLocal && (na.studentId === 's1' || na.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')));
+      if (!hasRemote) {
+        newAppraisals.push(localApp);
+      }
+    }
 
     const newDocs = (docsRes.data || []).map(d => ({
       id: d.id,

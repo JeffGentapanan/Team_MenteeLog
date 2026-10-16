@@ -123,20 +123,31 @@ export function createPortalViews(c){
         </div>
       </div>
       <h2 class="ref-rubric-heading">Performance Appraisal Rubric</h2>` +
-      (a ? panel('', legendHtml + tableHtml) + panel('Additional Comments & Official Endorsement', `
+      (a ? (() => {
+        const isKenzo = s.id === 's1' || s.id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || (s.email && s.email.toLowerCase() === 'kenzosomes@gmail.com');
+        const rawSig = String(a.signature || '');
+        const [cleanSigName, inlineSigImg] = rawSig.includes('|||') ? rawSig.split('|||') : [rawSig, ''];
+        let sigImg = a.signatureImage || inlineSigImg || '';
+        if (!sigImg) {
+          try {
+            sigImg = localStorage.getItem('menteelog.appraisal_sig.' + s.id) || (isKenzo ? localStorage.getItem('menteelog.appraisal_sig.kenzo') : '') || '';
+          } catch(e) {}
+        }
+        return panel('', legendHtml + tableHtml) + panel('Additional Comments & Official Endorsement', `
         <blockquote>${e(a.comments)}</blockquote>
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);">
           <div>
             <small style="display:block;color:var(--muted);font-size:12px;">Evaluated & Signed by</small>
-            <strong style="color:var(--ink);">${e(c.student(a.supervisorId)?.name||a.signature||'Supervisor')}</strong>
+            <strong style="color:var(--ink);">${e(c.student(a.supervisorId)?.name||cleanSigName||'Supervisor')}</strong>
             <span style="display:block;font-size:11px;color:var(--muted);">${e(s.company||'Industry Partner')} · ${date(a.date||today())}</span>
           </div>
           <div style="text-align:right;">
-            ${a.signatureImage?`<img src="${a.signatureImage}" alt="Supervisor Digital Signature" style="max-height:50px;display:block;margin-left:auto;">`:`<div style="font-family:'Brush Script MT','Caveat',cursive,sans-serif;font-size:22px;color:var(--burgundy);">${e(a.signature)}</div>`}
+            ${sigImg?`<img src="${sigImg}" alt="Supervisor Digital Signature" style="max-height:55px;display:block;margin-left:auto;margin-bottom:4px;">`:`<div style="font-family:'Brush Script MT','Caveat',cursive,sans-serif;font-size:22px;color:var(--burgundy);">${e(cleanSigName)}</div>`}
             <span class="badge" style="background:#e6f4ea;color:#137333;border:1px solid #ceead6;font-size:10px;padding:2px 8px;border-radius:4px;">✓ Authenticated Digital Signature</span>
           </div>
         </div>
-      `) : panel('', empty('Your appraisal is not available yet', 'Your supervisor\'s submitted rubric and comments will appear here.'))) +
+      `);
+      })() : panel('', empty('Your appraisal is not available yet', 'Your supervisor\'s submitted rubric and comments will appear here.'))) +
     '</div>';
   }
 
@@ -310,7 +321,7 @@ export function createPortalViews(c){
     return intro+panel('',tabs(co?[['','All Cases'],['red','Red Queue'],['student','Student Claims'],['supervisor','Disciplinary Logs'],['archive','Archive']]:[['','All Cases'],['review','Under Investigation'],['resolved','Resolved']])+search('Search case, student or category')+(list.length?table(['Report ID','Source','Student','HTE Partner','Category','Date Reported','Severity','Status','Action'],list.map(i=>`<tr><td>${e(i.id)}</td><td>${badge(i.category==='Student_Claim'?'Student Claim':'Supervisor Log')}</td><td>${e(c.student(i.studentId)?.name)}</td><td>${e(c.student(i.studentId)?.company||'—')}</td><td>${e(i.title)}</td><td>${date(i.date)}</td><td>${badge(i.priority)}</td><td>${badge(i.status)}</td><td>${nav('Review','incidents','detail',i.id,'secondary small')}</td></tr>`)):empty('No cases in this view'))+`<div class="table-footer">Showing ${list.length} logged cases</div>`);
   }
 
-  function appraisals(){const {sub,id}=r();if(u().role==='Student')return '<h1 class="sr-only">Performance Appraisal</h1><p class="ref-evaluation-period">Evaluation Period: Final Assessment</p>'+appraisalResult(u(),db().appraisals.find(a=>a.studentId===u().id));
+  function appraisals(){const {sub,id}=r();if(u().role==='Student'){const stu=u(),isKenzo=stu.id==='s1'||stu.id==='22227dcf-933f-40a9-9340-f66cb9020e5c'||(stu.email&&stu.email.toLowerCase()==='kenzosomes@gmail.com');const stuAppraisal=db().appraisals.find(a=>a.studentId===stu.id||(isKenzo&&(a.studentId==='s1'||a.studentId==='22227dcf-933f-40a9-9340-f66cb9020e5c')));return '<h1 class="sr-only">Performance Appraisal</h1><p class="ref-evaluation-period">Evaluation Period: Final Assessment</p>'+appraisalResult(stu,stuAppraisal);}
     if(sub==='evaluate'){
       const s=student(id);
       const a=db().appraisals.find(a=>a.studentId===id || ((id==='s1'||id==='22227dcf-933f-40a9-9340-f66cb9020e5c'||s?.email==='kenzosomes@gmail.com')&&(a.studentId==='s1'||a.studentId==='22227dcf-933f-40a9-9340-f66cb9020e5c')));
@@ -323,7 +334,7 @@ export function createPortalViews(c){
         </div>` : '') +
         legacyForm(()=>c.legacy.evaluate(id),()=>finish('Evaluation submitted successfully!','appraisals','submitted',id));
     }
-    if(sub==='submitted'){const s=student(id),a=db().appraisals.find(a=>a.studentId===id);return `<div class="ref-success"><span class="ref-success-icon">${icon('check')}</span><h1>Evaluation Submitted Successfully!</h1><p>Appraisal rubric has been processed and archived.</p>${panel('Evaluation Summary',`<p>Student: ${e(s.name)}</p><p>Evaluation type: Final Evaluation</p><h2>${a?.score.toFixed(1)||'—'} / 5.0</h2><p style="margin-top:8px;">${e(a?.comments||'')}</p><div style="margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;"><div><span style="font-size:11px;color:var(--muted);display:block;">Digitally Signed by</span><strong>${e(a?.signature||u().name)}</strong></div>${a?.signatureImage?`<img src="${a.signatureImage}" alt="Signature" style="max-height:45px;">`:''}</div>`)}${nav('Back to Appraisals','appraisals','','','')}</div>`;}
+    if(sub==='submitted'){const s=student(id),isKenzo=id==='s1'||id==='22227dcf-933f-40a9-9340-f66cb9020e5c'||s?.email==='kenzosomes@gmail.com',a=db().appraisals.find(a=>a.studentId===id||(isKenzo&&(a.studentId==='s1'||a.studentId==='22227dcf-933f-40a9-9340-f66cb9020e5c')));const rawSig=String(a?.signature||u().name||''),[cleanSigName,inlineSigImg]=rawSig.includes('|||')?rawSig.split('|||'):[rawSig,''];let sigImg=a?.signatureImage||inlineSigImg||'';if(!sigImg){try{sigImg=localStorage.getItem('menteelog.appraisal_sig.'+id)||(isKenzo?localStorage.getItem('menteelog.appraisal_sig.kenzo'):'')||'';}catch(e){}}return `<div class="ref-success"><span class="ref-success-icon">${icon('check')}</span><h1>Evaluation Submitted Successfully!</h1><p>Appraisal rubric has been processed and archived.</p>${panel('Evaluation Summary',`<p>Student: ${e(s.name)}</p><p>Evaluation type: Final Evaluation</p><h2>${a?.score.toFixed(1)||'—'} / 5.0</h2><p style="margin-top:8px;">${e(a?.comments||'')}</p><div style="margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;"><div><span style="font-size:11px;color:var(--muted);display:block;">Digitally Signed by</span><strong>${e(cleanSigName)}</strong></div>${sigImg?`<img src="${sigImg}" alt="Signature" style="max-height:50px;">`:''}</div>`)}${nav('Back to Appraisals','appraisals','','','')}</div>`;}
     const list=visibleStudents(db(),u()).filter(s=>match(s.name,s.course));return heading('Performance Appraisal','Evaluate student performance, record scores, and sign off evaluations.')+panel('',search('Search by student name or cohort')+(list.length?table(['Intern Name','Department','Evaluation Period','Score / Rating','Status','Action'],list.map(s=>{const a=db().appraisals.find(a=>a.studentId===s.id || ((s.id==='s1'||s.id==='22227dcf-933f-40a9-9340-f66cb9020e5c'||s.email==='kenzosomes@gmail.com')&&(a.studentId==='s1'||a.studentId==='22227dcf-933f-40a9-9340-f66cb9020e5c')));return `<tr><td>${person(s)}</td><td>${e(s.company)}</td><td>Final Evaluation</td><td>${a?a.score.toFixed(1)+' / 5.0':'— Not evaluated'}</td><td>${badge(a?'Completed':'Pending')}</td><td><div class="row" style="gap:4px;">${nav(a?'Review':'Evaluate','appraisals','evaluate',s.id,'small')}${a?b('Reset','ref-reset-appraisal',s.id,'secondary small'):''}</div></td></tr>`;})):empty('No interns found','No student records found to evaluate.')));
   }
 
@@ -988,6 +999,14 @@ finish('Compliance review saved; supervisor sign-off is required.','dtr','flagge
         </div>
       `, async () => {
         const isKenzo = id === 's1' || id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || (s?.email && s.email.toLowerCase() === 'kenzosomes@gmail.com');
+        try {
+          localStorage.removeItem('menteelog.appraisal_sig.' + id);
+          if (isKenzo) {
+            localStorage.removeItem('menteelog.appraisal_sig.kenzo');
+            localStorage.removeItem('menteelog.appraisal_sig.s1');
+            localStorage.removeItem('menteelog.appraisal_sig.22227dcf-933f-40a9-9340-f66cb9020e5c');
+          }
+        } catch(e) {}
         db().appraisals = (db().appraisals || []).filter(a => {
           if (a.studentId === id) return false;
           if (isKenzo && (a.studentId === 's1' || a.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')) return false;
