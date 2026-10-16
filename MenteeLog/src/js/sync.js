@@ -95,6 +95,11 @@ export async function syncRemote(supabase, db) {
       if (taskText && (taskText.includes('For Industry Supervisors, daily timekeeping is automated') || taskText.includes('In the Student Portal, BSIT interns discover'))) {
         taskText = 'Implemented responsive UI components for the client portal, integrated RESTful API endpoints with role-based session validation, and executed unit tests with the QA engineering team.';
       }
+      const inlineCoord = (l.remarks && l.remarks.includes(' | [Coordinator Note: ')) ? l.remarks.split(' | [Coordinator Note: ')[1].replace(/\]$/, '') : '';
+      let savedCoord = l.coordinator_remarks || inlineCoord || '';
+      if (!savedCoord) {
+        try { savedCoord = localStorage.getItem('menteelog.coord_remarks.' + l.id) || ''; } catch(e) {}
+      }
       return {
         id: l.id,
         studentId: l.student_id,
@@ -110,7 +115,7 @@ export async function syncRemote(supabase, db) {
         remarks: (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0 && (!l.remarks || !l.remarks.includes('Outside geofence'))) ? (l.remarks || 'Verified on-site within HTE premises') : l.remarks,
         signature: l.signature,
         justification: l.justification,
-        coordinatorRemarks: l.coordinator_remarks
+        coordinatorRemarks: savedCoord
       };
     });
 
