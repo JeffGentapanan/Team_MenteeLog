@@ -62,13 +62,13 @@ dialog .modal-head{background:var(--burgundy);color:var(--cream)}dialog .modal-h
 @media(max-width:650px){
   .reference-header{padding:10px 16px;gap:10px}.reference-header .logo{width:120px}.reference-header>.brand-link{padding:0}.reference-header nav{padding:8px 0 2px;flex-wrap:wrap;row-gap:10px}
   .sidebar>.brand-link{max-width:180px}.topbar>.row{min-width:0}.breadcrumb>span:first-child{display:none}.breadcrumb>span:nth-child(2){display:none}.top-actions{flex-shrink:0}
-  .application-card>.row{align-items:flex-start;flex-wrap:wrap}.application-path{gap:4px;grid-template-columns:1fr 12px 1fr 12px 1fr 12px 1fr}.application-step{font-size:10px}.application-line{margin-top:9px}
+  .application-card>.row{align-items:flex-start;flex-wrap:wrap}.application-path{gap:4px;grid-template-columns:1fr 14px 1fr 14px 1fr 14px 1fr}.application-step{font-size:10px}.application-line{margin-top:8px}
   .page-heading{flex-wrap:wrap}.page-heading>.row{flex-wrap:wrap}.profile-popover{right:0;max-width:calc(100vw - 32px)}
 }
 @media print{.ref-back,.ref-tabs,.ref-banner,.form-actions{display:none!important}.ref-paper{border:0;box-shadow:none;padding:0;max-width:none}.reference-portal .card{break-inside:avoid}}
 
 .application-card[data-status="Under_Review"]>.row>.badge{background:#abc9a1;color:#203d24;padding:6px 12px}
-@media(max-width:650px){.application-step>span{white-space:nowrap}.application-path{column-gap:3px}.application-step{font-size:10px}}
+@media(max-width:650px){.application-step>span{white-space:normal;line-height:1.25;word-break:break-word}.application-path{column-gap:4px}.application-step{font-size:10px}}
 
 .activity-item + .btn, .activity-item + a.btn, .activity-item ~ .btn, .activity-item ~ a.btn, .card > .btn:last-child, .card > a.btn:last-child { margin-top: 18px; display: inline-flex; }
 .card > .row:first-child .btn, .card > .btn:first-child, .card > a.btn:first-child { margin-top: 0; }

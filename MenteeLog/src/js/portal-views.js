@@ -17,7 +17,7 @@ export function createPortalViews(c){
   const search=(placeholder='Search name or record…')=>`<form id="search-form" class="toolbar"><input name="search" type="search" aria-label="${placeholder}" placeholder="${placeholder}" value="${e(c.view.search)}"><button class="btn secondary" type="submit">Search</button></form>`;
   const match=(...values)=>values.join(' ').toLowerCase().includes(c.view.search.toLowerCase());
   const tabs=(items,page=r().page,selected=r().sub)=>`<nav class="ref-tabs" aria-label="Page views">${items.map(([id,label])=>`<a class="${selected===id?'active':''}" href="${href(page,id)}" ${selected===id?'aria-current="page"':''}>${label}</a>`).join('')}</nav>`;
-  const filter=(items)=>`<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); width: 100%; gap: 24px; margin-bottom: 16px;">${items.map(([value,label])=>{ const active = c.view.filter===value; return `<button data-action="filter" data-id="${e(value)}" style="background: ${active ? 'var(--burgundy)' : 'var(--surface)'}; color: ${active ? 'var(--cream)' : 'var(--ink)'}; border: 1px solid ${active ? 'transparent' : 'var(--line)'}; border-radius: 12px; padding: 16px; font-weight: 600; font-size: 14px; text-align: center; cursor: pointer; transition: all 0.2s; box-shadow: ${active ? '0 4px 12px rgba(88,17,26,0.15)' : 'none'};"><span style="display:block;">${e(label)}</span></button>`; }).join('')}</div>`;
+  const filter=(items)=>`<div class="ref-filter-bar">${items.map(([value,label])=>{ const active = c.view.filter===value; return `<button type="button" data-action="filter" data-id="${e(value)}" class="ref-filter-btn ${active ? 'active' : ''}" aria-pressed="${active}"><span>${e(label)}</span></button>`; }).join('')}</div>`;
   const finish=(message,page=r().page,sub='',id='')=>{c.audit(message);c.save();notice=message;noticePath=href(page,sub,id);location.hash=noticePath;c.render();};
   function form(body,handler,label='Save changes',cancel=nav('Cancel',r().page)){
     formHandler=handler;formOwner=u().id;formRoute=location.hash;
@@ -1035,15 +1035,15 @@ finish('Compliance review saved and forwarded to the Supervisor Exception Queue.
     <div style="text-align: center; padding: 12px 0; position: relative;">
 
       <span class="eyebrow" style="display:inline-block; margin-bottom:16px;">TODAY · ${date(today())}</span>
-      <div class="timer" id="shift-timer" style="font-size: 56px; font-weight: 800; color: ${isBreak ? '#854d0e' : 'var(--ink)'}; line-height: 1; margin-bottom: 8px; font-variant-numeric: tabular-nums;">
+      <div class="timer" id="shift-timer" style="font-size: clamp(34px, 7.5vw, 52px); font-weight: 800; color: ${isBreak ? '#854d0e' : 'var(--ink)'}; line-height: 1; margin-bottom: 8px; font-variant-numeric: tabular-nums;">
         ${shift ? (netElapsed ? netElapsed(shift) : '00:00:00') : '00:00:00'}
       </div>
       <p class="muted" style="margin-bottom: 24px;">${shift?.clockOut?'Clocked out — daily log ready to submit':shift?'You are currently clocked in':'Not clocked in'}</p>
       
       
-      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center; box-shadow: var(--shadow-sm); margin-bottom: 24px;">
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; box-shadow: var(--shadow-sm); margin-bottom: 24px;">
           <h3 style="margin-top: 0; font-size: 16px;">Attendance Timekeeping & Shift Controls</h3>
-          <p class="muted small" style="margin-bottom:20px;">Log your on-site attendance, take lunch breaks, and clock out to submit your daily accomplishment summary.</p>
+          <p class="muted small" style="margin-bottom:18px;">Log your on-site attendance, take lunch breaks, and clock out to submit your daily accomplishment summary.</p>
           ${awaiting ? `
             <div style="background:#fefce8; color:#854d0e; padding:16px; border-radius:8px; margin-bottom:16px; border:1px solid #fde047; text-align:center;">
               <strong style="display:block; font-size:14px; margin-bottom:4px; color:#713f12;">Shift Clocked Out</strong>
@@ -1052,23 +1052,23 @@ finish('Compliance review saved and forwarded to the Supervisor Exception Queue.
             ${b('Submit Daily Summary Logbook', 'ref-submit-log', '', 'primary full', 'file')}
           ` : (shift ? `
             <div style="display:flex; flex-direction:column; gap:12px;">
-              <div style="display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; margin:0 auto; ${isBreak ? 'background:#fefce8; color:#854d0e; border:1px solid #fef08a;' : 'background:#dcfce7; color:#166534; border:1px solid #bbf7d0;'}">
+              <div style="display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:6px 14px; border-radius:20px; font-size:12.5px; font-weight:600; margin:0 auto; ${isBreak ? 'background:#fefce8; color:#854d0e; border:1px solid #fef08a;' : 'background:#dcfce7; color:#166534; border:1px solid #bbf7d0;'}">
                 <span style="width:8px; height:8px; border-radius:50%; ${isBreak ? 'background:#854d0e;' : 'background:#16a34a; animation:tk-pulse 2s infinite;'}"></span>
                 ${isBreak ? 'On Lunch / Break (Work Timer Paused)' : 'Active On-Site (Shift Timer Running)'}
               </div>
-              <div style="display:flex; gap:12px; margin-top:8px;">
-                <button class="btn secondary" data-action="student-toggle-break" style="flex:1; padding:12px; font-weight:600;">
+              <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:6px;">
+                <button class="btn secondary" data-action="student-toggle-break" style="flex:1 1 140px; padding:9px 14px; font-size:13px; font-weight:600;">
                   ${isBreak ? '☕ End Break & Resume' : '☕ Start Lunch / Break'}
                 </button>
-                <button class="btn primary" data-action="student-clock-out" style="flex:1; padding:12px; font-weight:700; background:#991b1b; border-color:#991b1b;">
+                <button class="btn primary" data-action="student-clock-out" style="flex:1 1 120px; padding:9px 14px; font-size:13px; font-weight:700; background:#991b1b; border-color:#991b1b;">
                   Clock Out
                 </button>
               </div>
               <p class="small muted" style="margin:4px 0 0;">Clocked in at ${time(shift.clockIn)}${totalBreakMinutes ? ' · ' + totalBreakMinutes + 'm break recorded' : (totalBreakMs >= 1000 ? ' · ' + Math.round(totalBreakMs/1000) + 's break recorded' : '')}${isBreak ? ' · Break in progress' : ''}</p>
             </div>
           ` : `
-            <div style="display:flex; flex-direction:column; gap:12px;">
-              <button class="btn primary full" data-action="student-clock-in" style="padding:14px; font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <button class="btn primary full" data-action="student-clock-in" style="padding:10px 18px; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
                 ${icon('clock')} Clock In
               </button>
               <p class="small muted" style="margin:0;">Click to record your time-in and start today's shift tracking.</p>
