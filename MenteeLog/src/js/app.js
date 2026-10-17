@@ -222,6 +222,13 @@ function connectCoreUsers(dataDb) {
   // Clean active shifts: remove any dummy student active shifts
   dataDb.activeShifts = (dataDb.activeShifts || []).filter(s => !String(s.studentId).startsWith('s_dummy'));
 
+  // Clean legacy hardcoded September 24/25 DTR notifications that have no matching DTR record
+  dataDb.notifications = (dataDb.notifications || []).filter(n => {
+    if (['n1', 'n2', 'n4', 'n5'].includes(n.id)) return false;
+    if (String(n.message || '').includes('September 24') || String(n.message || '').includes('September 25')) return false;
+    return true;
+  });
+
   return dataDb;
 }
 
