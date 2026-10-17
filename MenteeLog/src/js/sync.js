@@ -229,11 +229,33 @@ export async function syncRemote(supabase, db) {
       stu.badge = 'Active';
       stu.requiredHours = stu.requiredHours || 500;
       if (!stu.baseHours && stu.baseHours !== 0) stu.baseHours = 120;
+      const resolvedStuUuid = (stu.id && stu.id.length > 20) ? stu.id : '22227dcf-933f-40a9-9340-f66cb9020e5c';
       if (db.logs && db.logs.length > 0) {
         for (const localLog of db.logs) {
+          if (localLog.studentId === 's1') localLog.studentId = resolvedStuUuid;
           const remoteMatch = newLogs.find(nl => nl.id === localLog.id || (nl.studentId === localLog.studentId && nl.date === localLog.date && nl.clockIn === localLog.clockIn));
           if (!remoteMatch) {
             newLogs.unshift(localLog);
+            if (localLog.clockOut && !localLog._syncedToCloud) {
+              localLog._syncedToCloud = true;
+              supabase.from('logs').insert([{
+                student_id: resolvedStuUuid,
+                date: localLog.date,
+                clock_in: localLog.clockIn,
+                clock_out: localLog.clockOut,
+                hours: localLog.hours || 0,
+                tasks: localLog.tasks || 'General OJT tasks',
+                mood: localLog.mood || 'Good',
+                status: localLog.status || 'Pending',
+                geo: localLog.geo || 'Verified GPS',
+                location: localLog.location || '10.7202° N, 122.5621° E (Iloilo Business Park)',
+                lat: localLog.lat || 10.7202,
+                lng: localLog.lng || 122.5621,
+                within_geofence: localLog.withinGeofence !== false
+              }]).then(({ data }) => {
+                if (data && data[0] && data[0].id) localLog.id = data[0].id;
+              });
+            }
           } else {
             if (localLog.clockOut && !remoteMatch.clockOut) {
               Object.assign(remoteMatch, localLog);

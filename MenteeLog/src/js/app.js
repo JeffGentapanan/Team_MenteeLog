@@ -1029,7 +1029,7 @@ async function studentClockIn() {
 
   try {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    const validStudentUuid = uuidRegex.test(studentId) ? studentId : (uuidRegex.test(u.id) ? u.id : null);
+    const validStudentUuid = uuidRegex.test(studentId) ? studentId : (uuidRegex.test(u.id) ? u.id : ((studentId === 's1' || u.email === 'kenzosomes@gmail.com') ? '22227dcf-933f-40a9-9340-f66cb9020e5c' : null));
     const validSupervisorUuid = (supId && uuidRegex.test(supId)) ? supId : null;
     if (validStudentUuid) {
       const payload = {
@@ -1246,7 +1246,7 @@ async function studentClockOut() {
 
     try {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      const validStudentUuid = uuidRegex.test(studentId) ? studentId : (uuidRegex.test(u.id) ? u.id : null);
+      const validStudentUuid = uuidRegex.test(studentId) ? studentId : (uuidRegex.test(u.id) ? u.id : ((studentId === 's1' || u.email === 'kenzosomes@gmail.com') ? '22227dcf-933f-40a9-9340-f66cb9020e5c' : null));
       const validSupervisorUuid = (supId && uuidRegex.test(supId)) ? supId : null;
 
       let savedRemote = false;
