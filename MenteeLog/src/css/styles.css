@@ -652,3 +652,31 @@ dialog .tabs button:hover,
     }
 }
 
+/* Ensure #toast always renders in front of open <dialog> modals in the browser Top Layer */
+.toast,
+.toast[popover] {
+    position: fixed !important;
+    inset: auto auto 25px 50% !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: 25px !important;
+    left: 50% !important;
+    margin: 0 !important;
+    transform: translateX(-50%) !important;
+    background: var(--burgundy) !important;
+    color: var(--cream) !important;
+    border: 1px solid rgba(255, 255, 255, 0.24) !important;
+    padding: 13px 22px !important;
+    border-radius: 9px !important;
+    box-shadow: 0 12px 32px rgba(24, 5, 11, 0.45) !important;
+    z-index: 2147483647 !important;
+    max-width: calc(100vw - 32px) !important;
+    width: max-content !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    pointer-events: none;
+}
+
+.toast[hidden] {
+    display: none !important;
+}

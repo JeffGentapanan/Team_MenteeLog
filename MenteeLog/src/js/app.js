@@ -462,7 +462,22 @@ function isUserNotif(n,u){
   return false;
 }
 function audit(action){db.audit.unshift({id:crypto.randomUUID(),actor:currentUser()?.name||'Demo',action,date:new Date().toISOString()});db.audit=db.audit.slice(0,150);}
-function toast(message){const el=$('#toast');el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,5000);}
+function toast(message){
+  const el=$('#toast');
+  if(!el)return;
+  el.textContent=message;
+  el.hidden=false;
+  try {
+    if (!el.hasAttribute('popover')) el.setAttribute('popover', 'manual');
+    if (typeof el.hidePopover === 'function') { try { el.hidePopover(); } catch(e) {} }
+    if (typeof el.showPopover === 'function') { try { el.showPopover(); } catch(e) {} }
+  } catch(e) {}
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{
+    el.hidden=true;
+    try { if (typeof el.hidePopover === 'function') el.hidePopover(); } catch(e) {}
+  },5000);
+}
 const initials=name=>String(name||'ML').split(' ').filter(Boolean).map(n=>n[0]).slice(0,2).join('').toUpperCase();
 const student=id=>{
   if (!id) return null;
@@ -504,6 +519,10 @@ function showModal(title,body,onSubmit,label='Save changes'){
     for(const label of modal.querySelectorAll('label'))if(label.htmlFor===previous)label.htmlFor=control.id;
   }
   modal.showModal();
+  const toastEl=$('#toast');
+  if(toastEl&&!toastEl.hidden&&typeof toastEl.showPopover==='function'){
+    try{toastEl.hidePopover();toastEl.showPopover();}catch(e){}
+  }
   setTimeout(() => { if (typeof window.initEvalSignaturePad === 'function') window.initEvalSignaturePad(); }, 60);
 }
 modal.addEventListener('close',()=>{modalSubmit=null;if(modalOpener?.isConnected)modalOpener.focus();});
