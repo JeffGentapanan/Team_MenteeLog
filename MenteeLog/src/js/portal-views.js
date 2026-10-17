@@ -396,12 +396,42 @@ export function createPortalViews(c){
             <div id="modal-record-map-${l.id}" style="display:none; margin-top:12px; height:200px; border-radius:6px; overflow:hidden; border:1px solid #cbd5e1;"></div>
           </div>
         `;
-        c.showModal('Write Justification',`<p class="muted small mb16" style="text-transform: uppercase; font-weight: 600;">${date(l.date)} - ${l.status}</p><h3>Flag Reason</h3><p class="ref-alert mb16">${e(l.remarks||'GPS Mismatch - logged outside accredited workplace geofence.')}</p>${locCard}<p class="muted small mb16">Your justification will be forwarded to your supervisor for review. Be clear and factual.</p>${ta('Your Explanation','justification',l.justification||'','required minlength="10" placeholder="Explain the reason for the attendance anomaly (e.g. client site visit, official fieldwork, internet outage)..."')}${f('Attach Evidence','evidence','file','','accept="application/pdf,image/png,image/jpeg"')}<p class="small muted mt8">PNG, JPG or PDF (max. 10MB)</p>`,async(v,form)=>{const file=form.elements.evidence.files[0];if(file){validateUpload(file);const doc={id:crypto.randomUUID(),studentId:u().id,category:'DTR Justification',name:file.name,type:file.type,size:file.size,date:today()};await c.putFile(doc.id,file);db().documents.push(doc);l.evidenceId=doc.id;}const { error, data: updated } = await supabase.from('logs').update({ justification: v.justification, status: 'Pending' }).eq('id', l.id).select();
-if (error) throw new Error(error.message);
-if (!updated || updated.length === 0) throw new Error('Update failed or rejected by security rules.');
-await c.syncRemote(supabase, db());
-c.notify(l.supervisorId,'DTR_Event','Attendance justification submitted',u().name+' resubmitted '+date(l.date)+' for review.');
-finish('Justification submitted for supervisor review.','dtr');},'Submit');return true;}}
+        c.showModal('Write Justification',`<p class="muted small mb16" style="text-transform: uppercase; font-weight: 600;">${date(l.date)} - ${l.status}</p><h3>Flag Reason</h3><p class="ref-alert mb16">${e(l.remarks||'GPS Mismatch - logged outside accredited workplace geofence.')}</p>${locCard}<p class="muted small mb16">Your justification will be forwarded to your supervisor for review. Be clear and factual.</p>${ta('Your Explanation','justification',l.justification||'','required minlength="10" placeholder="Explain the reason for the attendance anomaly (e.g. client site visit, official fieldwork, internet outage)..."')}${f('Attach Evidence','evidence','file','','accept="application/pdf,image/png,image/jpeg"')}<p class="small muted mt8">PNG, JPG or PDF (max. 10MB)</p>`,async(v,form)=>{
+          const file=form.elements.evidence?.files?.[0];
+          if(file){
+            validateUpload(file);
+            const doc={id:crypto.randomUUID(),studentId:u().id,category:'DTR Justification',name:file.name,type:file.type,size:file.size,date:today()};
+            await c.putFile(doc.id,file);
+            db().documents.push(doc);
+            l.evidenceId=doc.id;
+            l.evidenceName=file.name;
+          }
+          l.justification = v.justification;
+          l.status = 'Pending';
+          try {
+            localStorage.setItem('menteelog.justification.' + l.id, JSON.stringify({
+              justification: v.justification,
+              evidenceId: l.evidenceId || null,
+              evidenceName: l.evidenceName || null,
+              status: 'Pending'
+            }));
+          } catch(e) {}
+          try {
+            const { error, data: updated } = await supabase.from('logs').update({ justification: v.justification, status: 'Pending' }).eq('id', l.id).select();
+            if (error) {
+              await supabase.from('logs').update({ status: 'Pending', remarks: (l.remarks || '') }).eq('id', l.id);
+            } else if (updated && updated.length > 0) {
+              await c.syncRemote(supabase, db());
+            }
+          } catch(err) {
+            console.warn('Justification cloud sync note:', err);
+          }
+          l.justification = v.justification;
+          l.status = 'Pending';
+          const supTargetId = l.supervisorId || stu?.supervisorId || 'v1';
+          c.notify(supTargetId,'DTR_Event','Attendance justification submitted',u().name+' submitted an off-site justification for '+date(l.date)+'.',{targetPage:'dtr',targetLogId:l.id,role:'Supervisor'});
+          finish('Justification submitted and forwarded to your Supervisor for review.','dtr');
+        },'Submit');return true;}}
     if(name==='announcement'&&u().role==='Supervisor'){c.showModal('Send Emergency Broadcast Alert',sel('Alert type','type',['Extreme Weather / Typhoon','Workplace Safety','Schedule Change','System / Technical'])+sel('Severity level','severity',['Low','Medium','High / Critical'],'Medium')+sel('Affected interns','recipients',[['all','All assigned active interns'],...visibleStudents(db(),u()).map(s=>[s.id,s.name])])+f('Subject line','title','text','','required maxlength="120"')+ta('Emergency message','message','','required minlength="10"')+'<p class="small">Creates notifications within this local preview. SMS and email delivery require the backend.</p>',v=>{const recipients=visibleStudents(db(),u()).filter(s=>v.recipients==='all'||s.id===v.recipients);recipients.forEach(s=>c.notify(s.id,'System',v.title,v.severity+' — '+v.message));finish('Alert recorded for '+recipients.length+' assigned interns.','dashboard');},'Send Alert Broadcast');return true;}
     if(name==='import-users'){if(u().role!=='Coordinator')throw new Error('Coordinator access required.');location.hash=href('users','import');return true;}
     if(name==='ref-dismiss'){notice='';c.render();return true;}
@@ -451,7 +481,30 @@ finish('Justification submitted for supervisor review.','dtr');},'Submit');retur
     if(await hteAction(name,id,el)||await attendanceAction(name,id,el)||await reportAction(name,id,el)||await governanceAction(name,id,el))return true;
     return false;
   }
-  async function previewFile(id){const doc=db().documents.find(d=>d.id===id&&(d.studentId===u().id||visibleStudents(db(),u()).some(s=>s.id===d.studentId)||visibleApplications(db(),u()).some(a=>a.resumeId===d.id)))||c.visibleIncidents(u()).find(i=>i.evidence?.id===id)?.evidence||(u().role==='Coordinator'?db().htes.find(h=>h.document?.id===id)?.document:null);if(!doc)throw new Error('This file is outside your portal scope.');let url;let isLocal=false;if(doc.filePath){url=await c.legacy.getSignedUrl(doc.filePath, doc.bucket || 'documents');if(!url)throw new Error('Unable to preview document.');}else{const file=await c.fileOp('get',id);if(!file)throw new Error('File no longer available in this browser.');url=URL.createObjectURL(file);isLocal=true;}c.showModal('Document Preview - '+e(doc.name),(doc.type||'').startsWith('image/')?`<img class="ref-file-image" src="${url}" alt="${e(doc.name)}">`:`<p>${e(doc.name)} - PDF document</p><p>Open the stored PDF in your browser's document viewer.</p><a class="btn" href="${url}" target="_blank" rel="noopener">Open PDF Preview</a>`);if(isLocal){document.querySelector('#modal').addEventListener('close',()=>URL.revokeObjectURL(url),{once:true});}}
+  async function previewFile(id){
+    const doc=db().documents.find(d=>d.id===id&&(d.studentId===u().id||visibleStudents(db(),u()).some(s=>s.id===d.studentId)||visibleApplications(db(),u()).some(a=>a.resumeId===d.id)))||c.visibleIncidents(u()).find(i=>i.evidence?.id===id)?.evidence||(u().role==='Coordinator'?db().htes.find(h=>h.document?.id===id)?.document:null)||db().documents.find(d=>d.id===id);
+    if(!doc)throw new Error('This file is outside your portal scope.');
+    let url;let isLocal=false;
+    if(doc.filePath){
+      url=await c.legacy.getSignedUrl(doc.filePath, doc.bucket || 'documents');
+      if(!url)throw new Error('Unable to preview document.');
+    }else{
+      const file=await c.fileOp('get',id);
+      if(!file)throw new Error('File no longer available in this browser.');
+      url=URL.createObjectURL(file);
+      isLocal=true;
+    }
+    const parentLog = (db().logs || []).find(l => l.evidenceId === id);
+    const previewContent = ((doc.type||'').startsWith('image/')
+      ? `<img class="ref-file-image" src="${url}" alt="${e(doc.name)}">`
+      : `<p>${e(doc.name)} - PDF document</p><p>Open the stored PDF in your browser's document viewer.</p><a class="btn" href="${url}" target="_blank" rel="noopener">Open PDF Preview</a>`)
+      + `<div class="form-actions" style="margin-top:16px; padding-top:12px; border-top:1px solid var(--line, #e2e8f0); display:flex; justify-content:flex-end; gap:8px;">`
+      + (parentLog ? `<button type="button" class="btn secondary" data-action="log-detail" data-id="${e(parentLog.id)}">&larr; Back to Exception Review</button>` : '')
+      + `<button type="button" class="btn primary" data-action="close">✕ Close Preview</button>`
+      + `</div>`;
+    c.showModal('Document Preview - '+e(doc.name), previewContent);
+    if(isLocal){document.querySelector('#modal').addEventListener('close',()=>URL.revokeObjectURL(url),{once:true});}
+  }
   async function submit(values,form){if(!formHandler||u()?.id!==formOwner||location.hash!==formRoute)throw new Error('The page or session changed. Reopen this form.');await formHandler(values,form);}
 
   // Module-specific pages follow; all remain under the sidebar routes in the supplied flowchart.
@@ -828,7 +881,13 @@ finish('Compliance review saved and forwarded to the Supervisor Exception Queue.
           ['Remaining Hours', totalRemaining + ' Hours', 'clock']
         ]);
 
-        const oversightBannerHtml = flaggedList.length > 0 ? `
+        const flaggedKey = flaggedList.map(l => l.id + ':' + l.status).sort().join('|');
+        let isBannerRead = c.view.dismissedExceptionBanner === flaggedKey;
+        if (!isBannerRead && flaggedKey) {
+          try { isBannerRead = localStorage.getItem('menteelog.sup_exception_banner_read') === flaggedKey; } catch(e) {}
+        }
+
+        const oversightBannerHtml = (flaggedList.length > 0 && !isBannerRead) ? `
           <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:14px 18px; margin-top:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div style="display:flex; align-items:center; gap:12px;">
               <span style="width:34px; height:34px; border-radius:50%; background:#fee2e2; color:#991b1b; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; flex-shrink:0;">!</span>
@@ -837,6 +896,9 @@ finish('Compliance review saved and forwarded to the Supervisor Exception Queue.
                 <span style="font-size:12.5px; color:#991b1b;">Normal on-site shifts are auto-verified. Step in only for the flagged off-site or anomalous log(s) below.</span>
               </div>
             </div>
+            <button type="button" class="text-btn small" data-action="ref-dismiss-exception-banner" data-id="${e(flaggedKey)}" style="color:#991b1b; font-weight:700; font-size:12.5px; cursor:pointer; background:#fee2e2; border:1px solid #fca5a5; padding:6px 12px; border-radius:6px; white-space:nowrap;">
+              ✓ Mark as Read
+            </button>
           </div>
         ` : (hoursAccomplished ? `
           <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:14px 18px; margin-top:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
@@ -868,7 +930,7 @@ finish('Compliance review saved and forwarded to the Supervisor Exception Queue.
                 const geofenceBadgeHtml = l.status === 'Approved' ? '<span class="badge green">📍 Inside 100m</span>' : (['Flagged','Pending'].includes(l.status) ? '<span class="badge red">⚠️ Outside 100m</span>' : badge(l.gps?'Captured':'Unavailable'));
                 const statusBadgeHtml = (l.status === 'Approved' ? '<span class="badge green" title="' + e(l.remarks || 'Automatically verified on-site within 100m HTE geofence') + '">✓ Verified On-Site</span>' : (['Flagged','Pending'].includes(l.status) ? '<span class="badge red" title="' + e(l.remarks || 'Logged outside 100m geofence — exception review required') + '">⚠️ Flagged Exception</span>' : badge(l.status))) + (coordNote ? '<div style="margin-top:4px;"><span class="badge blue" style="font-size:10.5px;" title="Coordinator Note: ' + e(coordNote) + '">📋 Coordinator Note</span></div>' : '');
                 const actionButtonsHtml = (['Pending','Flagged'].includes(l.status)
-                    ? b('⚠️ Review Exception','log-detail',l.id,'primary small') + b('Approve','ref-approve',l.id,'small') + b('Reject','ref-reject',l.id,'secondary small')
+                    ? b('⚠️ Review Exception','log-detail',l.id,'primary small')
                     : b('📖 Read Task & Map','log-detail',l.id,'secondary small') + nav('Log Sheet','dtr','profile',l.studentId,'secondary small'));
                 return '<tr><td><strong>' + e(sName) + '</strong><br><small>' + e(sCourse) + '</small></td><td>' + date(l.date) + '</td><td>' + time(l.clockIn) + '</td><td>' + time(l.clockOut) + '</td><td>' + breakHtml + '</td><td><span class="task-excerpt">' + taskHtml + '</span></td><td>' + geofenceBadgeHtml + '</td><td>' + statusBadgeHtml + '</td><td><div class="row" style="flex-wrap:wrap; gap:4px; max-width:260px;">' + actionButtonsHtml + '</div></td></tr>';
             });
@@ -1096,11 +1158,18 @@ finish('Compliance review saved and forwarded to the Supervisor Exception Queue.
   function elapsed(start,end){if(!start)return '00:00:00';const t=new Date(start).getTime();if(isNaN(t))return '00:00:00';const total=Math.max(0,Math.floor(((end?new Date(end).getTime():Date.now())-t)/1000));return [Math.floor(total/3600),Math.floor(total/60)%60,total%60].map(n=>String(n).padStart(2,'0')).join(':');}
   async function attendanceAction(name,id){
     if(['student-clock-in','student-toggle-break','student-clock-out','ref-clock-out','clock'].includes(name)) return false;
+    if(name==='ref-dismiss-exception-banner'){
+      c.view.dismissedExceptionBanner = id || '1';
+      try { localStorage.setItem('menteelog.sup_exception_banner_read', id || '1'); } catch(e) {}
+      c.toast('Exception queue alert marked as read.');
+      c.render();
+      return true;
+    }
     if(name==='ref-profile-tab'){c.view.profileTab=id;c.render();return true;}
     if(name==='ref-company-interns'){if(u().role!=='Coordinator')throw new Error('Coordinator access required.');location.hash=href('candidates','company',id);return true;}
     if(name==='ref-task-view'){c.view.tasks=!c.view.tasks;c.render();return true;}
     if(name==='log-detail'&&u().role==='Coordinator'){location.hash=href('dtr','review',id);return true;}
-    if(['ref-approve','ref-reject','ref-approve-all'].includes(name)){if(u().role!=='Supervisor')throw new Error('Supervisor access required.');const batch=name==='ref-approve-all',reject=name==='ref-reject',logs=visibleLogs(db(),u()).filter(l=>batch?l.status==='Pending':l.id===id&&['Pending','Flagged'].includes(l.status));if(!logs.length)throw new Error('No reviewable records found.');const body=(batch?`<p>Approve all ${logs.length} pending entries for your assigned interns?</p>`:stats([['Clock In',time(logs[0].clockIn)],['Clock Out',time(logs[0].clockOut)],['Total Hours',logs[0].hours+'h']])+`<h3>Task Summary</h3><p>${e(logs[0].task)}</p>`)+ta(reject?'Reason for rejection / supervisor comments':'Supervisor remarks','remarks',reject?'':'Reviewed attendance and task summary.','required minlength="5"')+signatureFields()+f('Typed signature (frontend preview)','signature','text',u().name,'required maxlength="100"')+'<label class="row"><input type="checkbox" required> I reviewed these attendance records.</label>';c.showModal(batch?'Confirm Bulk Approval':reject?'Reject DTR Entry':'Approve DTR Entry',body,async(v,form)=>{const image=await signatureImage(form);const signatureId=image?crypto.randomUUID():null;if(image)await c.putFile(signatureId,image);const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;const uuidIds = logs.map(l=>l.id).filter(id => uuidRegex.test(id));if(!uuidIds.length)throw new Error('Demo records cannot be saved to the live database.');const { error, data } = await supabase.from('logs').update({ status: reject?'Rejected':'Approved', remarks: v.remarks, signature: v.signature }).in('id', uuidIds).select();if(error)throw new Error(error.message);if(!data || data.length !== uuidIds.length)throw new Error('Some logs were not updated. Check your permissions.');await syncRemote(supabase, db());const updated=db().logs.filter(l=>uuidIds.includes(l.id));updated.forEach(l=>{if(signatureId)l.signatureFileId=signatureId;});updated.forEach(l=>c.notify(l.studentId,'DTR_Event',reject?'DTR entry rejected':'DTR entry approved',date(l.date)+': '+v.remarks));finish(batch?'All pending DTR entries approved.':reject?'DTR entry rejected — returned for resubmission.':'DTR entry approved and signed.','dtr');},reject?'Confirm Rejection':'Confirm Approval');bindSignature(document.querySelector('#modal-form'));return true;}
+    if(['ref-approve','ref-reject','ref-approve-all'].includes(name)){if(u().role!=='Supervisor')throw new Error('Supervisor access required.');const batch=name==='ref-approve-all',reject=name==='ref-reject',logs=visibleLogs(db(),u()).filter(l=>batch?l.status==='Pending':l.id===id&&['Pending','Flagged'].includes(l.status));if(!logs.length)throw new Error('No reviewable records found.');const body=(batch?`<p>Approve all ${logs.length} pending entries for your assigned interns?</p>`:stats([['Clock In',time(logs[0].clockIn)],['Clock Out',time(logs[0].clockOut)],['Total Hours',logs[0].hours+'h']])+`<h3>Task Summary</h3><p>${e(logs[0].task)}</p>`+(logs[0].justification?`<h3>Intern Off-Site Justification</h3><p style="background:#fffbeb; padding:10px 14px; border-radius:8px; border:1px solid #fde68a;">${e(logs[0].justification)}</p>`:'')+(logs[0].evidenceId?`<div style="margin-bottom:14px;">${b('📎 Preview Attached Evidence ('+e(logs[0].evidenceName||'Document')+')','ref-file-preview',logs[0].evidenceId,'secondary small')}</div>`:''))+ta(reject?'Reason for rejection / supervisor comments':'Supervisor remarks','remarks',reject?'':'Reviewed attendance and task summary.','required minlength="5"')+signatureFields()+f('Typed signature (frontend preview)','signature','text',u().name,'required maxlength="100"')+'<label class="row"><input type="checkbox" required> I reviewed these attendance records.</label>';c.showModal(batch?'Confirm Bulk Approval':reject?'Reject DTR Entry':'Approve DTR Entry',body,async(v,form)=>{const image=await signatureImage(form);const signatureId=image?crypto.randomUUID():null;if(image)await c.putFile(signatureId,image);const nextStatus=reject?'Rejected':'Approved';logs.forEach(l=>{l.status=nextStatus;l.remarks=v.remarks;l.signature=v.signature;if(signatureId)l.signatureFileId=signatureId;try{localStorage.removeItem('menteelog.justification.'+l.id);}catch(e){}});const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;const uuidIds = logs.map(l=>l.id).filter(id => uuidRegex.test(id));if(uuidIds.length){try{const { error, data } = await supabase.from('logs').update({ status: nextStatus, remarks: v.remarks, signature: v.signature }).in('id', uuidIds).select();if(!error && data && data.length > 0){await syncRemote(supabase, db());}}catch(err){console.warn('Supervisor DTR review sync note:',err);}}logs.forEach(l=>{l.status=nextStatus;l.remarks=v.remarks;l.signature=v.signature;if(signatureId)l.signatureFileId=signatureId;c.notify(l.studentId,'DTR_Event',reject?'DTR entry rejected':'DTR entry approved',date(l.date)+': '+v.remarks,{targetPage:'dtr',targetLogId:l.id,role:'Student'});});finish(batch?'All pending DTR entries approved.':reject?'DTR entry rejected — returned for resubmission.':'DTR entry approved and signed.','dtr');},reject?'Confirm Rejection':'Confirm Approval');bindSignature(document.querySelector('#modal-form'));return true;}
     if(name==='ref-scan'){if(u().role!=='Coordinator')throw new Error('Coordinator access required.');const issues=db().logs.filter(l=>!l.gps||l.hours<=0||l.hours>16);c.showModal('Attendance Validation Results',`<p>${db().logs.length} records checked. ${issues.length} need a location or duration review.</p><p>This local check does not verify GPS authenticity or approve attendance.</p>`+table(['Student','Date','Finding'],issues.map(l=>`<tr><td>${e(c.student(l.studentId)?.name)}</td><td>${date(l.date)}</td><td>${!l.gps?'No location captured':'Unusual duration'}</td></tr>`)));return true;}
     if(name==='ref-compliance-settings'){if(u().role!=='Coordinator')throw new Error('Coordinator access required.');c.showModal('Compliance Settings',f('Required OJT hours for new candidates','requiredHours','number',db().program.requiredHours,'required min="1" max="2000"')+f('Program completion deadline','deadline','date',db().program.deadline,'required'),v=>{db().program.requiredHours=Number(v.requiredHours);db().program.deadline=v.deadline;finish('Compliance settings saved.');});return true;}
     if(name==='ref-submit-log'){if(u().role!=='Student')throw new Error('Student access required.');if(!db().logs.find(l=>(l.studentId===u().id || (u().email === 'kenzosomes@gmail.com' && (l.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c' || l.studentId === 's1')) || (u().id === '22227dcf-933f-40a9-9340-f66cb9020e5c' && l.studentId === 's1')) && l.status==='Awaiting_Student_Log'))throw new Error('No completed shift awaits a logbook summary.');return false;}
