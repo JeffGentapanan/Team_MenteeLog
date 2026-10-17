@@ -481,7 +481,30 @@ export function createPortalViews(c){
     if(await hteAction(name,id,el)||await attendanceAction(name,id,el)||await reportAction(name,id,el)||await governanceAction(name,id,el))return true;
     return false;
   }
-  async function previewFile(id){const doc=db().documents.find(d=>d.id===id&&(d.studentId===u().id||visibleStudents(db(),u()).some(s=>s.id===d.studentId)||visibleApplications(db(),u()).some(a=>a.resumeId===d.id)))||c.visibleIncidents(u()).find(i=>i.evidence?.id===id)?.evidence||(u().role==='Coordinator'?db().htes.find(h=>h.document?.id===id)?.document:null);if(!doc)throw new Error('This file is outside your portal scope.');let url;let isLocal=false;if(doc.filePath){url=await c.legacy.getSignedUrl(doc.filePath, doc.bucket || 'documents');if(!url)throw new Error('Unable to preview document.');}else{const file=await c.fileOp('get',id);if(!file)throw new Error('File no longer available in this browser.');url=URL.createObjectURL(file);isLocal=true;}c.showModal('Document Preview - '+e(doc.name),(doc.type||'').startsWith('image/')?`<img class="ref-file-image" src="${url}" alt="${e(doc.name)}">`:`<p>${e(doc.name)} - PDF document</p><p>Open the stored PDF in your browser's document viewer.</p><a class="btn" href="${url}" target="_blank" rel="noopener">Open PDF Preview</a>`);if(isLocal){document.querySelector('#modal').addEventListener('close',()=>URL.revokeObjectURL(url),{once:true});}}
+  async function previewFile(id){
+    const doc=db().documents.find(d=>d.id===id&&(d.studentId===u().id||visibleStudents(db(),u()).some(s=>s.id===d.studentId)||visibleApplications(db(),u()).some(a=>a.resumeId===d.id)))||c.visibleIncidents(u()).find(i=>i.evidence?.id===id)?.evidence||(u().role==='Coordinator'?db().htes.find(h=>h.document?.id===id)?.document:null)||db().documents.find(d=>d.id===id);
+    if(!doc)throw new Error('This file is outside your portal scope.');
+    let url;let isLocal=false;
+    if(doc.filePath){
+      url=await c.legacy.getSignedUrl(doc.filePath, doc.bucket || 'documents');
+      if(!url)throw new Error('Unable to preview document.');
+    }else{
+      const file=await c.fileOp('get',id);
+      if(!file)throw new Error('File no longer available in this browser.');
+      url=URL.createObjectURL(file);
+      isLocal=true;
+    }
+    const parentLog = (db().logs || []).find(l => l.evidenceId === id);
+    const previewContent = ((doc.type||'').startsWith('image/')
+      ? `<img class="ref-file-image" src="${url}" alt="${e(doc.name)}">`
+      : `<p>${e(doc.name)} - PDF document</p><p>Open the stored PDF in your browser's document viewer.</p><a class="btn" href="${url}" target="_blank" rel="noopener">Open PDF Preview</a>`)
+      + `<div class="form-actions" style="margin-top:16px; padding-top:12px; border-top:1px solid var(--line, #e2e8f0); display:flex; justify-content:flex-end; gap:8px;">`
+      + (parentLog ? `<button type="button" class="btn secondary" data-action="log-detail" data-id="${e(parentLog.id)}">&larr; Back to Exception Review</button>` : '')
+      + `<button type="button" class="btn primary" data-action="close">✕ Close Preview</button>`
+      + `</div>`;
+    c.showModal('Document Preview - '+e(doc.name), previewContent);
+    if(isLocal){document.querySelector('#modal').addEventListener('close',()=>URL.revokeObjectURL(url),{once:true});}
+  }
   async function submit(values,form){if(!formHandler||u()?.id!==formOwner||location.hash!==formRoute)throw new Error('The page or session changed. Reopen this form.');await formHandler(values,form);}
 
   // Module-specific pages follow; all remain under the sidebar routes in the supplied flowchart.

@@ -498,7 +498,7 @@ function showModal(title,body,onSubmit,label='Save changes'){
   if(capturingForm){capturedForm={title,body,onSubmit,label};return;}
   modal.className='';
   modalOpener=document.activeElement;modalSubmit=onSubmit;modalUserId=currentUser()?.id||null;
-  modal.innerHTML=`<div class="modal-head"><h2 id="modal-title">${title}</h2><button class="icon-btn" data-action="close" aria-label="Close dialog">${icon('close')}</button></div><div class="modal-body">${onSubmit?'<form id="modal-form">':''}${body}${onSubmit?`<p class="form-error" role="alert"></p><div class="form-actions">${button('Cancel','close')}<button class="btn" type="submit">${label}</button></div></form>`:''}</div>`;
+  modal.innerHTML=`<div class="modal-head" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;"><h2 id="modal-title" style="min-width:0;flex:1;overflow-wrap:anywhere;word-break:break-word;margin:0;line-height:1.35;">${title}</h2><button type="button" class="icon-btn" data-action="close" aria-label="Close dialog" style="flex-shrink:0;width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.35);color:#ffffff;cursor:pointer;">${icon('close')}</button></div><div class="modal-body">${onSubmit?'<form id="modal-form">':''}${body}${onSubmit?`<p class="form-error" role="alert"></p><div class="form-actions">${button('Cancel','close')}<button class="btn" type="submit">${label}</button></div></form>`:''}</div>`;
   for(const control of modal.querySelectorAll('[id^="f-"]')){
     const previous=control.id;control.id='modal-'+previous;
     for(const label of modal.querySelectorAll('label'))if(label.htmlFor===previous)label.htmlFor=control.id;
