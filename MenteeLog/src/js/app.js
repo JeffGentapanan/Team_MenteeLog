@@ -1683,10 +1683,13 @@ function evaluate(id){
     if (!data.signature || !data.signature.trim()) throw new Error('Please provide your signatory name.');
     const sigImage = data.signatureImage || document.getElementById('eval-sig-image-data')?.value || '';
     const cleanSigName = data.signature.trim();
+    const isKenzoStu = id === 's1' || id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || (s?.email && s.email.toLowerCase() === 'kenzosomes@gmail.com');
     try {
+      localStorage.removeItem('menteelog.reset_appraisal_stu.' + (isKenzoStu ? 'kenzo' : id));
+      localStorage.removeItem('menteelog.reset_appraisal_stu.' + id);
       if (sigImage) {
         localStorage.setItem('menteelog.appraisal_sig.' + id, sigImage);
-        if (id === 's1' || id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || (s?.email && s.email.toLowerCase() === 'kenzosomes@gmail.com')) {
+        if (isKenzoStu) {
           localStorage.setItem('menteelog.appraisal_sig.kenzo', sigImage);
         }
       }
@@ -1733,9 +1736,11 @@ function evaluate(id){
     } catch(err) {
       console.warn('Supabase appraisal sync (stored locally):', err);
     }
-    const existingIdx = db.appraisals.findIndex(a => a.studentId === id || ((id === 's1' || id === '22227dcf-933f-40a9-9340-f66cb9020e5c') && (a.studentId === 's1' || a.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')));
-    if (existingIdx !== -1) db.appraisals[existingIdx] = appraisalRecord;
-    else db.appraisals.push(appraisalRecord);
+    try {
+      localStorage.removeItem('menteelog.deleted_appraisal.' + appraisalRecord.id);
+    } catch(e) {}
+    db.appraisals = (db.appraisals || []).filter(a => !(a.studentId === id || (isKenzoStu && (a.studentId === 's1' || a.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c'))));
+    db.appraisals.unshift(appraisalRecord);
     save();
     notify(id, 'System', 'Your performance appraisal is ready', 'View your supervisor\'s rubric scores and feedback.');
     audit('Submitted appraisal for ' + s.name);

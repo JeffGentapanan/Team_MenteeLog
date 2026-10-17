@@ -164,7 +164,15 @@ export async function syncRemote(supabase, db) {
     }
 
     const newAppraisals = (appraisalsRes.data || [])
-      .filter(a => !String(a.comments || '').includes('m y jyyyy'))
+      .filter(a => {
+        if (String(a.comments || '').includes('m y jyyyy')) return false;
+        try {
+          if (localStorage.getItem('menteelog.deleted_appraisal.' + a.id) === '1') return false;
+          const isKenzoId = a.student_id === 's1' || a.student_id === '22227dcf-933f-40a9-9340-f66cb9020e5c';
+          if (localStorage.getItem('menteelog.reset_appraisal_stu.' + (isKenzoId ? 'kenzo' : a.student_id)) === '1') return false;
+        } catch(e) {}
+        return true;
+      })
       .map(a => {
         const rawSig = String(a.signature || '');
         const [sigName, inlineImg] = rawSig.includes('|||') ? rawSig.split('|||') : [rawSig, ''];
@@ -190,6 +198,9 @@ export async function syncRemote(supabase, db) {
         };
       });
     for (const localApp of (db.appraisals || [])) {
+      try {
+        if (localStorage.getItem('menteelog.deleted_appraisal.' + localApp.id) === '1') continue;
+      } catch(e) {}
       const isKenzoLocal = localApp.studentId === 's1' || localApp.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c';
       const hasRemote = newAppraisals.some(na => na.id === localApp.id || na.studentId === localApp.studentId || (isKenzoLocal && (na.studentId === 's1' || na.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')));
       if (!hasRemote) {

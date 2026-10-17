@@ -1252,31 +1252,50 @@ finish('Compliance review saved and forwarded to the Supervisor Exception Queue.
         </div>
       `, async () => {
         const isKenzo = id === 's1' || id === '22227dcf-933f-40a9-9340-f66cb9020e5c' || (s?.email && s.email.toLowerCase() === 'kenzosomes@gmail.com');
+        const removedAppraisals = (db().appraisals || []).filter(a => {
+          if (a.studentId === id) return true;
+          if (isKenzo && (a.studentId === 's1' || a.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')) return true;
+          return false;
+        });
+
         try {
           localStorage.removeItem('menteelog.appraisal_sig.' + id);
+          localStorage.setItem('menteelog.reset_appraisal_stu.' + (isKenzo ? 'kenzo' : id), '1');
           if (isKenzo) {
             localStorage.removeItem('menteelog.appraisal_sig.kenzo');
             localStorage.removeItem('menteelog.appraisal_sig.s1');
             localStorage.removeItem('menteelog.appraisal_sig.22227dcf-933f-40a9-9340-f66cb9020e5c');
           }
+          for (const rem of removedAppraisals) {
+            if (rem?.id) {
+              localStorage.setItem('menteelog.deleted_appraisal.' + rem.id, '1');
+              localStorage.setItem('menteelog.notif_cleared.notif-appraisal-' + rem.id, '1');
+            }
+          }
         } catch(e) {}
-        db().appraisals = (db().appraisals || []).filter(a => {
-          if (a.studentId === id) return false;
-          if (isKenzo && (a.studentId === 's1' || a.studentId === '22227dcf-933f-40a9-9340-f66cb9020e5c')) return false;
-          return true;
-        });
+
+        db().appraisals = (db().appraisals || []).filter(a => !removedAppraisals.includes(a));
+        db().notifications = (db().notifications || []).filter(n => !removedAppraisals.some(rem => n.id === 'notif-appraisal-' + rem.id));
 
         try {
           if (typeof supabase !== 'undefined' && supabase) {
-            const deleteIds = isKenzo ? [id, 's1', '22227dcf-933f-40a9-9340-f66cb9020e5c'] : [id];
-            await supabase.from('appraisals').delete().in('student_id', deleteIds);
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            const validAppraisalUuids = removedAppraisals.map(a => a.id).filter(aid => uuidRegex.test(String(aid || '')));
+            if (validAppraisalUuids.length > 0) {
+              await supabase.from('appraisals').delete().in('id', validAppraisalUuids);
+            }
+            const candidateStuIds = isKenzo ? [id, '22227dcf-933f-40a9-9340-f66cb9020e5c'] : [id];
+            const validStudentUuids = [...new Set(candidateStuIds.filter(sid => uuidRegex.test(String(sid || ''))))];
+            if (validStudentUuids.length > 0) {
+              await supabase.from('appraisals').delete().in('student_id', validStudentUuids);
+            }
           }
         } catch(err) {
           console.warn('Supabase delete appraisal error:', err);
         }
 
         c.save();
-        c.toast(`Appraisal for ${studentName} has been reset.`);
+        c.toast(`Appraisal for ${studentName} has been reset. You can now re-evaluate.`);
         document.querySelector('#modal').close();
         location.hash = href('appraisals', 'evaluate', id);
         c.render();
