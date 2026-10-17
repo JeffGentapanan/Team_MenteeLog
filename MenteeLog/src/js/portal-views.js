@@ -858,7 +858,13 @@ finish('Compliance review saved and forwarded to the Supervisor Exception Queue.
           ['Remaining Hours', totalRemaining + ' Hours', 'clock']
         ]);
 
-        const oversightBannerHtml = flaggedList.length > 0 ? `
+        const flaggedKey = flaggedList.map(l => l.id + ':' + l.status).sort().join('|');
+        let isBannerRead = c.view.dismissedExceptionBanner === flaggedKey;
+        if (!isBannerRead && flaggedKey) {
+          try { isBannerRead = localStorage.getItem('menteelog.sup_exception_banner_read') === flaggedKey; } catch(e) {}
+        }
+
+        const oversightBannerHtml = (flaggedList.length > 0 && !isBannerRead) ? `
           <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:14px 18px; margin-top:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div style="display:flex; align-items:center; gap:12px;">
               <span style="width:34px; height:34px; border-radius:50%; background:#fee2e2; color:#991b1b; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; flex-shrink:0;">!</span>
@@ -867,6 +873,9 @@ finish('Compliance review saved and forwarded to the Supervisor Exception Queue.
                 <span style="font-size:12.5px; color:#991b1b;">Normal on-site shifts are auto-verified. Step in only for the flagged off-site or anomalous log(s) below.</span>
               </div>
             </div>
+            <button type="button" class="text-btn small" data-action="ref-dismiss-exception-banner" data-id="${e(flaggedKey)}" style="color:#991b1b; font-weight:700; font-size:12.5px; cursor:pointer; background:#fee2e2; border:1px solid #fca5a5; padding:6px 12px; border-radius:6px; white-space:nowrap;">
+              ✓ Mark as Read
+            </button>
           </div>
         ` : (hoursAccomplished ? `
           <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:14px 18px; margin-top:16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
@@ -1126,6 +1135,13 @@ finish('Compliance review saved and forwarded to the Supervisor Exception Queue.
   function elapsed(start,end){if(!start)return '00:00:00';const t=new Date(start).getTime();if(isNaN(t))return '00:00:00';const total=Math.max(0,Math.floor(((end?new Date(end).getTime():Date.now())-t)/1000));return [Math.floor(total/3600),Math.floor(total/60)%60,total%60].map(n=>String(n).padStart(2,'0')).join(':');}
   async function attendanceAction(name,id){
     if(['student-clock-in','student-toggle-break','student-clock-out','ref-clock-out','clock'].includes(name)) return false;
+    if(name==='ref-dismiss-exception-banner'){
+      c.view.dismissedExceptionBanner = id || '1';
+      try { localStorage.setItem('menteelog.sup_exception_banner_read', id || '1'); } catch(e) {}
+      c.toast('Exception queue alert marked as read.');
+      c.render();
+      return true;
+    }
     if(name==='ref-profile-tab'){c.view.profileTab=id;c.render();return true;}
     if(name==='ref-company-interns'){if(u().role!=='Coordinator')throw new Error('Coordinator access required.');location.hash=href('candidates','company',id);return true;}
     if(name==='ref-task-view'){c.view.tasks=!c.view.tasks;c.render();return true;}
