@@ -348,6 +348,9 @@ export async function syncRemote(supabase, db) {
       }
     };
 
+    const primaryStudent = stu;
+    const primarySupervisor = sup;
+
     for (const l of newLogs) {
       if (l.coordinatorRemarks) {
         ensureNotif({

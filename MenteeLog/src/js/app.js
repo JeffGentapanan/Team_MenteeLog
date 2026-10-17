@@ -765,10 +765,10 @@ window.menteelogGps = {
           map.invalidateSize();
           if (isOnSite) {
             const circleBounds = circle.getBounds().pad(0.35);
-            map.fitBounds(circleBounds, { maxZoom: 18 });
+            map.fitBounds(circleBounds, { paddingTopLeft: [30, 110], paddingBottomRight: [30, 35], maxZoom: 18 });
           } else {
-            const bounds = L.latLngBounds([[uLat, uLng], [hLat, hLng]]).pad(0.2);
-            map.fitBounds(bounds, { padding: [35, 35], maxZoom: 16 });
+            const bounds = L.latLngBounds([[uLat, uLng], [hLat, hLng]]).pad(0.18);
+            map.fitBounds(bounds, { paddingTopLeft: [40, 125], paddingBottomRight: [40, 45], maxZoom: 16 });
           }
           userMarker.openPopup();
         } catch(e) {}
@@ -790,35 +790,35 @@ window.menteelogGps = {
     }
     fsEl = document.createElement('dialog');
     fsEl.id = 'map-fullscreen-overlay';
-    fsEl.style.cssText = 'position:fixed; inset:0; width:100vw; max-width:100vw; height:100vh; max-height:100vh; margin:0; padding:16px; border:none; border-radius:0; background:rgba(15,23,42,0.88); backdrop-filter:blur(6px); display:flex; flex-direction:column; z-index:999999; box-sizing:border-box;';
+    fsEl.style.cssText = 'position:fixed; inset:0; width:100vw; max-width:100vw; height:100vh; max-height:100vh; margin:0; padding:clamp(8px, 2vw, 16px); border:none; border-radius:0; background:rgba(15,23,42,0.88); backdrop-filter:blur(6px); display:flex; flex-direction:column; z-index:999999; box-sizing:border-box;';
     document.body.appendChild(fsEl);
     
     const uLat = Number(userLat) || 10.71678;
     const uLng = Number(userLng) || 122.54586;
     const statusBadge = isOnSite 
-      ? '<span class="badge green" style="font-size:13px; padding:4px 12px; font-weight:700;">✓ Inside Geofence (On-Site)</span>' 
-      : '<span class="badge red" style="font-size:13px; padding:4px 12px; font-weight:700;">⚠️ Outside Geofence (Off-Site)</span>';
+      ? '<span class="badge green" style="font-size:12px; padding:3px 10px; font-weight:700;">✓ Inside Geofence (On-Site)</span>' 
+      : '<span class="badge red" style="font-size:12px; padding:3px 10px; font-weight:700;">⚠️ Outside Geofence (Off-Site)</span>';
 
     fsEl.innerHTML = `
       <div style="background:#ffffff; border-radius:12px; display:flex; flex-direction:column; width:100%; height:100%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); overflow:hidden; border:1px solid rgba(255,255,255,0.2);">
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
-          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-            <strong style="font-size:16px; color:#1e293b;">${title}</strong>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:12px 16px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; flex:1;">
+            <strong style="font-size:clamp(14px, 3.5vw, 16px); color:#1e293b; line-height:1.3;">${title}</strong>
             ${statusBadge}
-            <span style="font-size:13px; color:#64748b; font-family:monospace; background:#e2e8f0; padding:2px 8px; border-radius:4px;">${uLat.toFixed(5)}° N, ${uLng.toFixed(5)}° E</span>
+            <span style="font-size:12px; color:#64748b; font-family:monospace; background:#e2e8f0; padding:2px 8px; border-radius:4px;">${uLat.toFixed(5)}° N, ${uLng.toFixed(5)}° E</span>
           </div>
-          <button type="button" class="btn secondary small" id="btn-close-map-fs" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; padding:8px 16px; cursor:pointer;">
-            ✕ Exit Fullscreen
+          <button type="button" class="btn secondary small" id="btn-close-map-fs" style="display:inline-flex; align-items:center; gap:5px; font-weight:700; padding:6px 12px; font-size:12px; white-space:nowrap; flex-shrink:0; cursor:pointer;">
+            ✕ Exit
           </button>
         </div>
-        <div id="fs-leaflet-map" style="flex:1; width:100%; min-height:450px; background:#f1f5f9; position:relative;"></div>
-        <div style="padding:12px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; font-size:13px; color:#475569;">
-          <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
+        <div id="fs-leaflet-map" style="flex:1; width:100%; min-height:240px; background:#f1f5f9; position:relative;"></div>
+        <div style="padding:10px 16px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:12px; color:#475569;">
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
             <span>🏢 <strong>${companyName}</strong> (Accredited Workplace)</span>
             <span>📍 <strong>Pinpoint Position</strong></span>
             <span>🟢 <strong>100m Accredited Geofence Radius</strong></span>
           </div>
-          <span style="color:#64748b; font-size:12px;">Scroll to zoom · Drag to pan · Press ESC to exit</span>
+          <span style="color:#64748b; font-size:11px;">Scroll/pinch to zoom · Drag to pan · ESC to exit</span>
         </div>
       </div>
     `;
