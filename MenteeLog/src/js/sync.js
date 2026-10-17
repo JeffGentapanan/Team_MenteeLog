@@ -100,7 +100,14 @@ export async function syncRemote(supabase, db) {
       if (!savedCoord) {
         try { savedCoord = localStorage.getItem('menteelog.coord_remarks.' + l.id) || ''; } catch(e) {}
       }
-      const isOffSiteOrException = (l.gps === false) || Boolean(l.remarks && l.remarks.includes('Outside geofence')) || Boolean(savedCoord) || Boolean(l.justification);
+      let savedJust = null;
+      try { savedJust = JSON.parse(localStorage.getItem('menteelog.justification.' + l.id) || 'null'); } catch(e) {}
+      const justText = l.justification || savedJust?.justification || '';
+      const remLower = String(l.remarks || '').toLowerCase();
+      const isOffSiteOrException = (l.gps === false) || remLower.includes('outside') || remLower.includes('flagged') || Boolean(savedCoord) || Boolean(justText);
+      let resolvedStatus = l.status;
+      if (savedJust?.status === 'Pending' && resolvedStatus === 'Flagged') resolvedStatus = 'Pending';
+      if (resolvedStatus === 'Pending' && !isOffSiteOrException && Number(l.hours || 0) > 0) resolvedStatus = 'Approved';
       return {
         id: l.id,
         studentId: l.student_id,
@@ -110,12 +117,14 @@ export async function syncRemote(supabase, db) {
         clockOut: l.clock_out,
         breakMinutes: Number(l.break_minutes) || 0,
         hours: Number(l.hours) || 0,
-        status: (l.status === 'Pending' && !isOffSiteOrException && Number(l.hours || 0) > 0) ? 'Approved' : l.status,
+        status: resolvedStatus,
         task: taskText,
         gps: l.gps,
-        remarks: (l.status === 'Pending' && !isOffSiteOrException && Number(l.hours || 0) > 0) ? (l.remarks || 'Verified on-site within HTE premises') : l.remarks,
+        remarks: (resolvedStatus === 'Approved' && !isOffSiteOrException && Number(l.hours || 0) > 0) ? (l.remarks || 'Verified on-site within HTE premises') : l.remarks,
         signature: l.signature,
-        justification: l.justification,
+        justification: justText,
+        evidenceId: savedJust?.evidenceId || null,
+        evidenceName: savedJust?.evidenceName || null,
         coordinatorRemarks: savedCoord
       };
     });
