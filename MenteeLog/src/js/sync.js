@@ -90,7 +90,40 @@ export async function syncRemote(supabase, db) {
       };
     });
 
-    let newLogs = (logsRes.data || []).map(l => {
+    const RESET_CUTOFF_MS = Date.parse('2026-10-19T08:35:00Z');
+    const isPreResetTestLog = (l) => {
+      const d = String(l.date || '').slice(0, 10);
+      if (d && d <= '2026-10-18') return true;
+      if (l.created_at && !Number.isNaN(Date.parse(l.created_at)) && Date.parse(l.created_at) < RESET_CUTOFF_MS) return true;
+      const ci = String(l.clock_in || l.clockIn || '');
+      if (d === '2026-10-19') {
+        const ts = Date.parse(ci);
+        if (!Number.isNaN(ts) && ts < RESET_CUTOFF_MS) return true;
+        if (ci.includes('3:57') || ci.includes('15:57') || ci.includes('07:57')) return true;
+      }
+      return false;
+    };
+    const isPreResetTestAppraisal = (a) => {
+      const c = String(a.comments || '');
+      if (c.includes('m y jyyyy') || c.includes('Completed all assigned OJT software development tasks with high accuracy')) return true;
+      const d = String(a.date || '').slice(0, 10);
+      if (d && d <= '2026-10-18') return true;
+      if (a.created_at && !Number.isNaN(Date.parse(a.created_at)) && Date.parse(a.created_at) < RESET_CUTOFF_MS) return true;
+      return false;
+    };
+    const isPreResetTestDoc = (d) => {
+      const name = String(d.name || '');
+      if (name.includes('MenteeLog-Sitemap')) return true;
+      const dDate = String(d.doc_date || d.date || '').slice(0, 10);
+      if (dDate && dDate <= '2026-10-18') return true;
+      if (d.created_at && !Number.isNaN(Date.parse(d.created_at)) && Date.parse(d.created_at) < RESET_CUTOFF_MS) return true;
+      try {
+        if (localStorage.getItem('menteelog.deleted_doc.' + d.id) === '1') return true;
+      } catch(e) {}
+      return false;
+    };
+
+    let newLogs = (logsRes.data || []).filter(l => !isPreResetTestLog(l)).map(l => {
       let taskText = l.task;
       if (taskText && (taskText.includes('For Industry Supervisors, daily timekeeping is automated') || taskText.includes('In the Student Portal, BSIT interns discover'))) {
         taskText = 'Implemented responsive UI components for the client portal, integrated RESTful API endpoints with role-based session validation, and executed unit tests with the QA engineering team.';
@@ -165,7 +198,7 @@ export async function syncRemote(supabase, db) {
 
     const newAppraisals = (appraisalsRes.data || [])
       .filter(a => {
-        if (String(a.comments || '').includes('m y jyyyy')) return false;
+        if (isPreResetTestAppraisal(a)) return false;
         try {
           if (localStorage.getItem('menteelog.deleted_appraisal.' + a.id) === '1') return false;
           const isKenzoId = a.student_id === 's1' || a.student_id === '22227dcf-933f-40a9-9340-f66cb9020e5c';
@@ -198,6 +231,7 @@ export async function syncRemote(supabase, db) {
         };
       });
     for (const localApp of (db.appraisals || [])) {
+      if (isPreResetTestAppraisal(localApp)) continue;
       try {
         if (localStorage.getItem('menteelog.deleted_appraisal.' + localApp.id) === '1') continue;
       } catch(e) {}
@@ -208,7 +242,7 @@ export async function syncRemote(supabase, db) {
       }
     }
 
-    const newDocs = (docsRes.data || []).map(d => ({
+    const newDocs = (docsRes.data || []).filter(d => !isPreResetTestDoc(d)).map(d => ({
       id: d.id,
       studentId: d.student_id,
       category: d.category,
@@ -248,10 +282,11 @@ export async function syncRemote(supabase, db) {
       stu.status = 'Active';
       stu.badge = 'Active';
       stu.requiredHours = stu.requiredHours || 500;
-      if (!stu.baseHours && stu.baseHours !== 0) stu.baseHours = 120;
+      stu.baseHours = 0;
       const resolvedStuUuid = (stu.id && stu.id.length > 20) ? stu.id : '22227dcf-933f-40a9-9340-f66cb9020e5c';
       if (db.logs && db.logs.length > 0) {
         for (const localLog of db.logs) {
+          if (isPreResetTestLog(localLog)) continue;
           if (localLog.studentId === 's1') localLog.studentId = resolvedStuUuid;
           const remoteMatch = newLogs.find(nl => nl.id === localLog.id || (nl.studentId === localLog.studentId && nl.date === localLog.date && nl.clockIn === localLog.clockIn));
           if (!remoteMatch) {
@@ -318,11 +353,10 @@ export async function syncRemote(supabase, db) {
     }
     newUsers = newUsers.filter(u => !String(u.id).startsWith('s_dummy') && !['Alice Chen','Bob Smith','Charlie Cruz','Diana Reyes','Example Intern'].includes(u.name));
     newLogs = (newLogs || []).filter(l => {
+      if (isPreResetTestLog(l)) return false;
       if (String(l.id || '').startsWith('log_')) return false;
       if (String(l.studentId || '').startsWith('s_dummy')) return false;
       if (String(l.task || '').includes('Configured project development environment')) return false;
-      if (l.date === '2026-10-14' || l.date === '2026-10-15') return false;
-      if (l.date === '2026-10-16' && Number(l.hours || 0) <= 0.02 && (String(l.clockIn || '').includes('00:23') || String(l.clockIn || '').includes('12:23') || String(l.clockOut || '').includes('00:23') || String(l.clockOut || '').includes('12:23') || !l.task)) return false;
       return true;
     }).map(l => {
       if (l.coordinatorRemarks && !l.signature && l.status === 'Approved') {
@@ -336,7 +370,21 @@ export async function syncRemote(supabase, db) {
     });
 
     // Synchronize live actionable notifications across portals for DTR exceptions, Coordinator reviews, and Appraisals
-    db.notifications = db.notifications || [];
+    const notifsBefore = JSON.stringify(db.notifications || []);
+    const validLogIds = new Set(newLogs.map(l => String(l.id)));
+    const validAppraisalIds = new Set(newAppraisals.map(a => String(a.id)));
+    db.notifications = (db.notifications || []).filter(n => {
+      const nid = String(n.id || '');
+      if (nid.startsWith('notif-appraisal-')) return validAppraisalIds.has(nid.replace('notif-appraisal-', ''));
+      if (nid.startsWith('notif-flagged-sup-')) return validLogIds.has(nid.replace('notif-flagged-sup-', ''));
+      if (nid.startsWith('notif-flagged-coord-')) return validLogIds.has(nid.replace('notif-flagged-coord-', ''));
+      if (nid.startsWith('notif-coord-review-')) return validLogIds.has(nid.replace('notif-coord-review-', ''));
+      if (n.title === 'Your performance appraisal is ready' && newAppraisals.length === 0) return false;
+      const nDateMs = Date.parse(n.date || '');
+      if (nid !== 'n3' && !Number.isNaN(nDateMs) && nDateMs < RESET_CUTOFF_MS) return false;
+      return true;
+    });
+
     const ensureNotif = (notifObj) => {
       try {
         if (localStorage.getItem('menteelog.notif_cleared.' + notifObj.id) === '1') {
@@ -446,8 +494,8 @@ export async function syncRemote(supabase, db) {
     }
 
     const cleanIncidents = (list) => (list || []).map(i => { const copy = {...i}; delete copy._pending; return copy; });
-    const before = JSON.stringify({ jobs: db.jobs, apps: db.applications, users: db.users, logs: db.logs, incidents: cleanIncidents(db.incidents), appraisals: db.appraisals, docs: db.documents });
-    const after = JSON.stringify({ jobs: newJobs, apps: newApps, users: newUsers, logs: newLogs, incidents: cleanIncidents(newIncidents), appraisals: newAppraisals, docs: newDocs });
+    const before = JSON.stringify({ jobs: db.jobs, apps: db.applications, users: db.users, logs: db.logs, incidents: cleanIncidents(db.incidents), appraisals: db.appraisals, docs: db.documents, notifs: notifsBefore });
+    const after = JSON.stringify({ jobs: newJobs, apps: newApps, users: newUsers, logs: newLogs, incidents: cleanIncidents(newIncidents), appraisals: newAppraisals, docs: newDocs, notifs: JSON.stringify(db.notifications || []) });
 
     if (before !== after) {
       db.jobs = newJobs;
