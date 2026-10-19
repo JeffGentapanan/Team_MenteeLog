@@ -189,22 +189,40 @@ function connectCoreUsers(dataDb) {
     app.jobId = supJob.id;
   }
 
+  const RESET_CUTOFF_MS = Date.parse('2026-10-19T08:35:00Z');
   // Remove any legacy auto-injected sample logs, dummy records, or past test remnants
   dataDb.logs = (dataDb.logs || []).filter(l => {
     if (String(l.id || '').startsWith('log_')) return false;
     if (String(l.studentId || '').startsWith('s_dummy')) return false;
     if (String(l.task || '').includes('Configured project development environment')) return false;
     if (l.id === 'log_' + stu.id + '_1' || l.id === 'log_s1_1' || l.id === 'shift-flagged-001' || String(l.id || '').startsWith('shift-flagged-')) return false;
-    if (l.date === '2026-10-14' || l.date === '2026-10-15') return false;
-    if (l.date === '2026-10-16' && Number(l.hours || 0) <= 0.02 && (String(l.clockIn || '').includes('00:23') || String(l.clockIn || '').includes('12:23') || String(l.clockOut || '').includes('00:23') || String(l.clockOut || '').includes('12:23') || !l.task)) return false;
+    const d = String(l.date || '').slice(0, 10);
+    if (d && d <= '2026-10-18') return false;
+    const ci = String(l.clockIn || l.clock_in || '');
+    if (d === '2026-10-19') {
+      const ts = Date.parse(ci);
+      if (!Number.isNaN(ts) && ts < RESET_CUTOFF_MS) return false;
+      if (ci.includes('3:57') || ci.includes('15:57') || ci.includes('07:57')) return false;
+    }
     return true;
   });
   const stuLogs = dataDb.logs.filter(l => l.studentId === stu.id);
   stuLogs.forEach(l => { l.supervisorId = sup.id; });
 
-  // Remove test appraisal for kenzosomes
+  // Remove test appraisals from before reset
   dataDb.appraisals = (dataDb.appraisals || []).filter(a => {
-    if (String(a.comments || '').includes('m y jyyyy')) return false;
+    const c = String(a.comments || '');
+    if (c.includes('m y jyyyy') || c.includes('Completed all assigned OJT software development tasks with high accuracy')) return false;
+    const d = String(a.date || '').slice(0, 10);
+    if (d && d <= '2026-10-18') return false;
+    return true;
+  });
+
+  // Remove test documents from before reset
+  dataDb.documents = (dataDb.documents || []).filter(doc => {
+    if (String(doc.name || '').includes('MenteeLog-Sitemap')) return false;
+    const d = String(doc.date || doc.doc_date || '').slice(0, 10);
+    if (d && d <= '2026-10-18') return false;
     return true;
   });
 
@@ -233,10 +251,13 @@ function connectCoreUsers(dataDb) {
   // Clean active shifts: remove any dummy student active shifts
   dataDb.activeShifts = (dataDb.activeShifts || []).filter(s => !String(s.studentId).startsWith('s_dummy'));
 
-  // Clean legacy hardcoded September 24/25 DTR notifications that have no matching DTR record
+  // Clean legacy hardcoded and pre-reset test notifications
   dataDb.notifications = (dataDb.notifications || []).filter(n => {
     if (['n1', 'n2', 'n4', 'n5'].includes(n.id)) return false;
     if (String(n.message || '').includes('September 24') || String(n.message || '').includes('September 25')) return false;
+    if ((n.title === 'Your performance appraisal is ready' || String(n.id || '').startsWith('notif-appraisal-')) && (dataDb.appraisals || []).length === 0) return false;
+    const nDateMs = Date.parse(n.date || '');
+    if (n.id !== 'n3' && !Number.isNaN(nDateMs) && nDateMs < RESET_CUTOFF_MS) return false;
     return true;
   });
 
@@ -260,84 +281,57 @@ try {
   }
 } catch(e) {}
 
-// Automatic cleanup of sample testing records for Student DTR (preserving session, profile, and drafts)
+// Clean production reset for MenteeLog (wiping leftover test DTR logs, appraisals, documents, and notifications while preserving accounts & sessions)
 try {
-  const cleanupKey = 'dtr_test_cleanup_oct16_v35';
-  if (!localStorage.getItem(cleanupKey)) {
-    localStorage.setItem(cleanupKey, '1');
-    if (db && Array.isArray(db.logs)) {
-      db.logs = db.logs.filter(l => {
-        if (l.date === '2026-10-14' || l.date === '2026-10-15') return false;
-        if (l.date === '2026-10-16' && Number(l.hours || 0) <= 0.02 && (String(l.clockIn || '').includes('00:23') || String(l.clockIn || '').includes('12:23') || String(l.clockOut || '').includes('00:23') || String(l.clockOut || '').includes('12:23') || !l.task)) return false;
-        if (String(l.id || '').startsWith('log_')) return false;
-        if (String(l.studentId || '').startsWith('s_dummy')) return false;
-        if (String(l.task || '').includes('Configured project development environment')) return false;
-        return true;
-      });
+  const cleanResetKey = 'production_clean_reset_oct19_v1';
+  if (!localStorage.getItem(cleanResetKey)) {
+    localStorage.setItem(cleanResetKey, '1');
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (
+        k.startsWith('menteelog.justification.') ||
+        k.startsWith('menteelog.coord_remarks.') ||
+        k.startsWith('menteelog.appraisal_sig.') ||
+        k.startsWith('menteelog.deleted_appraisal.') ||
+        k.startsWith('menteelog.reset_appraisal_stu.') ||
+        k.startsWith('menteelog.notif_')
+      )) {
+        keysToRemove.push(k);
+      }
     }
-    if (db && Array.isArray(db.activeShifts)) {
-      db.activeShifts = db.activeShifts.filter(sh => 
-        !String(sh.studentId || '').startsWith('s_dummy')
-      );
-    }
-    db.shift = null;
-    save();
-
-    if (typeof supabase !== 'undefined' && supabase) {
-      supabase.auth.getSession().then(async ({ data }) => {
-        const uid = data?.session?.user?.id;
-        if (uid) {
-          await supabase.from('logs').delete().eq('student_id', uid).lte('hours', 0.02);
-          await supabase.from('logs').delete().eq('student_id', uid).in('date', ['2026-10-14', '2026-10-15']);
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    if (db) {
+      db.logs = [];
+      db.appraisals = [];
+      db.documents = [];
+      db.taskDrafts = [];
+      db.activeShifts = [];
+      db.shift = null;
+      db.draft = '';
+      const stuAcc = (db.users || []).find(u => u.role === 'Student' && (u.id === 's1' || String(u.email || '').toLowerCase() === 'kenzosomes@gmail.com'));
+      db.notifications = [
+        {
+          id: 'n3',
+          userId: stuAcc?.id || 's1',
+          type: 'Application_Status',
+          title: 'Your placement is confirmed',
+          message: 'You are assigned to Accenture Philippines as a Software Engineer Intern.',
+          date: '2026-08-01T09:00:00+08:00',
+          read: true
         }
-      }).catch(() => {});
-    }
-  }
-} catch(e) {}
-
-// Automatic reset of kenzosomes test performance appraisal
-try {
-  const kenzoResetKey = 'reset_kenzo_appraisal_oct16_v1';
-  if (!localStorage.getItem(kenzoResetKey)) {
-    localStorage.setItem(kenzoResetKey, '1');
-    const kenzoIds = ['22227dcf-933f-40a9-9340-f66cb9020e5c', 's1'];
-    if (db && Array.isArray(db.appraisals)) {
-      db.appraisals = db.appraisals.filter(a => !kenzoIds.includes(a.studentId) && !String(a.comments || '').includes('m y jyyyy'));
-    }
-    save();
-
-    if (typeof supabase !== 'undefined' && supabase) {
-      supabase.from('appraisals').delete().in('student_id', kenzoIds).then(() => {}).catch(() => {});
-    }
-  }
-} catch(e) {}
-
-// Automatic geofence verification for on-site pending logs & task script text cleanup
-try {
-  const autoVerifyKey = 'dtr_autoverify_onsite_oct16_v3';
-  if (!localStorage.getItem(autoVerifyKey)) {
-    localStorage.setItem(autoVerifyKey, '1');
-    const cleanTaskText = 'Implemented responsive UI components for the client portal, integrated RESTful API endpoints with role-based session validation, and executed unit tests with the QA engineering team.';
-    if (db && Array.isArray(db.logs)) {
-      db.logs.forEach(l => {
-        if (l.status === 'Pending' && l.gps !== false && Number(l.hours || 0) > 0) {
-          l.status = 'Approved';
-          l.remarks = l.remarks || 'Verified on-site within HTE premises';
-        }
-        if (l.task && (l.task.includes('For Industry Supervisors, daily timekeeping is automated') || l.task.includes('In the Student Portal, BSIT interns discover'))) {
-          l.task = cleanTaskText;
-        }
-      });
+      ];
       save();
     }
     if (typeof supabase !== 'undefined' && supabase) {
-      supabase.from('logs').update({
-        status: 'Approved',
-        remarks: 'Verified on-site within HTE premises'
-      }).eq('status', 'Pending').eq('gps', true).then(() => {}).catch(() => {});
-      supabase.from('logs').update({
-        task: cleanTaskText
-      }).ilike('task', '%For Industry Supervisors, daily timekeeping is automated%').then(() => {}).catch(() => {});
+      supabase.auth.getSession().then(async ({ data }) => {
+        const uid = data?.session?.user?.id;
+        const kenzoIds = ['22227dcf-933f-40a9-9340-f66cb9020e5c', 's1'];
+        if (uid && !kenzoIds.includes(uid)) kenzoIds.push(uid);
+        await supabase.from('logs').delete().in('student_id', kenzoIds).lte('date', '2026-10-19').catch(() => {});
+        await supabase.from('appraisals').delete().in('student_id', kenzoIds).catch(() => {});
+        await supabase.from('documents').delete().in('student_id', kenzoIds).catch(() => {});
+      }).catch(() => {});
     }
   }
 } catch(e) {}
