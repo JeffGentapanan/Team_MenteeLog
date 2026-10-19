@@ -2092,13 +2092,21 @@ html, body {
         margin: 0 auto 22px !important;
     }
     .hero-cta {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
         gap: 10px;
+        justify-content: center;
         align-items: center;
     }
     .hero-cta .btn {
-        width: 85%;
+        width: auto;
+        min-width: 150px;
+        max-width: 220px;
+        padding: 8px 18px;
+        font-size: 12.5px;
+        min-height: 36px;
         text-align: center;
+        justify-content: center;
     }
     .hero-pill {
         font-size: 10px;
@@ -2219,9 +2227,10 @@ html, body {
         flex-direction: column;
         align-items: center;
         background: #FAF4E8;
-        padding: 16px 0;
+        padding: 12px 16px;
         border-top: 1px solid #EFDFBB;
         margin-top: 8px;
+        gap: 4px;
     }
     body.menu-open .public-site .reference-header nav {
         display: flex !important;
@@ -2230,11 +2239,20 @@ html, body {
         background: #FAF4E8 !important;
     }
     body.menu-open .public-site .reference-header nav a {
-        font-size: 14px !important;
-        padding: 12px 0;
+        font-size: 13.5px !important;
+        padding: 10px 14px;
         width: 100%;
         text-align: center;
         color: #58111A !important;
+        border-radius: 10px;
+        text-decoration: none !important;
+        transform: none !important;
+    }
+    body.menu-open .public-site .reference-header nav a.selected,
+    body.menu-open .public-site .reference-header nav a:hover {
+        background: rgba(88, 17, 26, 0.1) !important;
+        color: #58111A !important;
+        transform: none !important;
     }
     body.menu-open .public-site .reference-header .mobile-menu-btn {
         color: #58111A !important;
