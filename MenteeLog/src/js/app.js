@@ -42,7 +42,7 @@ function connectCoreUsers(dataDb) {
       stu.id = 's1';
     }
     stu.identifier = stu.identifier || '2021-00421';
-    stu.name = (stu.name && stu.name !== 'User' && stu.name !== 'Maria Santos') ? stu.name : 'kenzosomes';
+    stu.name = (stu.name && stu.name !== 'User' && stu.name !== 'Supabase User' && stu.name !== 'Maria Santos') ? stu.name : 'kenzosomes';
     stu.email = stu.email || 'kenzosomes@gmail.com';
     stu.role = 'Student';
     stu.status = 'Active';
@@ -80,7 +80,7 @@ function connectCoreUsers(dataDb) {
       sup.id = 'v1';
     }
     sup.identifier = sup.identifier || 'shisulzhin@gmail.com';
-    sup.name = (sup.name && sup.name !== 'User' && !sup.name.includes('Carlos Jose')) ? sup.name : 'shisuizhin';
+    sup.name = (sup.name && sup.name !== 'User' && sup.name !== 'Supabase User' && !sup.name.includes('Carlos Jose')) ? sup.name : 'shisuizhin';
     sup.email = sup.email || 'shisulzhin@gmail.com';
     sup.role = 'Supervisor';
     sup.status = 'Active';
@@ -105,7 +105,7 @@ function connectCoreUsers(dataDb) {
       coord.id = 'c1';
     }
     coord.identifier = coord.identifier || 'FAC-2026-001';
-    coord.name = (coord.name && coord.name !== 'User' && !coord.name.includes('Evelyn Ramos')) ? coord.name : 'jeff.gentapanan2004525';
+    coord.name = (coord.name && coord.name !== 'User' && coord.name !== 'Supabase User' && !coord.name.includes('Evelyn Ramos')) ? coord.name : 'jeff.gentapanan2004525';
     coord.email = coord.email || 'jeff.gentapanan2004525@gmail.com';
     coord.role = 'Coordinator';
     coord.status = 'Active';
@@ -803,35 +803,35 @@ window.menteelogGps = {
     }
     fsEl = document.createElement('dialog');
     fsEl.id = 'map-fullscreen-overlay';
-    fsEl.style.cssText = 'position:fixed; inset:0; width:100vw; max-width:100vw; height:100vh; max-height:100vh; margin:0; padding:clamp(8px, 2vw, 16px); border:none; border-radius:0; background:rgba(15,23,42,0.88); backdrop-filter:blur(6px); display:flex; flex-direction:column; z-index:999999; box-sizing:border-box;';
+    fsEl.style.cssText = 'position:fixed; inset:0; width:100vw; max-width:100vw; height:100vh; height:100dvh; max-height:100vh; max-height:100dvh; margin:0; padding:clamp(6px, 1.8vw, 16px); border:none; border-radius:0; background:rgba(15,23,42,0.88); backdrop-filter:blur(6px); display:flex; flex-direction:column; z-index:999999; box-sizing:border-box; overflow:hidden;';
     document.body.appendChild(fsEl);
     
     const uLat = Number(userLat) || 10.71678;
     const uLng = Number(userLng) || 122.54586;
     const statusBadge = isOnSite 
-      ? '<span class="badge green" style="font-size:12px; padding:3px 10px; font-weight:700;">✓ Inside Geofence (On-Site)</span>' 
-      : '<span class="badge red" style="font-size:12px; padding:3px 10px; font-weight:700;">⚠️ Outside Geofence (Off-Site)</span>';
+      ? '<span class="badge green" style="font-size:11.5px; padding:3px 9px; font-weight:700;">✓ Inside Geofence (On-Site)</span>' 
+      : '<span class="badge red" style="font-size:11.5px; padding:3px 9px; font-weight:700;">⚠️ Outside Geofence (Off-Site)</span>';
 
     fsEl.innerHTML = `
-      <div style="background:#ffffff; border-radius:12px; display:flex; flex-direction:column; width:100%; height:100%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); overflow:hidden; border:1px solid rgba(255,255,255,0.2);">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:12px 16px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; flex:1;">
-            <strong style="font-size:clamp(14px, 3.5vw, 16px); color:#1e293b; line-height:1.3;">${title}</strong>
+      <div style="background:#ffffff; border-radius:12px; display:flex; flex-direction:column; width:100%; height:100%; max-height:100%; min-height:0; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); overflow:hidden; border:1px solid rgba(255,255,255,0.2);">
+        <div style="flex-shrink:0; display:flex; justify-content:space-between; align-items:flex-start; gap:8px; padding:10px 14px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+          <div style="display:flex; align-items:center; gap:6px 8px; flex-wrap:wrap; min-width:0; flex:1;">
+            <strong style="font-size:clamp(13px, 3.4vw, 16px); color:#1e293b; line-height:1.25;">${title}</strong>
             ${statusBadge}
-            <span style="font-size:12px; color:#64748b; font-family:monospace; background:#e2e8f0; padding:2px 8px; border-radius:4px;">${uLat.toFixed(5)}° N, ${uLng.toFixed(5)}° E</span>
+            <span style="font-size:11px; color:#64748b; font-family:monospace; background:#e2e8f0; padding:2px 7px; border-radius:4px;">${uLat.toFixed(5)}° N, ${uLng.toFixed(5)}° E</span>
           </div>
-          <button type="button" class="btn secondary small" id="btn-close-map-fs" style="display:inline-flex; align-items:center; gap:5px; font-weight:700; padding:6px 12px; font-size:12px; white-space:nowrap; flex-shrink:0; cursor:pointer;">
+          <button type="button" class="btn secondary small" id="btn-close-map-fs" style="display:inline-flex; align-items:center; gap:4px; font-weight:700; padding:5px 10px; font-size:11.5px; white-space:nowrap; flex-shrink:0; cursor:pointer;">
             ✕ Exit
           </button>
         </div>
-        <div id="fs-leaflet-map" style="flex:1; width:100%; min-height:240px; background:#f1f5f9; position:relative;"></div>
-        <div style="padding:10px 16px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:12px; color:#475569;">
-          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <div id="fs-leaflet-map" style="flex:1 1 auto; width:100%; min-height:0; background:#f1f5f9; position:relative;"></div>
+        <div style="flex-shrink:0; padding:8px 12px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px 10px; font-size:clamp(10.5px, 2.6vw, 12px); line-height:1.35; color:#475569;">
+          <div style="display:flex; gap:4px 10px; align-items:center; flex-wrap:wrap;">
             <span>🏢 <strong>${companyName}</strong> (Accredited Workplace)</span>
             <span>📍 <strong>Pinpoint Position</strong></span>
-            <span>🟢 <strong>100m Accredited Geofence Radius</strong></span>
+            <span>🟢 <strong>100m Geofence Radius</strong></span>
           </div>
-          <span style="color:#64748b; font-size:11px;">Scroll/pinch to zoom · Drag to pan · ESC to exit</span>
+          <span style="color:#64748b; font-size:clamp(10px, 2.4vw, 11px);">Pinch/scroll to zoom · Drag to pan</span>
         </div>
       </div>
     `;
@@ -1963,20 +1963,36 @@ async function action(name,id,el){
     case 'toggle-password':{const byId=el.dataset.id?document.getElementById(el.dataset.id):null;const input=(byId instanceof HTMLInputElement?byId:null)||el.parentElement?.querySelector('input')||$('#password');if(!input)return;input.type=input.type==='password'?'text':'password';el.setAttribute('aria-label',input.type==='password'?'Show password':'Hide password');return;}
     case 'forgot': recoveryActive = false; location.hash = '/forgot'; return;
       case 'login': recoveryActive = false; location.hash = '/login'; return;
-    case 'logout':
-      showModal('Confirm Sign Out', `
-        <div style="text-align:center; padding:12px 0 16px;">
-          <div style="width:48px;height:48px;border-radius:50%;background:#fee2e2;color:#b91c1c;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
-            <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M9 3H3v18h6 M9 12h12 m-5-5 5 5-5 5"/></svg>
-          </div>
-          <h3 style="margin:0 0 8px;font-size:18px;font-weight:600;color:var(--ink);">Are you sure you want to sign out?</h3>
-          <p style="margin:0;font-size:14px;color:var(--slate);">You will be returned to the public portal. Make sure you have saved any current work.</p>
-        </div>
-      `, () => {
+    case 'logout': {
+      document.querySelectorAll('details.profile-menu[open]').forEach(d => d.removeAttribute('open'));
+      const activeUser = currentUser();
+      modal.className = 'logout-confirm-dialog';
+      modalOpener = document.activeElement;
+      modalUserId = activeUser?.id || null;
+      modalSubmit = () => {
         logout();
         toast('You have successfully signed out.');
-      }, 'Sign Out');
+      };
+      modal.innerHTML = `
+        <div class="logout-modal-card">
+          <div class="logout-modal-header">
+            <h2 id="modal-title">Sign out</h2>
+            <button type="button" class="logout-modal-close" data-action="close" aria-label="Close dialog">
+              ${icon('close')}
+            </button>
+          </div>
+          <div class="logout-modal-body">
+            <p>Are you sure you want to sign out of your MenteeLog account? You can sign back in anytime.</p>
+          </div>
+          <form id="modal-form" class="logout-modal-footer">
+            <button type="button" class="btn secondary small logout-btn-cancel" data-action="close">Cancel</button>
+            <button type="submit" class="btn small logout-btn-confirm">Sign out</button>
+          </form>
+        </div>
+      `;
+      modal.showModal();
       return;
+    }
     case 'student-delete-log': {
       if (confirm('Delete this test attendance entry?')) {
         db.logs = (db.logs || []).filter(l => l.id !== id);

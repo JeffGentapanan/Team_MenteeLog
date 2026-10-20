@@ -698,3 +698,129 @@ dialog .tabs button:hover,
     width: 0 !important;
     height: 0 !important;
 }
+
+#map-fullscreen-overlay {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+}
+
+/* =====================================================================
+   SIGN OUT CONFIRMATION DIALOG (Clean, Minimal Product Dialog)
+   ===================================================================== */
+dialog.logout-confirm-dialog {
+    width: min(380px, calc(100vw - 32px)) !important;
+    max-width: 380px !important;
+    padding: 0 !important;
+    border: 1px solid #e4dad2 !important;
+    border-radius: 12px !important;
+    background: #fffdf9 !important;
+    box-shadow: 0 16px 40px rgba(32, 7, 17, 0.18) !important;
+    overflow: hidden !important;
+}
+
+dialog.logout-confirm-dialog::backdrop {
+    background: rgba(31, 41, 55, 0.35) !important;
+    backdrop-filter: blur(2px) !important;
+    -webkit-backdrop-filter: blur(2px) !important;
+}
+
+.logout-modal-card {
+    background: #fffdf9;
+    text-align: left;
+}
+
+.logout-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 8px;
+}
+
+.logout-modal-header h2 {
+    margin: 0 !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #1f2937 !important;
+    letter-spacing: -0.1px !important;
+}
+
+.logout-modal-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+.logout-modal-close:hover {
+    background: #f3ede4;
+    color: #1f2937;
+}
+
+.logout-modal-close .icon {
+    width: 15px;
+    height: 15px;
+}
+
+.logout-modal-body {
+    padding: 4px 20px 20px;
+}
+
+.logout-modal-body p {
+    margin: 0 !important;
+    font-size: 13.5px !important;
+    line-height: 1.5 !important;
+    color: #6b7280 !important;
+}
+
+.logout-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 20px;
+    background: #f8f4ec;
+    border-top: 1px solid #ebe3d8;
+    margin: 0;
+}
+
+.logout-modal-footer .btn {
+    min-height: 34px !important;
+    padding: 6px 14px !important;
+    border-radius: 7px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+}
+
+.logout-btn-cancel {
+    background: #ffffff !important;
+    color: #374151 !important;
+    border: 1px solid #d6ccc2 !important;
+}
+
+.logout-btn-cancel:hover {
+    background: #f3ede4 !important;
+    color: #1f2937 !important;
+}
+
+.logout-btn-confirm {
+    background: #58111A !important;
+    color: #FAF4E8 !important;
+    border: 1px solid #58111A !important;
+}
+
+.logout-btn-confirm:hover {
+    background: #6e1722 !important;
+    border-color: #6e1722 !important;
+}
