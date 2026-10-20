@@ -14,7 +14,7 @@
 **MenteeLog** is a specialized, enterprise-grade On-the-Job Training (OJT) and internship management system engineered to modernize, automate, and govern university internship programs. It completely replaces fragile, easily forged paper Daily Time Records (DTR) and uncoordinated logbooks with an automated, tamper-resistant digital ecosystem.
 
 MenteeLog unifies the entire internship lifecycle across three interconnected portals:
-1. **OJT Student Interns** — Autonomous placement discovery, automated 100m GPS geofenced attendance tracking, millisecond shift timers with break tracking, saved task drafts, and digital appraisal transparency.
+1. **OJT Student Interns** — Autonomous placement discovery, automated 100m GPS geofenced attendance tracking, millisecond shift timers with break tracking, saved task drafts, printable DTR exports, and digital appraisal transparency.
 2. **Host Training Establishment (HTE) Supervisors** — Streamlined applicant screening pipelines, automated on-site attendance crediting, off-site anomaly justification audits with location maps, and 7-criteria performance evaluations authenticated via drawn digital canvas signatures.
 3. **Faculty OJT Coordinators & Academic Administrators** — Corporate HTE accreditations, bulk student cohort placements, continuous compliance queues, dispute and incident mediation, and single-click CHED completion reporting.
 
@@ -58,9 +58,9 @@ To ensure transparency and operational reliability, MenteeLog operates under cle
 ## 🎨 Brand Guidelines & Identity
 
 * **Primary Palette:** Deep Burgundy (`#58111A`), Rose Accent (`#D85A63`), Warm Sand/Cream (`#FAF4E8` / `#EFDFBB`), and Emerald Success (`#059669`).
-* **Typography:** Clean, high-legibility sans-serif (`Inter`, `system-ui`) and monospace technical accents (`ui-monospace`, `JetBrains Mono`) for coordinate, telemetry, and time tracking.
-* **UI Philosophy:** Frosted acrylic glassmorphism, hardware-accelerated GPU transitions, interactive React Bits & Anime.js-inspired physics, and responsive data tables.
-* **Map Design:** Custom Leaflet.js map layer with branded vector SVG pins (teardrop corporate office pin for workplaces and live pulsing GPS radar beacons for interns).
+* **Typography:** Clean, high-legibility sans-serif ([Inter](https://fonts.google.com/specimen/Inter), `system-ui`) and monospace technical accents (`ui-monospace`, [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono)) for coordinate, telemetry, and time tracking.
+* **UI Philosophy:** Clean institutional cards, frosted acrylic glassmorphism, hardware-accelerated GPU transitions, interactive [React Bits](https://www.reactbits.dev) & [Anime.js](https://animejs.com)-inspired physics, and responsive data tables.
+* **Map Design:** Custom [Leaflet.js](https://leafletjs.com) map layer with branded vector SVG pins (teardrop corporate office pin for workplaces and live pulsing GPS radar beacons for interns).
 
 ---
 
@@ -68,7 +68,7 @@ To ensure transparency and operational reliability, MenteeLog operates under cle
 
 * **Verified HTE Placements:** Eliminate unaccredited student placements through a vetted directory of partner companies with active Memorandums of Agreement (MOA).
 * **Automated 100m GPS Geofence Verification:** Replace manual, easily-forged paper DTRs with automated geofence verification. Shifts clocked within the accredited 100-meter workplace perimeter are automatically verified upon clock-out, freeing company supervisors from tedious daily timekeeper tasks.
-* **Interactive Fullscreen Mapping:** Equip students, supervisors, and coordinators with a high-definition Leaflet map and dedicated `⛶ Wide / Fullscreen` viewer to inspect clock-in coordinates, geofence boundaries, and live telemetry.
+* **Interactive Fullscreen Mapping:** Equip students, supervisors, and coordinators with a high-definition Leaflet map and dedicated `⛶ Wide / Fullscreen` viewer (`100dvh` mobile-safe viewport) to inspect clock-in coordinates, geofence boundaries, and live telemetry.
 * **Exception-Based Anomaly Handling:** Shifts recorded outside the accredited 100m perimeter are flagged automatically, prompting the intern to submit an official justification with an embedded clock-in geolocation record map for supervisor review.
 * **Granular Break & Shift Tracking:** Accurately compute net rendered hours by deducting lunch and personal breaks with precision resumption and zero lost time.
 * **7-Criteria Performance Appraisal with Drawn Signatures:** Streamline intern evaluations with a 5-point rubric (+ N/A option) and an executive HTML5 high-DPI canvas drawing pad for authentic digital signatures.
@@ -79,13 +79,13 @@ To ensure transparency and operational reliability, MenteeLog operates under cle
 
 ## 🤖 Antigravity AI Engineering & Architecture Collaboration
 
-MenteeLog was engineered in close collaboration with **Antigravity AI**, Google DeepMind's Advanced Agentic Coding assistant. The agentic AI architecture played an instrumental role across critical engineering modules:
+MenteeLog was engineered in close collaboration with **[Antigravity AI](https://deepmind.google)**, Google DeepMind's Advanced Agentic Coding assistant. The agentic AI architecture played an instrumental role across critical engineering modules:
 
 1. **Geodesic Haversine Geofencing Engine:**
-   * Formulated and implemented the spherical trigonometry Haversine algorithm in vanilla JavaScript to calculate real-time Euclidean distance between student GPS telemetry and HTE company coordinates with sub-meter precision.
+   * Formulated and implemented the spherical trigonometry [Haversine algorithm](https://en.wikipedia.org/wiki/Haversine_formula) in vanilla JavaScript to calculate real-time Euclidean distance between student GPS telemetry and HTE company coordinates with sub-meter precision.
    * Engineered the automated 100m boundary evaluation logic that automatically categorizes shifts into verified on-site records versus flagged off-site anomalies.
 2. **High-DPI Canvas Draw Signature Station:**
-   * Designed the responsive HTML5 drawing canvas with dynamic `devicePixelRatio` scaling, eliminating blurriness on retina displays and mobile touch screens.
+   * Designed the responsive [HTML5 Canvas 2D](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) drawing pad with dynamic `devicePixelRatio` scaling, eliminating blurriness on retina displays and mobile touch screens.
    * Implemented smooth Bézier curve interpolation for pen/mouse strokes, clear canvas handlers, and base64 vector extraction directly embedded into appraisal records.
 3. **Multi-Tab Scoped Session Isolation:**
    * Diagnosed and eliminated cross-tab session bleed and accidental role overwrites by creating an isolated session management architecture (`sessionStorage.SESSION.<role>`).
@@ -93,38 +93,83 @@ MenteeLog was engineered in close collaboration with **Antigravity AI**, Google 
 4. **Custom Vector SVG Mapping & Coordinate Calibration:**
    * Replaced generic raster icons with bespoke, hardware-rendered SVG teardrop corporate pins and pulsing emerald radar beacons (`mlgPulse`).
    * Calibrated pixel anchor points to `[22, 53]` to ensure mathematical needle-tip precision on Leaflet map tiles.
-   * Implemented the fullscreen modal overlay with dynamic Leaflet tile re-rendering and `ESC` key accessibility.
+   * Implemented the fullscreen modal overlay with dynamic `100dvh` mobile-safe height, Leaflet tile re-rendering, and `ESC` key accessibility.
 5. **Quality-Gated Build & Zero-Regression Verification:**
-   * Managed automated test cycles, Vite 8 module bundling, memory allocation optimizations, and syntax integrity validations to ensure zero compilation errors.
+   * Managed automated test cycles, [Vite 8](https://vite.dev) module bundling, memory allocation optimizations, and syntax integrity validations via [Oxlint](https://oxc.rs/docs/guide/usage/linter.html) to ensure zero compilation errors.
 
 ---
 
-## 🛠️ Comprehensive Technology Stack & Libraries
+## 🛠️ Comprehensive Technology Stack, APIs & Official Resource Links
 
-### 1. Languages
-* **JavaScript (ECMAScript 2023 / ES6+):** Modular vanilla ES module architecture (`export`, `import`) delivering near-zero runtime overhead and maximum execution speed.
-* **HTML5:** Semantic markup, custom SVG graphic nodes, and HTML5 Canvas API for digital signature capture.
-* **CSS3:** Custom design token system, CSS custom properties (variables), Flexbox/CSS Grid layouts, glassmorphism filters, and GPU-accelerated `@keyframes` animations.
-* **SQL (PostgreSQL Dialect):** Relational schema definitions, relational integrity foreign keys, check constraints, and Supabase Row Level Security (RLS) policies.
+### 1. Core Languages & Web Standards
+* **JavaScript ([ECMAScript 2023 / ES6+](https://tc39.es/ecma262/)):** Modular vanilla ES module architecture (`export`, `import`) delivering near-zero runtime overhead and maximum execution speed. ([MDN JavaScript Reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript))
+* **HTML5 ([WHATWG HTML Living Standard](https://html.spec.whatwg.org/)):** Semantic markup, native `<dialog>` modals, custom SVG graphic nodes, and [HTML5 Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) for digital signature capture.
+* **CSS3 ([W3C CSS Specifications](https://www.w3.org/Style/CSS/)):** Custom design token system, CSS custom properties (variables), Flexbox/CSS Grid layouts, dynamic viewport units (`100dvh`), glassmorphism filters, and GPU-accelerated `@keyframes` animations.
+* **SQL ([PostgreSQL 15+ Dialect](https://www.postgresql.org/docs/)):** Relational schema definitions, foreign keys, check constraints, and [Supabase Row Level Security (RLS)](https://supabase.com/docs/guides/database/postgres/row-level-security) policies.
 
-### 2. Frontend Framework & Tooling
-* **Vite 8.x:** Next-generation frontend bundler providing instant Hot Module Replacement (HMR) and optimized Rollup/Rolldown production chunking.
-* **React 19 (Selective Ecosystem Components):** Utilized for specialized reactive components and interactive UI micro-interactions.
-* **Oxlint:** Ultra-fast Rust-based linter ensuring clean code syntax, memory safety, and strict style compliance.
+### 2. Frontend Framework, Bundler & Developer Tooling
+* **[Vite 8.x (`^8.3.0`)](https://vite.dev):** Next-generation frontend build tool providing instant Hot Module Replacement (HMR) and optimized production bundling. ([NPM: `vite`](https://www.npmjs.com/package/vite) | [GitHub: `vitejs/vite`](https://github.com/vitejs/vite))
+* **[React 19 (`^19.2.8`)](https://react.dev) & [React DOM (`^19.2.8`)](https://www.npmjs.com/package/react-dom):** Utilized with [`@vitejs/plugin-react`](https://www.npmjs.com/package/@vitejs/plugin-react) for reactive ecosystem integration. ([NPM: `react`](https://www.npmjs.com/package/react))
+* **[Oxlint (`^1.81.0`)](https://oxc.rs/docs/guide/usage/linter.html):** Ultra-fast Rust-based JavaScript/TypeScript linter from the Oxidation Compiler (Oxc) project ensuring clean syntax and strict code quality. ([NPM: `oxlint`](https://www.npmjs.com/package/oxlint) | [GitHub: `oxc-project/oxc`](https://github.com/oxc-project/oxc))
+* **[Node.js (v20+ LTS)](https://nodejs.org):** JavaScript runtime environment supporting build scripts, package management ([npm](https://www.npmjs.com)), and maintenance automation.
 
-### 3. Mapping, GIS & Geolocation Libraries
-* **Leaflet.js (v1.9.4):** High-performance, mobile-friendly interactive mapping library powering geofence visualization, custom tile rendering, and coordinate projection.
-* **OpenStreetMap (OSM):** Standardized, open-source cartographic tile server providing street-level geographic topology.
-* **W3C Geolocation API:** Standardized HTML5 browser API interfacing directly with client GPS hardware for high-accuracy latitude, longitude, and accuracy radius ingestion.
+### 3. Mapping, GIS, Geolocation & Export Libraries
+* **[Leaflet.js (`v1.9.4`)](https://leafletjs.com):** Open-source, mobile-friendly interactive mapping library powering the 100m geofence visualization, custom SVG pin rendering, and coordinate projection.
+  * **Official Website & Docs:** [https://leafletjs.com/reference.html](https://leafletjs.com/reference.html)
+  * **NPM Package:** [https://www.npmjs.com/package/leaflet](https://www.npmjs.com/package/leaflet)
+  * **UNPKG CDN Stylesheet:** [`https://unpkg.com/leaflet@1.9.4/dist/leaflet.css`](https://unpkg.com/leaflet@1.9.4/dist/leaflet.css)
+  * **UNPKG CDN Script:** [`https://unpkg.com/leaflet@1.9.4/dist/leaflet.js`](https://unpkg.com/leaflet@1.9.4/dist/leaflet.js)
+* **[OpenStreetMap (OSM) Raster Tile Server API](https://www.openstreetmap.org):** Standardized open-source cartographic tile provider delivering street-level geographic topology.
+  * **Documentation:** [https://wiki.openstreetmap.org/wiki/Raster_tile_providers](https://wiki.openstreetmap.org/wiki/Raster_tile_providers)
+  * **Tile Endpoint Pattern:** `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`
+* **[W3C HTML5 Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API):** Browser hardware API (`navigator.geolocation.getCurrentPosition` & `watchPosition`) interfacing directly with client GPS sensors for WGS84 latitude, longitude, and accuracy radius ingestion. ([W3C Specification](https://w3c.github.io/geolocation/))
+* **[html2pdf.js (`v0.10.1`)](https://ekoopmans.github.io/html2pdf.js/):** Client-side HTML-to-PDF generator (combining `html2canvas` and `jsPDF`) used to export printable Daily Time Records (DTR) and CHED compliance sheets.
+  * **GitHub Repository:** [https://github.com/eKoopmans/html2pdf.js](https://github.com/eKoopmans/html2pdf.js)
+  * **UNPKG CDN Bundle:** [`https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js`](https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js)
 
-### 4. Backend & Cloud Infrastructure
-* **Supabase BaaS:**
-  * **PostgreSQL 15+:** Fully relational cloud database managing users, jobs, applications, DTR logs, incident claims, and appraisals.
-  * **Supabase Auth:** Secure credential authentication, session tokens, and password hashing (bcrypt/Argon2).
-  * **Row Level Security (RLS):** Granular database-level access policies guaranteeing students, supervisors, and coordinators can only query authorized records.
-  * **Supabase Storage:** Cloud storage buckets for student clearance documents, MOA PDFs, and incident evidence attachments.
-* **Node.js (v20+ LTS):** Server runtime environment supporting build tooling and developer scripts.
-* **Hybrid Local Persistence Engine:** In-memory reactive state manager with browser storage synchronization (`localStorage` and scoped `sessionStorage`) providing seamless offline fallbacks and demonstration stability.
+### 4. Backend-as-a-Service (BaaS), Cloud Database & Transactional Email APIs
+* **[Supabase (`@supabase/supabase-js` `^2.117.2`)](https://supabase.com):**
+  * **Official Platform & Docs:** [https://supabase.com/docs](https://supabase.com/docs)
+  * **JavaScript SDK (NPM):** [https://www.npmjs.com/package/@supabase/supabase-js](https://www.npmjs.com/package/@supabase/supabase-js) | [GitHub: `supabase/supabase-js`](https://github.com/supabase/supabase-js)
+  * **[Supabase PostgreSQL Database](https://supabase.com/docs/guides/database/overview):** Cloud relational database storing `users`, `school_registry`, `jobs`, `applications`, `dtr_logs`, `incidents`, `appraisals`, `notifications`, and `system_state`.
+  * **[Supabase Auth API](https://supabase.com/docs/guides/auth):** Token-based authentication, session management, and password hashing.
+  * **[Supabase Storage API](https://supabase.com/docs/guides/storage):** Cloud object storage buckets for student clearance documents, MOA PDFs, and incident evidence attachments.
+* **[EmailJS REST API (`v1.0`)](https://www.emailjs.com):** Client-side transactional email dispatch service used to send 6-digit OTP account activation codes and password reset tokens to verified institutional emails.
+  * **Official Documentation:** [https://www.emailjs.com/docs/rest-api/send/](https://www.emailjs.com/docs/rest-api/send/)
+  * **REST Endpoint Used:** `https://api.emailjs.com/api/v1.0/email/send`
+* **Browser Native Web APIs ([MDN Web APIs](https://developer.mozilla.org/en-US/docs/Web/API)):**
+  * **[Web Storage API (`localStorage` & `sessionStorage`)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API):** Powers the hybrid local persistence cache and multi-tab role session isolation (`sessionStorage.SESSION.<role>`).
+  * **[Web Crypto API (`crypto.randomUUID()`)](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID):** Cryptographically strong UUID v4 generation for incident report codes, DTR log IDs, and session tokens.
+  * **[HTML5 Canvas 2D Context API](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D):** Powers the high-DPI supervisor digital signature drawing pad (`toDataURL('image/png')`).
+
+---
+
+## 🔗 Quick Reference Table: All Tools, APIs, Libraries & Sources
+
+| Category | Tool / API / Library | Version / Spec | Official Link / Source URL | Purpose in MenteeLog |
+| :--- | :--- | :--- | :--- | :--- |
+| **Cloud Backend & DB** | **Supabase Platform** | PostgreSQL 15+ | [https://supabase.com](https://supabase.com) | Cloud database, authentication, RLS security, and real-time state sync |
+| **Database SDK** | **`@supabase/supabase-js`** | `^2.117.2` | [npmjs.com/package/@supabase/supabase-js](https://www.npmjs.com/package/@supabase/supabase-js) | Isomorphic JavaScript client for querying Supabase tables & auth |
+| **GIS & Mapping** | **Leaflet.js** | `1.9.4` | [https://leafletjs.com](https://leafletjs.com) | Interactive 100m geofence maps, custom SVG pins, and fullscreen map viewer |
+| **Map CDN Assets** | **Leaflet UNPKG CDN** | `1.9.4` | [unpkg.com/leaflet@1.9.4/dist/leaflet.js](https://unpkg.com/leaflet@1.9.4/dist/leaflet.js) | Global CDN delivery for Leaflet core JS and stylesheet |
+| **Map Tiles API** | **OpenStreetMap (OSM)** | Raster Tiles | [https://www.openstreetmap.org](https://www.openstreetmap.org) | Street-level map tiles (`https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`) |
+| **GPS Telemetry API** | **W3C Geolocation API** | HTML5 Standard | [MDN Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API) | Hardware GPS coordinate ingestion (`getCurrentPosition` / `watchPosition`) |
+| **Geodesic Math** | **Haversine Formula** | Spherical Trig | [Wikipedia: Haversine Formula](https://en.wikipedia.org/wiki/Haversine_formula) | Sub-meter distance calculation between intern GPS and HTE office |
+| **Email Dispatch API** | **EmailJS REST API** | `v1.0` | [https://www.emailjs.com/docs/rest-api/send/](https://www.emailjs.com/docs/rest-api/send/) | Sending 6-digit OTP activation codes via `https://api.emailjs.com/api/v1.0/email/send` |
+| **PDF Export CDN** | **html2pdf.js** | `0.10.1` | [ekoopmans.github.io/html2pdf.js](https://ekoopmans.github.io/html2pdf.js/) | Exporting printable DTR sheets and CHED compliance reports to PDF |
+| **Digital Signatures** | **HTML5 Canvas 2D API** | WHATWG Standard | [MDN CanvasRenderingContext2D](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) | High-DPI drawn digital signatures (`PNG` base64 extraction) for appraisals |
+| **Frontend Bundler** | **Vite** | `^8.3.0` | [https://vite.dev](https://vite.dev) | Fast ES module dev server (HMR) and production asset bundler |
+| **UI Library** | **React & React DOM** | `^19.2.8` | [https://react.dev](https://react.dev) | Component runtime and Vite React plugin integration |
+| **Code Linter** | **Oxlint (Oxc)** | `^1.81.0` | [https://oxc.rs](https://oxc.rs) | High-speed Rust linter for JavaScript/JSX syntax verification |
+| **JS Runtime** | **Node.js & npm** | `v20+ LTS` | [https://nodejs.org](https://nodejs.org) | Local development environment, dependency management, and build scripts |
+| **UI/UX Design** | **Figma** | Web / Desktop | [https://www.figma.com](https://www.figma.com) | Interface wireframing, design tokens, and brand identity prototyping |
+| **Diagramming** | **Mermaid.js (ELK)** | `v11+` | [https://mermaid.js.org](https://mermaid.js.org) | System architecture flowcharts, ERDs, and hierarchical site maps |
+| **Motion & UI Patterns** | **React Bits & Anime.js** | Design Reference | [reactbits.dev](https://www.reactbits.dev) / [animejs.com](https://animejs.com) | Interactive micro-interactions, spotlight tracking, and keyframe physics |
+| **Typography** | **Google Fonts** | `Inter` / `JetBrains Mono` | [https://fonts.google.com](https://fonts.google.com) | UI body typography and monospace telemetry/timer numerals |
+| **CHED Regulation** | **CHED CMO No. 104 s. 2017** | SIPP Guidelines | [CHED CMO 104 s. 2017 Official PDF](https://ched.gov.ph/wp-content/uploads/2018/03/CMO-NO.-104-S.-2017.pdf) | Official Philippine regulatory standard for student internship compliance |
+| **AI Pair Programmer** | **Antigravity AI** | Google DeepMind | [https://deepmind.google](https://deepmind.google) | Agentic AI engineering, geofence math, canvas signature pad, and QA |
+| **Source Control (Main)** | **GitHub (Production)** | Git | [github.com/JeffGentapanan/Team_MenteeLog](https://github.com/JeffGentapanan/Team_MenteeLog) | Primary production repository with branch protection & PR workflow |
+| **Source Control (Test)** | **GitHub (Simulation)** | Git | [github.com/JeffGentapanan/MenteeLog_Test](https://github.com/JeffGentapanan/MenteeLog_Test) | Dedicated simulation and pilot testing repository |
 
 ---
 
@@ -255,9 +300,9 @@ flowchart TD
     end
 
     %% Session Security
-    Z["Any Portal: Click Sign Out"] --> AA{"Confirm Logout Dialog?"}:::decision
+    Z["Any Portal: Click Sign Out"] --> AA{"Confirm Sign Out Dialog?"}:::decision
     AA -->|"Cancel"| AB["Remain Logged In"]:::action
-    AA -->|"Confirm"| AC["Secure Session Termination & Return to Login"]:::action
+    AA -->|"Sign out"| AC["Secure Session Termination & Return to Landing Page"]:::action
 ```
 
 ---
@@ -305,7 +350,7 @@ graph TD
     S1["2.1 Profile Setup & Settings"]
     S2["2.2 Job Browse & Apply<br/>(CHED Accredited BSIT HTE Listings)"]
     S3["2.3 Application Status Tracker"]
-    S4["2.4 Attendance & DTR Geofence Hub<br/><b>100m Workplace Geofence · Live Map & Fullscreen View</b><br/><i>(Live Clock In/Out, Auto-Verification & Breaks)</i>"]
+    S4["2.4 Attendance & DTR Geofence Hub<br/><b>100m Workplace Geofence · Live Map & Fullscreen Mobile-Safe View</b><br/><i>(Live Clock In/Out, Auto-Verification, Breaks & Printable DTR)</i>"]
     S4_Justify["2.4a Attendance Justification Modal<br/><i>(Off-Site Flag Explanation & Clock-In Location Map)</i>"]
     S5["2.5 Student Incident Module (Form & Evidence Upload)"]
     S6["2.6 Performance Appraisal Result<br/>(7-Criteria Rubric Breakdown & Digital Signature)"]
@@ -372,12 +417,12 @@ graph TD
   %% 5. SHARED NAVIGATION & SYSTEM OVERLAYS
   %% ====================================================
   subgraph SharedServices ["Shared Navigation & System Overlay"]
-    Sh1_Modal["1.3 Logout Confirmation Modal<br/>(Are you sure you want to log out?)"]
+    Sh1_Modal["1.3 Sign Out Confirmation Dialog<br/>(Confirm Account Sign Out: Cancel / Sign out)"]
     Sh1["1.4 Sign Out / Session Termination"]
-    Sh2["1.5 Header Notification Drawer"]
-    Sh3["1.6 Notifications Center Page"]
+    Sh2["1.5 Header Notification Drawer<br/>(Unread-Only Bell Overlay)"]
+    Sh3["1.6 Notifications Center Page<br/>(Tabs: All, Unread, System)"]
 
-    Sh1_Modal -->|Confirm Logout| Sh1
+    Sh1_Modal -->|Confirm Sign Out| Sh1
     Sh2 --> Sh3
   end
 
@@ -439,7 +484,7 @@ graph TB
   %% ====================================================
   %% 1. PUBLIC / AUTHENTICATION MODULE
   %% ====================================================
-  subgraph PublicAuth["PUBLIC / AUTHENTICATION SERVICES"]
+  subgraph PublicAuth["1. PUBLIC / AUTHENTICATION SERVICES"]
     LandingPage["1.0 Landing Page<br/><i>(Hero + Platform Stats + OJT Guide)</i>"]
     AuthHub[["1.1 Auth Hub<br/><b>Multi-Role Gateway</b>"]]
     ForgotPassword["1.2 Forgot Password Modal<br/><i>(Email Link Request)</i>"]
@@ -452,7 +497,7 @@ graph TB
     end
 
     ActivationModal["Account Activation / Password Reset<br/><i>(Token Verification)</i>"]
-    SignOutConfirmModal["1.3 Logout Confirmation Modal<br/><i>(Are you sure you want to log out?)</i>"]
+    SignOutConfirmModal["1.3 Sign Out Confirmation Dialog<br/><i>(Confirm Account Sign Out: Cancel / Sign out)</i>"]
     SignOutNode["1.4 Sign Out / Session Termination<br/><i>(Token Revocation & State Reset)</i>"]
     HeaderNotificationDrawer["1.5 Header Notification Drawer<br/><i>(Bell Icon Overlay)</i>"]
     NotificationCenter["1.6 Notifications Center Page<br/><i>(Tabs: All, Unread, System)</i>"]
@@ -461,15 +506,15 @@ graph TB
   %% ====================================================
   %% 2. STUDENT PORTAL
   %% ====================================================
-  subgraph StudentPortal["STUDENT PORTAL SERVICES"]
+  subgraph StudentPortal["2. STUDENT PORTAL SERVICES"]
     Dashboard2["2.0 Student Dashboard<br/><i>(OJT Progress, Hours & HTE Details)</i>"]
-    ProfileSetup2["2.1 Profile Setup"]
+    ProfileSetup2["2.1 Profile Setup<br/><i>(Academic Info & Resume)</i>"]
     JobBrowse2["2.2 Job Browse & Apply<br/><i>(CHED Accredited BSIT Listings)</i>"]
     ApplicationStatus2["2.3 Application Status Tracker"]
     
     subgraph StudentDTRSub["2.4 Attendance & Geofence Hub"]
-      DTRStudent2["Live Clock In, Break & Clock Out<br/><i>(Millisecond Timer + Policy Notice)</i>"]
-      LiveMapStudent["Interactive HTE Geofence Map<br/><b>100m Perimeter · Live GPS Beacon</b><br/><i>(⛶ Wide / Fullscreen View Support)</i>"]
+      DTRStudent2["Live Clock In, Break & Clock Out<br/><i>(Millisecond Timer + Policy Notice + Printable DTR)</i>"]
+      LiveMapStudent["Interactive HTE Geofence Map<br/><b>100m Perimeter · Live GPS Beacon</b><br/><i>(⛶ Fullscreen Mobile-Safe Map View)</i>"]
       GPSDecision{"GPS Check<br/><b>Within 100m Geofence?</b>"}
       AutoVerifiedLog["✓ Auto-Verified On-Site<br/><i>(Direct Approval)</i>"]
       FlaggedLog["⚠️ Flagged Shift<br/><i>(Outside Geofence Anomaly)</i>"]
@@ -484,7 +529,7 @@ graph TB
   %% ====================================================
   %% 3. SUPERVISOR PORTAL
   %% ====================================================
-  subgraph SupervisorPortal["SUPERVISOR PORTAL SERVICES"]
+  subgraph SupervisorPortal["3. SUPERVISOR PORTAL SERVICES"]
     Dashboard3["3.0 Supervisor Dashboard<br/><i>(Active Interns & Quick Stats)</i>"]
     CandidateReview3["3.1 Candidate & Application Review Hub<br/><b>Pipeline: All, Review, Accepted, Rejected</b>"]
     
@@ -501,7 +546,7 @@ graph TB
   %% ====================================================
   %% 4. COORDINATOR / ADMIN PORTAL
   %% ====================================================
-  subgraph CoordinatorPortal["COORDINATOR / ADMIN PORTAL SERVICES"]
+  subgraph CoordinatorPortal["4. COORDINATOR / ADMIN PORTAL SERVICES"]
     Dashboard4["4.0 Coordinator Dashboard"]
     JobManagement4["4.1 Job Management"]
     HTEAccreditation4["4.2 HTE Accreditation<br/><i>(Partner Companies & MOAs)</i>"]
@@ -521,10 +566,11 @@ graph TB
   end
 
   %% ====================================================
-  %% 5. SHARED DATA STORES (PERSISTENCE LAYER)
+  %% 5. SHARED DATA STORES (SUPABASE + PERSISTENCE LAYER)
   %% ====================================================
-  subgraph SharedDataStores["SHARED PERSISTENCE LAYER (DATABASES)"]
-    UserStore[("User Store<br/>Users & Accounts")]
+  subgraph SharedDataStores["5. SHARED PERSISTENCE & SUPABASE CLOUD SYNC LAYER"]
+    SupabaseSync[["Supabase Real-Time Sync Engine<br/><b>Auth · PostgreSQL DB · Cloud State</b>"]]
+    UserStore[("User Store<br/>Users & Core Accounts")]
     JobStore[("Job Store<br/>Listings & HTE Specs")]
     ApplicationStore[("Application Store<br/>Applications & Appraisals")]
     DTRStore[("DTR & Logbook Store<br/>Clock-ins, GPS, Breaks & Justifications")]
@@ -548,11 +594,11 @@ graph TB
   AuthDecision -->|Supervisor Role| Dashboard3
   AuthDecision -->|Coordinator Role| Dashboard4
 
-  %% Logout Flow with Confirmation Modal
+  %% Sign Out Flow with Confirmation Dialog
   Dashboard2 -.->|Sign Out Clicked| SignOutConfirmModal
   Dashboard3 -.->|Sign Out Clicked| SignOutConfirmModal
   Dashboard4 -.->|Sign Out Clicked| SignOutConfirmModal
-  SignOutConfirmModal -->|Confirm Logout| SignOutNode
+  SignOutConfirmModal -->|Confirm Sign Out| SignOutNode
   SignOutConfirmModal -.->|Cancel| Dashboard2
   SignOutConfirmModal -.->|Cancel| Dashboard3
   SignOutConfirmModal -.->|Cancel| Dashboard4
@@ -637,6 +683,15 @@ graph TB
   PreSeedBatch4 -.->|Batch Write| UserStore
   PreSeedBatch4 -.->|Batch Tag| BadgesStore
 
+  %% Supabase Cloud Sync Connections
+  SupabaseSync <--> UserStore
+  SupabaseSync <--> JobStore
+  SupabaseSync <--> ApplicationStore
+  SupabaseSync <--> DTRStore
+  SupabaseSync <--> ReportStore
+  SupabaseSync <--> BadgesStore
+  SupabaseSync <--> NotificationStore
+
   %% ====================================================
   %% BRANDED COLOR STYLES (MenteeLog Palette)
   %% ====================================================
@@ -656,7 +711,7 @@ graph TB
   class Dashboard3,CandidateReview3,LogSheetsSummary3,ReviewFlaggedDTR,AppraisalSubmission3,SlotManagement3 supervisorPortal;
   class Dashboard4,JobManagement4,HTEAccreditation4,StudentPlacement4,DTRCompliance4,ReportsAnalytics4,RBACSummary4,PreSeedBatch4,ProvisionCoordinator4 coordinatorPortal;
   class StudentReport2,SupervisorReport3,IncidentHub4 redReport;
-  class UserStore,JobStore,ApplicationStore,DTRStore,ReportStore,BadgesStore,NotificationStore sharedData;
+  class SupabaseSync,UserStore,JobStore,ApplicationStore,DTRStore,ReportStore,BadgesStore,NotificationStore sharedData;
   class AutoVerifiedLog greenVerify;
   class FlaggedLog redFlag;
 ```
@@ -702,28 +757,25 @@ To evaluate the integrated portals, use the following pre-configured demonstrati
 * **Off-Site Warning Pin:** Crimson alert pin (`#dc2626`) with a warning glyph and red pulsing radar ring for out-of-bounds locations.
 * **Pixel-Perfect Needle Anchoring:** Calibrated to `[22, 53]` to ensure mathematical needle-tip precision on Leaflet map tiles.
 
-### 3. Dedicated Wide / Fullscreen Interactive Map Viewer Across All Portals
+### 3. Dedicated Mobile-Safe Fullscreen Interactive Map Viewer Across All Portals
 * Added **`🗺️ Toggle Record Map`** and **`⛶ Wide / Fullscreen`** controls across the Student DTR Hub, Attendance Justification modal, Supervisor Exception Review modal, and Coordinator **Review DTR Entry** (`#/coordinator/dtr/review/<id>`) page.
-* Opens an expansive viewport overlay with backdrop blur, telemetry badge, geofence status badge, pan/zoom controls, and instant **`ESC` key** dismissal.
+* Uses `100dvh` (`max-height: 100dvh`) with flex-locked header and legend bars so the bottom telemetry legend is never clipped by mobile browser navigation bars, alongside instant **`ESC` key** dismissal.
 
 ### 4. Coordinator DTR Compliance Directives & Actionable Notification Routing
 * **Coordinator → Supervisor Compliance Forwarding:** When a Faculty Coordinator audits an off-site DTR entry (`#/coordinator/dtr/review/<id>`) and clicks **Forward to Supervisor for Action**, their remarks are saved as a **Faculty Coordinator Compliance Note** (`📋 Coordinator Directive`) inside the Supervisor's **Exception Review — Flagged Shift** modal.
-* **Click-to-Open Notifications (`#notice-drawer` & `#/<role>/notifications`):** Clicking any notification in the top-right Bell Drawer (unread-only queue with `✓ Mark as read` and `Mark all read`) or on the Notifications Center page routes directly to the target portal page and automatically opens the relevant modal or record (DTR Exception Review, Performance Appraisal Rubric, Application Tracker, or Incident Case Detail).
+* **Click-to-Open Notifications (`#notice-drawer` & `#/<role>/notifications`):** Clicking any notification in the top-right Bell Drawer (unread-only queue with `✓ Mark as read` and `Mark all read`) or on the Notifications Center page routes directly to the target portal page and automatically opens the relevant modal or record.
 
 ### 5. Interactive Draw Signature Station for Appraisals (`#/supervisor/appraisals`)
 * Equipped the 7-criteria evaluation module with both **✍️ Draw Signature** (high-DPI HTML5 canvas pad supporting mouse, pen, and touch input) and **⌨️ Type Signature** modes.
 * Drawn canvas signatures (`PNG`) persist across `localStorage` and Supabase and render directly inside the Student's **Performance Appraisal Result** (`#/student/appraisals`) and Coordinator audit views.
 
-### 6. Redesigned Application Status Tracker & Clean Card Aesthetic (`#/student/applications`)
-* Upgraded **My Applications Tracker** with a 3-column KPI summary banner, company monogram header, interactive 4-stage milestone cards (`Application Submitted` → `Supervisor Review` → `Placement Approved` → `Official Endorsement`), and a 4-column assignment specification grid.
-* Standardized all portal cards with clean `1px` borders and balanced mobile `flex-wrap` spacing (`row-gap` & `column-gap`).
+### 6. Clean Sign Out Confirmation Dialog & Mobile Header Refinements
+* Redesigned the **Sign out** confirmation dialog into a clean, minimal `380px` product dialog with left-aligned header, subtle `×` close button, clear account confirmation copy, and a warm cream footer (`#f8f4ec`) with `Cancel` and `#58111A` `Sign out` actions.
+* Refined mobile navigation drawer (`body.menu-open`) and removed stray horizontal/vertical scrollbars on tab strips.
 
 ### 7. Multi-Tab Session Isolation & Page Reload Fix
 * Resolved browser storage and routing conflicts using scoped session storage (`sessionStorage.SESSION.<role>`).
 * Reloading any active tab accurately persists the current portal view and prevents session drops or accidental role switching.
-
-### 8. Interactive DTR Clock, OTP Activation & BSIT Standardization
-* Active analog & digital clock dial animation on `#/login` with 3-step OTP account activation on `#/activate` and strict BSIT academic scope standardization.
 
 ---
 
@@ -735,17 +787,20 @@ Team_MenteeLog/
 │   ├── src/
 │   │   ├── css/                # Stylesheets & animations
 │   │   │   ├── animations.css          # Keyframes, radar pulse, glassmorphism transitions
+│   │   │   ├── portal-layout.css       # Responsive portal grid, sidebar, and tab layout rules
 │   │   │   ├── portal-reference.css    # Unified multi-portal layout and component styling
 │   │   │   ├── reference.css           # Public landing and authentication stylesheets
+│   │   │   ├── styles.css              # Core UI components, modals, and fullscreen map overlay
 │   │   │   └── tokens.css              # Color tokens, brand typography, and CSS variables
 │   │   ├── js/                 # Application architecture modules
 │   │   │   ├── app.js                  # Master application orchestrator, router, and session lifecycle
 │   │   │   ├── portal-views.js         # Student, Supervisor & Coordinator portal views & Leaflet maps
 │   │   │   ├── portal-domain.js        # Domain business logic, mock fallbacks, and storage syncing
 │   │   │   ├── public.js               # Public landing page, OJT Success Guide, and Knowledge Base
+│   │   │   ├── sync.js                 # Real-time Supabase cloud state synchronization engine
 │   │   │   └── auth-experience.js      # Interactive analog/digital clock dial & spotlight animations
 │   │   ├── supabaseClient.js   # Supabase client instantiation, DB tables & Auth interface
-│   │   ├── index.html          # Main HTML entry point with Leaflet and Google Fonts CDN assets
+│   │   ├── index.html          # Main HTML entry point with Leaflet CDN assets
 │   │   └── main.jsx            # Application bootstrap script
 │   ├── public/                 # Static assets, logos, and reference photographs
 │   ├── package.json            # Node.js dependencies, scripts, and build configuration
@@ -808,7 +863,7 @@ MenteeLog is developed collaboratively by:
 
 ## 📄 Institutional Compliance & CHED CMO 104 s. 2017 Alignment
 
-MenteeLog is designed and developed in strict compliance with **CHED Memorandum Order (CMO) No. 104, Series of 2017** (*Revised Guidelines for Student Internship Program in the Philippines* - SIPP) for Higher Education Institutions (HEIs):
+MenteeLog is designed and developed in strict compliance with **[CHED Memorandum Order (CMO) No. 104, Series of 2017](https://ched.gov.ph/wp-content/uploads/2018/03/CMO-NO.-104-S.-2017.pdf)** (*Revised Guidelines for Student Internship Program in the Philippines* - SIPP) issued by the [Commission on Higher Education (CHED)](https://ched.gov.ph) for Higher Education Institutions (HEIs):
 * **Section 11 (Obligations of HEI):** Provides continuous tracking of intern hours, verified supervisor placements, and centralized dispute mediation logs.
 * **Section 13 (Obligations of HTE):** Automates verified daily attendance tracking, guarantees structured training mentors, and standardizes competency-based evaluation instruments.
 * **Section 14 (Student Intern Obligations):** Mandates timely submission of daily task reflections (minimum 150 characters) and adherence to workplace location bounds.
